@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Djeli'S App Simulator</title>
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="mode-mobile">
+
+    <!-- Viewport Devices Switcher Header -->
+    <div class="viewport-selector">
+        <button class="selector-btn active" data-mode="mobile">
+            <span class="material-icons-round">phone_iphone</span> Mobile
+        </button>
+        <button class="selector-btn" data-mode="desktop">
+            <span class="material-icons-round">desktop_mac</span> Ordinateur
+        </button>
+        <button class="selector-btn" data-mode="tv">
+            <span class="material-icons-round">tv</span> Télévision
+        </button>
+        <div class="selector-divider"></div>
+        <button class="selector-btn network-btn" id="network-toggle-btn" onclick="toggleOfflineModeBtn()">
+            <span class="material-icons-round" id="network-status-icon">wifi</span>
+            <span id="network-status-text">En ligne</span>
+        </button>
+    </div>
+
+    <!-- Simulator Workspace Wrapper -->
+    <div class="simulator-wrapper">
+        
+        <!-- TV remote control helper tooltip -->
+        <div class="tv-helper-card">
+            <h3>Mode Télévision Activé</h3>
+            <p><span class="key-badge">←</span> <span class="key-badge">↑</span> <span class="key-badge">↓</span> <span class="key-badge">→</span> Flèches pour naviguer.</p>
+            <p><span class="key-badge">Entrée</span> pour sélectionner.</p>
+            <p><span class="key-badge">Échap</span> pour fermer / retour.</p>
+        </div>
+
+        <!-- Main Phone / Screen Device Container -->
+        <div class="device-frame">
+            <!-- Dynamic Island/Notch (mobile only) -->
+            <div class="dynamic-island"></div>
+            
+            <!-- Device Status Bar (mobile only) -->
+            <div class="status-bar">
+                <span class="time" id="status-time">16:20</span>
+                <div class="status-icons">
+                    <span class="material-icons-round">signal_cellular_4_bar</span>
+                    <span class="material-icons-round" id="status-wifi-icon">wifi</span>
+                    <span class="material-icons-round">battery_full</span>
+                </div>
+            </div>
+
+            <!-- Sidebar Navigation (Desktop / TV mode only) -->
+            <aside class="desktop-sidebar">
+                <div class="sidebar-logo">
+                    <img src="assets/logo.png" alt="Djeli'S Logo" class="sidebar-logo-img">
+                    <span class="sidebar-logo-text">Djeli'S</span>
+                </div>
+                <nav class="sidebar-nav">
+                    <button class="sidebar-nav-item active tv-focusable" id="side-nav-home">
+                        <span class="material-icons-round">home</span> Accueil
+                    </button>
+                    <button class="sidebar-nav-item tv-focusable" id="side-nav-search">
+                        <span class="material-icons-round">search</span> Recherche
+                    </button>
+                    <button class="sidebar-nav-item tv-focusable" id="side-nav-mylist">
+                        <span class="material-icons-round">favorite_border</span> Ma Liste
+                    </button>
+                    <button class="sidebar-nav-item tv-focusable" id="side-nav-profile">
+                        <span class="material-icons-round">person_outline</span> Mon Profil
+                    </button>
+                    <button class="sidebar-nav-item side-plans-btn tv-focusable" id="side-nav-plans">
+                        <span class="material-icons-round">stars</span> Abonnements
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Application Container -->
+            <div class="app-container">
+                <!-- Offline Banner Alert -->
+                <div class="offline-banner" id="offline-banner">
+                    <span class="material-icons-round">wifi_off</span>
+                    <span>Mode Hors-ligne — Lecture limitée aux médias téléchargés</span>
+                </div>
+                <!-- App Header -->
+                <header class="app-header">
+                    <!-- Guest Button (Login/Subscribe) on left when logged out -->
+                    <button class="header-auth-trigger-btn tv-focusable" id="header-guest-btn" onclick="openAuthModal()">
+                        <span class="material-icons-round">vpn_key</span> S'abonner
+                    </button>
+
+                    <!-- User Avatar icon on left when logged in (hidden by default) -->
+                    <button class="icon-btn header-avatar tv-focusable" id="header-profile-btn" style="display: none;">
+                        <span class="material-icons-round">account_circle</span>
+                    </button>
+                    
+                    <!-- Header Title/Tabs Switcher -->
+                    <div class="header-tabs">
+                        <span class="header-tab-item active" id="tab-toggle-djaasoo">DjaaSoo</span>
+                        <span class="header-tab-item" id="tab-toggle-djelison">DjeliSon</span>
+                    </div>
+
+                    <!-- Search icon on right -->
+                    <div class="header-actions">
+                        <button class="icon-btn tv-focusable" id="header-search-btn">
+                            <span class="material-icons-round">search</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Scrollable Content Screen -->
+                <main class="app-content">
+                    
+                    <!-- PAGE 1: HOME SCREEN -->
+                    <div id="page-home" class="app-page active">
+                        
+                        <!-- TAB 1: DJAASOO (VIDEOS) -->
+                        <section id="screen-djaasoo" class="screen-tab active">
+                            <!-- Djaasoo Sub-tabs Selector -->
+                            <div class="djaasoo-tabs-container">
+                                <div class="djaasoo-tabs">
+                                    <button class="djaasoo-tab-btn active tv-focusable" id="djaasoo-tab-cinema">
+                                        <span class="material-icons-round">movie</span>
+                                        <span>Cinéma & Séries</span>
+                                    </button>
+                                    <button class="djaasoo-tab-btn tv-focusable" id="djaasoo-tab-theatre">
+                                        <span class="material-icons-round">theater_comedy</span>
+                                        <span>Théâtre & Humour</span>
+                                    </button>
+                                    <button class="djaasoo-tab-btn tv-focusable" id="djaasoo-tab-docs">
+                                        <span class="material-icons-round">explore</span>
+                                        <span>Documentaires</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB CONTENT 1: CINÉMA & SÉRIES -->
+                            <div id="djaasoo-cinema-content" class="djaasoo-sub-tab-content active">
+                                <!-- Category Pills Filters -->
+                                <div class="category-pills-bar">
+                                    <button class="pill-filter active tv-focusable" onclick="filterPageCategory(this, 'cinema', 'all')">Tout</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'cinema', 'film')">Films</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'cinema', 'series')">Séries</button>
+                                </div>
+
+                                <!-- Hero Banner -->
+                                <div class="hero-banner tv-focusable" id="hero-mandate" data-id="c1" data-category="series" onclick="openDetails('c1')">
+                                    <div class="hero-badge">Historical Series</div>
+                                    <h1 class="hero-title">Le Trône du Mandé</h1>
+                                    <p class="hero-synopsis">An epic tale of power and betrayal in the ancient Mandé Empire. Witness the rise of a legendary king.</p>
+                                    <div class="hero-actions">
+                                        <button class="play-btn-large tv-focusable" onclick="event.stopPropagation(); playDirectVideo('c1')">
+                                            <span class="material-icons-round">play_arrow</span> Regarder
+                                        </button>
+                                    </div>
+                                    <button class="hero-center-cta tv-focusable" id="hero-cta-btn" onclick="event.stopPropagation(); openAuthModal();">
+                                        <span class="material-icons-round">stars</span> S'abonner maintenant
+                                    </button>
+                                </div>
+                                
+                                <!-- Slider Dots -->
+                                <div class="slider-dots">
+                                    <span class="dot active"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                </div>
+
+                                <!-- Cinema & Séries: Popular Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Les Plus Populaires</h2>
+                                        <a href="#" class="see-all">Voir tout</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="media-card tv-focusable" data-id="c2" data-category="film" onclick="openDetails('c2')">
+                                            <div class="card-image" style="background-image: url('assets/baobab.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c2')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Secrets du Baobab</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Un jeune villageois découvre un parchemin scel...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.9</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c3" data-category="film" onclick="openDetails('c3')">
+                                            <div class="card-image" style="background-image: url('assets/king.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c3')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">L'Or de Ségou</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Dans les mines d'or traditionnelles près de S...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.9</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c7" data-category="series" onclick="openDetails('c7')">
+                                            <div class="card-image img-vie">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c7')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Tranches de Vie</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Une comédie irrésistible sur le quotidien...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.8</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cinema & Séries: Latest Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Dernières Publications</h2>
+                                        <a href="#" class="see-all">Voir tout</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="media-card tv-focusable" data-id="c1" data-category="series" onclick="openDetails('c1')">
+                                            <div class="card-image" style="background-image: url('assets/king.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c1')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Le Trône du Mandé</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">L'épopée historique (2026) légendaire qui retrace l...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.5</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c2" data-category="film" onclick="openDetails('c2')">
+                                            <div class="card-image" style="background-image: url('assets/baobab.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c2')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Secrets du Baobab</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Un jeune villageois (2025) découvre un parchemin scel...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.9</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c4" data-category="film" onclick="openDetails('c4')">
+                                            <div class="card-image img-bamako">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c4')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Taxi à Bamako</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Une comédie (2025) dans les rues de Bamako...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.6</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c3" data-category="film" onclick="openDetails('c3')">
+                                            <div class="card-image" style="background-image: url('assets/king.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c3')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">L'Or de Ségou</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Drame (2024) dans les mines traditionnelles...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.9</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c7" data-category="series" onclick="openDetails('c7')">
+                                            <div class="card-image img-vie">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c7')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Tranches de Vie</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Une sitcom (2024) familiale irrésistible...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.8</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB CONTENT 2: THÉÂTRE & HUMOUR -->
+                            <div id="djaasoo-theatre-content" class="djaasoo-sub-tab-content">
+                                <!-- Category Pills Filters -->
+                                <div class="category-pills-bar">
+                                    <button class="pill-filter active tv-focusable" onclick="filterPageCategory(this, 'theatre', 'all')">Tout</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'theatre', 'theatre')">Théâtre</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'theatre', 'humour')">Humoristes & Stand-up</button>
+                                </div>
+
+                                <!-- Featured Theater Banner -->
+                                <div class="hero-banner tv-focusable img-guignol" data-id="c5" data-category="theatre" onclick="openDetails('c5')">
+                                    <div class="hero-badge">Théâtre Populaire</div>
+                                    <h1 class="hero-title">Le Retour de Guignol</h1>
+                                    <p class="hero-synopsis">La célèbre troupe théâtrale de retour sur scène pour une satire sociale moderne.</p>
+                                    <div class="hero-actions">
+                                        <button class="play-btn-large tv-focusable" onclick="event.stopPropagation(); playDirectVideo('c5')">
+                                            <span class="material-icons-round">play_arrow</span> Regarder
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Théâtre & Humour: Popular Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Les Plus Populaires</h2>
+                                        <a href="#" class="see-all">Voir tout</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="media-card tv-focusable" data-id="c7" data-category="humour" onclick="openDetails('c7')">
+                                            <div class="card-image img-vie">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c7')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Tranches de Vie</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Sitcom comique familiale...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.8</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c6" data-category="humour" onclick="openDetails('c6')">
+                                            <div class="card-image img-comedy">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c6')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Abidjan Comedy Show</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Le show stand-up le plus drôle...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.7</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c5" data-category="theatre" onclick="openDetails('c5')">
+                                            <div class="card-image img-guignol">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c5')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Le Retour de Guignol</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Satire sociale théâtrale...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.7</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Théâtre & Humour: Latest Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Dernières Publications</h2>
+                                        <a href="#" class="see-all">Voir tout</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="media-card tv-focusable" data-id="c5" data-category="theatre" onclick="openDetails('c5')">
+                                            <div class="card-image img-guignol">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c5')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Le Retour de Guignol</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Satire sur scène (2026) moderne...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.7</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c6" data-category="humour" onclick="openDetails('c6')">
+                                            <div class="card-image img-comedy">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c6')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Abidjan Comedy Show</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Stand-up ouest-africain (2025)...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.7</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c7" data-category="humour" onclick="openDetails('c7')">
+                                            <div class="card-image img-vie">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c7')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Tranches de Vie</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Sitcom comique (2024) familiale...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.8</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB CONTENT 3: DOCUMENTAIRES -->
+                            <div id="djaasoo-docs-content" class="djaasoo-sub-tab-content">
+                                <!-- Featured Documentary Banner -->
+                                <div class="hero-banner tv-focusable img-mali" data-id="c8" onclick="openDetails('c8')">
+                                    <div class="hero-badge">Histoire & Culture</div>
+                                    <h1 class="hero-title">L'Empire du Mali</h1>
+                                    <p class="hero-synopsis">Une série documentaire historique sur le grand Empire du Mali.</p>
+                                    <div class="hero-actions">
+                                        <button class="play-btn-large tv-focusable" onclick="event.stopPropagation(); playDirectVideo('c8')">
+                                            <span class="material-icons-round">play_arrow</span> Regarder
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Documentaires: Popular Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Les Plus Populaires</h2>
+                                        <a href="#" class="see-all">Voir tout</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="media-card tv-focusable" data-id="c8" onclick="openDetails('c8')">
+                                            <div class="card-image img-mali">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c8')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">L'Empire du Mali</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Série documentaire historique...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.9</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c10" onclick="openDetails('c10')">
+                                            <div class="card-image img-sahel">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c10')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Femmes du Sahel</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Portraits inspirants de femmes...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.8</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Documentaires: Latest Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Dernières Publications</h2>
+                                        <a href="#" class="see-all">Voir tout</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="media-card tv-focusable" data-id="c8" onclick="openDetails('c8')">
+                                            <div class="card-image img-mali">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c8')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">L'Empire du Mali</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Documentaire historique (2026) de référence...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.9</span>
+                                            </div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c10" onclick="openDetails('c10')">
+                                            <div class="card-image img-sahel">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c10')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Femmes du Sahel</div>
+                                            <div class="card-meta">
+                                                <span class="card-desc">Sujets inspirants au Sahel (2024)...</span>
+                                                <span class="card-rating"><span class="material-icons-round">star</span> 4.8</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- TAB 2: DJELISON (AUDIO) -->
+                        <section id="screen-djelison" class="screen-tab">
+                            <!-- Djelison Sub-tabs Selector -->
+                            <div class="djelison-tabs-container">
+                                <div class="djelison-tabs">
+                                    <button class="djelison-tab-btn active tv-focusable" id="djelison-tab-podcasts">
+                                        <span class="material-icons-round">mic</span>
+                                        <span>Podcasts & Récits</span>
+                                    </button>
+                                    <button class="djelison-tab-btn tv-focusable" id="djelison-tab-music">
+                                        <span class="material-icons-round">music_note</span>
+                                        <span>Musique</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB CONTENT 1: PODCASTS & STORIES -->
+                            <div id="djelison-podcasts-content" class="djelison-sub-tab-content active">
+                                <!-- Category Pills Filters -->
+                                <div class="category-pills-bar">
+                                    <button class="pill-filter active tv-focusable" onclick="filterPageCategory(this, 'podcasts', 'all')">Tout</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'podcasts', 'podcast')">Podcasts</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'podcasts', 'recit')">Récits</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'podcasts', 'conte')">Contes</button>
+                                </div>
+
+                                <!-- Podcast Banner -->
+                                <div class="audio-banner tv-focusable" data-audio-title="Paroles de Griot" data-category="podcast" style="background-image: url('assets/griot.png');" onclick="playMockTrack('Paroles de Griot', 'Sékou le Griot', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3')">
+                                    <span class="banner-badge">Podcasts & Contes</span>
+                                    <h2 class="banner-title">Écoutez la sagesse de nos ancêtres contée par les plus grands griots.</h2>
+                                    <button class="listen-btn">ÉCOUTER MAINTENANT</button>
+                                </div>
+
+                                <!-- Podcasts: Popular Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Les Plus Populaires</h2>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="audio-card tv-focusable" data-audio-title="Paroles de Griot" data-category="podcast" onclick="playMockTrack('Paroles de Griot', 'Sékou le Griot', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/griot.png');"><button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Paroles de Griot', 'Sékou le Griot', 'assets/griot.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3')"><span class="material-icons-round icon">download</span></button></div>
+                                            <div class="audio-card-title">Paroles de Griot</div>
+                                            <div class="audio-card-subtitle">Popularité ★4.9</div>
+                                        </div>
+                                        <div class="audio-card tv-focusable" data-audio-title="Épopées Mandingues" data-category="recit" onclick="playMockTrack('Épopées Mandingues', 'Kora Masters', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/kora.png');"><button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Épopées Mandingues', 'Kora Masters', 'assets/kora.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3')"><span class="material-icons-round icon">download</span></button></div>
+                                            <div class="audio-card-title">Épopées Mandingues</div>
+                                            <div class="audio-card-subtitle">Popularité ★4.8</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Podcasts: Latest Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Dernières Publications</h2>
+                                     </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="audio-card tv-focusable" data-audio-title="Épopées Mandingues" data-category="recit" onclick="playMockTrack('Épopées Mandingues', 'Kora Masters', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/kora.png');"><button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Épopées Mandingues', 'Kora Masters', 'assets/kora.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3')"><span class="material-icons-round icon">download</span></button></div>
+                                            <div class="audio-card-title">Épopées Mandingues</div>
+                                            <div class="audio-card-subtitle">Nouveauté (2026)</div>
+                                        </div>
+                                        <div class="audio-card tv-focusable" data-audio-title="Paroles de Griot" data-category="podcast" onclick="playMockTrack('Paroles de Griot', 'Sékou le Griot', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/griot.png');"><button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Paroles de Griot', 'Sékou le Griot', 'assets/griot.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3')"><span class="material-icons-round icon">download</span></button></div>
+                                            <div class="audio-card-title">Paroles de Griot</div>
+                                            <div class="audio-card-subtitle">Émission (2025)</div>
+                                        </div>
+                                         <div class="audio-card tv-focusable" data-audio-title="Contes d'Anansi" data-category="conte" onclick="playMockTrack('Contes d\'Anansi', 'Griot Magique', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3')">
+                                             <div class="audio-card-image" style="background-image: url('assets/anansi.png');"><button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Contes d\'Anansi', 'Griot Magique', 'assets/anansi.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3')"><span class="material-icons-round icon">download</span></button></div>
+                                            <div class="audio-card-title">Contes d'Anansi</div>
+                                            <div class="audio-card-subtitle">Classique (2024)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB CONTENT 2: MUSIC -->
+                            <div id="djelison-music-content" class="djelison-sub-tab-content">
+                                <!-- Category Pills Filters -->
+                                <div class="category-pills-bar">
+                                    <button class="pill-filter active tv-focusable" onclick="filterPageCategory(this, 'music', 'all')">Tout</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'music', 'traditionnel')">Traditionnel</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'music', 'moderne')">Moderne</button>
+                                    <button class="pill-filter tv-focusable" onclick="filterPageCategory(this, 'music', 'rap')">Rap</button>
+                                </div>
+
+                                <!-- Music Banner -->
+                                <div class="audio-banner tv-focusable" data-audio-title="Festival Acoustique - Live" data-category="traditionnel" style="background-image: url('assets/kora.png');" onclick="playMockTrack('Festival Acoustique - Live', 'Artistes Multiples', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3')">
+                                    <span class="banner-badge">Festival Acoustique - Live</span>
+                                    <h2 class="banner-title">Célébration des rythmes et chansons traditionnelles.</h2>
+                                    <button class="listen-btn">ÉCOUTER EN LIVE</button>
+                                </div>
+
+                                <!-- Music: Popular Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Les Plus Populaires</h2>
+                                        <a href="#" class="see-all">Tout voir</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                        <div class="audio-card tv-focusable" data-audio-title="Diarabi" data-category="traditionnel" onclick="playMockTrack('Diarabi', 'Sidiki Diabaté', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/kora.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Diarabi', 'Sidiki Diabaté', 'assets/kora.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Diarabi</div>
+                                            <div class="audio-card-subtitle">Sidiki Diabaté · ★4.9</div>
+                                        </div>
+
+                                        <div class="audio-card tv-focusable" data-audio-title="Balimaya" data-category="moderne" onclick="playMockTrack('Balimaya', 'Fafa Ruffino', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/griot.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Balimaya', 'Fafa Ruffino', 'assets/griot.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Balimaya</div>
+                                            <div class="audio-card-subtitle">Fafa Ruffino · ★4.8</div>
+                                        </div>
+
+                                        <div class="audio-card tv-focusable" data-audio-title="Bamako Flow" data-category="rap" onclick="playMockTrack('Bamako Flow', 'Iba One', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/anansi.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Bamako Flow', 'Iba One', 'assets/anansi.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Bamako Flow</div>
+                                            <div class="audio-card-subtitle">Iba One · ★4.9</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Music: Latest Row -->
+                                <div class="content-row">
+                                    <div class="row-header">
+                                        <h2>Dernières Publications</h2>
+                                        <a href="#" class="see-all">Tout voir</a>
+                                    </div>
+                                    <div class="horizontal-scroll">
+                                         <div class="audio-card tv-focusable" data-audio-title="Sankofa" data-category="moderne" onclick="playMockTrack('Sankofa', 'Blick Bassy', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/anansi.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Sankofa', 'Blick Bassy', 'assets/anansi.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Sankofa</div>
+                                            <div class="audio-card-subtitle">Blick Bassy · 2026</div>
+                                        </div>
+
+                                        <div class="audio-card tv-focusable" data-audio-title="Diarabi" data-category="traditionnel" onclick="playMockTrack('Diarabi', 'Sidiki Diabaté', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/kora.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Diarabi', 'Sidiki Diabaté', 'assets/kora.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Diarabi</div>
+                                            <div class="audio-card-subtitle">Sidiki Diabaté · 2025</div>
+                                        </div>
+
+                                        <div class="audio-card tv-focusable" data-audio-title="Balimaya" data-category="moderne" onclick="playMockTrack('Balimaya', 'Fafa Ruffino', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/griot.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Balimaya', 'Fafa Ruffino', 'assets/griot.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Balimaya</div>
+                                            <div class="audio-card-subtitle">Fafa Ruffino · 2024</div>
+                                        </div>
+
+                                        <div class="audio-card tv-focusable" data-audio-title="Bamako Flow" data-category="rap" onclick="playMockTrack('Bamako Flow', 'Iba One', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3')">
+                                            <div class="audio-card-image" style="background-image: url('assets/anansi.png');">
+                                                <div class="card-play-overlay">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                                <button class="audio-card-download tv-focusable" onclick="event.stopPropagation(); toggleDownloadAudio(event, 'Bamako Flow', 'Iba One', 'assets/anansi.png', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3')"><span class="material-icons-round icon">download</span></button>
+                                            </div>
+                                            <div class="audio-card-title">Bamako Flow</div>
+                                            <div class="audio-card-subtitle">Iba One · 2026</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- PAGE 2: SEARCH SCREEN -->
+                    <div id="page-search" class="app-page">
+                        <div class="search-page-container">
+                            <div class="search-bar-field">
+                                <span class="material-icons-round">search</span>
+                                <input type="text" placeholder="Rechercher des films, séries, musiques..." id="search-input-page">
+                            </div>
+                            
+                            <div class="search-genres-grid" id="search-genres-grid">
+                                <h3>Parcourir les catégories</h3>
+                                <div class="genres-list">
+                                    <div class="genre-bubble tv-focusable" onclick="filterGenre('film')">Films</div>
+                                    <div class="genre-bubble tv-focusable" onclick="filterGenre('series')">Séries</div>
+                                    <div class="genre-bubble tv-focusable" onclick="filterGenre('podcast')">Podcasts</div>
+                                    <div class="genre-bubble tv-focusable" onclick="filterGenre('documentary')">Documentaires</div>
+                                    <div class="genre-bubble tv-focusable" onclick="filterGenre('theatre')">Théâtre</div>
+                                    <div class="genre-bubble tv-focusable" onclick="filterGenre('humour')">Humour</div>
+                                </div>
+                            </div>
+                            
+                            <div class="search-page-results" id="search-page-results"></div>
+                        </div>
+                    </div>
+
+                    <!-- PAGE 3: MY LIST (FAVORITES) -->
+                    <div id="page-mylist" class="app-page">
+                        <div class="mylist-container">
+                            
+                            <!-- Sub-tabs header switcher -->
+                            <div class="mylist-tabs-container">
+                                <button class="mylist-tab-btn active tv-focusable" id="mylist-tab-fav" onclick="switchMylistTab('fav')">
+                                    <span class="material-icons-round">favorite_border</span> Favoris
+                                </button>
+                                <button class="mylist-tab-btn tv-focusable" id="mylist-tab-dl" onclick="switchMylistTab('dl')">
+                                    <span class="material-icons-round">download</span> Hors-ligne
+                                </button>
+                            </div>
+
+                            <!-- Logged out state for My List -->
+                            <div class="mylist-unauth-view" id="mylist-unauth">
+                                <span class="material-icons-round mylist-empty-icon">favorite_border</span>
+                                <p>Connectez-vous pour ajouter et retrouver vos favoris.</p>
+                                <button class="modal-action-btn tv-focusable" style="margin-top: 14px;" onclick="openAuthModal()">S'abonner / Se connecter</button>
+                            </div>
+
+                            <!-- Logged in state for My List -->
+                            <div class="mylist-auth-view" id="mylist-auth" style="display: none;">
+                                
+                                <!-- FAVORITES SUB-VIEW -->
+                                <div id="mylist-fav-content">
+                                    <p class="mylist-subtitle">Retrouvez tous vos contenus préférés sauvegardés.</p>
+                                    <div class="mylist-grid" id="mylist-items-grid">
+                                        <div class="media-card tv-focusable" data-id="c2" onclick="openDetails('c2')">
+                                            <div class="card-image" style="background-image: url('assets/baobab.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c2')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">Les Secrets du Baobab</div>
+                                        </div>
+                                        <div class="media-card tv-focusable" data-id="c3" onclick="openDetails('c3')">
+                                            <div class="card-image" style="background-image: url('assets/king.png');">
+                                                <div class="card-play-overlay" onclick="event.stopPropagation(); playDirectVideo('c3')">
+                                                    <span class="material-icons-round">play_circle_filled</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-title">L'Or de Ségou</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- DOWNLOADS SUB-VIEW -->
+                                <div id="mylist-dl-content" style="display: none;">
+                                    <!-- Storage limits card indicator -->
+                                    <div class="downloads-storage-card">
+                                        <h4>Limite de stockage hors-ligne</h4>
+                                        
+                                        <div class="storage-item">
+                                            <div class="storage-info">
+                                                <span>Vidéos (Max 3)</span>
+                                                <strong id="dl-video-count">0 / 3</strong>
+                                            </div>
+                                            <div class="storage-bar-bg">
+                                                <div class="storage-bar-fill" id="dl-video-bar" style="width: 0%;"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="storage-item" style="margin-top: 12px;">
+                                            <div class="storage-info">
+                                                <span>Musique & Podcasts (Max 15)</span>
+                                                <strong id="dl-audio-count">0 / 15</strong>
+                                            </div>
+                                            <div class="storage-bar-bg">
+                                                <div class="storage-bar-fill" id="dl-audio-bar" style="width: 0%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mylist-grid" id="mylist-dl-grid">
+                                        <!-- Will be populated dynamically by app.js based on downloaded files -->
+                                    </div>
+                                    
+                                    <div class="mylist-empty-downloads" id="mylist-dl-empty" style="display: flex;">
+                                        <span class="material-icons-round">cloud_download</span>
+                                        <p>Aucun téléchargement disponible.<br>Téléchargez des vidéos, des musiques ou des podcasts pour les écouter hors-ligne.</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PAGE 4: PROFILE SCREEN -->
+                    <div id="page-profile" class="app-page">
+                        <div class="profile-container">
+                            
+                            <!-- SUB-VIEW A: GUEST PROFILE PAGE (Non connecté) -->
+                            <div class="profile-subpage active" id="profile-subpage-unauth">
+                                <div class="profile-header-card">
+                                    <div class="profile-logo-large">
+                                        <img src="assets/logo.png" alt="Djeli'S Logo" class="profile-logo-img-large">
+                                    </div>
+                                    <h2 class="profile-name">Djeli'S</h2>
+                                    <p class="profile-email">Rejoignez Djeli'S pour profiter de l'expérience</p>
+                                    <button class="modal-action-btn tv-focusable" style="margin-top: 14px;" onclick="openAuthModal()">Créer mon compte / Se connecter</button>
+                                </div>
+                            </div>
+
+                            <!-- SUB-VIEW B: REGISTERED USER PROFILE PAGE (Connecté) -->
+                            <div class="profile-subpage" id="profile-subpage-home">
+                                <div class="profile-header-card">
+                                    <div class="profile-avatar-large">
+                                        <span class="material-icons-round">person</span>
+                                    </div>
+                                    <h2 class="profile-name" id="user-display-name">Sidiki Keita</h2>
+                                    <p class="profile-email" id="user-display-email">sidiki.keita@djelis.com</p>
+                                    <span class="profile-status-badge" id="user-display-status">Membre Premium VIP</span>
+                                </div>
+
+                                <!-- Subscription Hover Banner (Abonnement option) -->
+                                <div class="profile-plans-hover-card tv-focusable" id="profile-abonnements-banner" onclick="openPlans()">
+                                    <div class="hover-card-content">
+                                        <span class="material-icons-round">stars</span>
+                                        <div>
+                                            <h4>Gérer mon Abonnement</h4>
+                                            <p>Modifier l'offre, facturation et reçus</p>
+                                        </div>
+                                    </div>
+                                    <span class="material-icons-round">chevron_right</span>
+                                </div>
+
+                                <!-- Actions List -->
+                                <div class="profile-actions-list">
+                                    <!-- CRITICAL: account settings parameters inside the profile -->
+                                    <div class="profile-action-item tv-focusable" onclick="switchProfileSubpage('settings')">
+                                        <span class="material-icons-round">settings</span>
+                                        <span>Paramètres du compte</span>
+                                        <span class="material-icons-round arrow">chevron_right</span>
+                                    </div>
+                                    <div class="profile-action-item profile-plans-btn tv-focusable" onclick="openPlans()">
+                                        <span class="material-icons-round">account_balance_wallet</span>
+                                        <span>Abonnements & Tarifs</span>
+                                        <span class="material-icons-round arrow">chevron_right</span>
+                                    </div>
+                                    <div class="profile-action-item tv-focusable" style="color: var(--accent-crimson);" onclick="performLogout()">
+                                        <span class="material-icons-round">logout</span>
+                                        <span>Se déconnecter</span>
+                                        <span class="material-icons-round arrow">chevron_right</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUB-VIEW C: PROFILE ACCOUNT SETTINGS (Inline inside Profile page) -->
+                            <div class="profile-subpage" id="profile-subpage-settings">
+                                <div class="settings-back-header">
+                                    <button class="settings-back-btn tv-focusable" onclick="switchProfileSubpage('home')">
+                                        <span class="material-icons-round">arrow_back</span> Retour au profil
+                                    </button>
+                                </div>
+                                <h3 class="settings-sec-title">Informations personnelles</h3>
+                                <form id="form-settings" onsubmit="handleSettingsUpdate(event)">
+                                    <div class="form-group">
+                                        <label>Nom</label>
+                                        <input type="text" id="set-name-input" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email</label>
+                                        <input type="email" id="set-email-input" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Téléphone</label>
+                                        <input type="tel" id="set-phone-input" class="form-input">
+                                    </div>
+                                    
+                                    <h3 class="settings-sec-title" style="margin-top: 24px;">Préférences</h3>
+                                    <div class="form-group">
+                                        <label>Langue de l'application</label>
+                                        <select class="form-input" id="set-lang-select">
+                                            <option value="fr">Français</option>
+                                            <option value="en">English</option>
+                                            <option value="bm">Bambara</option>
+                                            <option value="wo">Wolof</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="setting-toggle-item">
+                                        <div>
+                                            <span class="toggle-title">Contrôle parental (18+)</span>
+                                            <span class="toggle-desc">Masquer les contenus déconseillés</span>
+                                        </div>
+                                        <input type="checkbox" id="set-parental-check" class="settings-checkbox">
+                                    </div>
+
+                                    <div class="setting-toggle-item">
+                                        <div>
+                                            <span class="toggle-title">Notifications Push</span>
+                                            <span class="toggle-desc">Alertes de nouveaux films et sons</span>
+                                        </div>
+                                        <input type="checkbox" checked id="set-notif-check" class="settings-checkbox">
+                                    </div>
+
+                                    <button type="submit" class="modal-action-btn tv-focusable" style="margin-top: 24px;">
+                                        Sauvegarder les modifications
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </main>
+
+                <!-- Bottom Mini Player Bar for Audio -->
+                <div class="mini-player" id="mini-player">
+                    <div class="player-progress-container">
+                        <div class="player-progress-bar" id="player-progress"></div>
+                    </div>
+                    <div class="mini-player-content">
+                        <div class="mini-player-artwork">
+                            <span class="material-icons-round">music_note</span>
+                        </div>
+                        <div class="mini-player-details">
+                            <div class="mini-player-title" id="player-track-name">Diarabi</div>
+                            <div class="mini-player-artist" id="player-track-artist">Sidiki Diabaté</div>
+                        </div>
+                        <div class="mini-player-controls">
+                            <button class="control-btn tv-focusable" id="player-play-pause-btn">
+                                <span class="material-icons-round" id="player-play-icon">play_arrow</span>
+                            </button>
+                            <button class="control-btn tv-focusable" id="player-close-btn">
+                                <span class="material-icons-round">close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Profile Drawer Menu Overlay -->
+                <div class="mobile-profile-overlay" id="mobile-profile-overlay" onclick="closeMobileProfileMenu()"></div>
+                <div class="mobile-profile-drawer" id="mobile-profile-drawer">
+                    <!-- Drawer Handle -->
+                    <div class="drawer-handle-bar"></div>
+
+                    <!-- User Identity -->
+                    <div class="drawer-user-identity" id="drawer-user-identity">
+                        <div class="drawer-avatar-ring">
+                            <span class="material-icons-round">account_circle</span>
+                        </div>
+                        <div class="drawer-user-info">
+                            <span class="drawer-user-name" id="drawer-user-name">Sidiki Keita</span>
+                            <span class="drawer-user-sub" id="drawer-user-sub">Premium VIP</span>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Items -->
+                    <div class="drawer-nav-list">
+                        <button class="drawer-nav-item" id="dmenu-home" onclick="mobileMenuNavigate('home')">
+                            <span class="drawer-nav-icon material-icons-round">home</span>
+                            <span class="drawer-nav-label">Accueil</span>
+                            <span class="drawer-nav-arrow material-icons-round">chevron_right</span>
+                        </button>
+                        <button class="drawer-nav-item" id="dmenu-search" onclick="mobileMenuNavigate('search')">
+                            <span class="drawer-nav-icon material-icons-round">search</span>
+                            <span class="drawer-nav-label">Recherche</span>
+                            <span class="drawer-nav-arrow material-icons-round">chevron_right</span>
+                        </button>
+                        <button class="drawer-nav-item" id="dmenu-mylist" onclick="mobileMenuNavigate('mylist')">
+                            <span class="drawer-nav-icon material-icons-round">favorite_border</span>
+                            <span class="drawer-nav-label">Ma Liste</span>
+                            <span class="drawer-nav-arrow material-icons-round">chevron_right</span>
+                        </button>
+
+                        <button class="drawer-nav-item" id="dmenu-settings" onclick="mobileMenuNavigate('profile')">
+                            <span class="drawer-nav-icon material-icons-round">settings</span>
+                            <span class="drawer-nav-label">Paramètres du compte</span>
+                            <span class="drawer-nav-arrow material-icons-round">chevron_right</span>
+                        </button>
+                        <button class="drawer-nav-item" id="dmenu-plans" onclick="openPlansFromDrawer()">
+                            <span class="drawer-nav-icon material-icons-round">stars</span>
+                            <span class="drawer-nav-label">Gérer mon abonnement</span>
+                            <span class="drawer-nav-arrow material-icons-round">chevron_right</span>
+                        </button>
+
+                        <!-- Separator -->
+                        <div class="drawer-separator"></div>
+
+                        <!-- Déconnecter -->
+                        <button class="drawer-nav-item drawer-nav-item--danger" id="dmenu-logout" onclick="mobileMenuLogout()">
+                            <span class="drawer-nav-icon material-icons-round">logout</span>
+                            <span class="drawer-nav-label">Déconnecter</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bottom Navigation Bar (Mobile only) -->
+                <nav class="app-nav">
+                    <button class="nav-item active" id="nav-home">
+                        <span class="material-icons-round nav-icon">home</span>
+                        <span class="nav-label">Accueil</span>
+                    </button>
+                    <button class="nav-item" id="nav-search">
+                        <span class="material-icons-round nav-icon">search</span>
+                        <span class="nav-label">Recherche</span>
+                    </button>
+                    <button class="nav-item" id="nav-mylist">
+                        <span class="material-icons-round nav-icon">favorite_border</span>
+                        <span class="nav-label">Ma Liste</span>
+                    </button>
+                    <button class="nav-item" id="nav-profile">
+                        <span class="material-icons-round nav-icon">person_outline</span>
+                        <span class="nav-label">Mon Profil</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- DETAIL / MODAL WINDOW -->
+            <div class="modal" id="details-modal">
+                <div class="modal-header">
+                    <button class="modal-close tv-focusable" onclick="closeDetails()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <span class="modal-header-title">Détails</span>
+                </div>
+                <div class="modal-content">
+                    <div class="modal-banner" id="modal-banner-img">
+                        <div class="modal-play-overlay tv-focusable" onclick="startVideoPlayer()">
+                            <span class="material-icons-round">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-tags">
+                            <span class="modal-badge" id="modal-type">Film</span>
+                            <span class="modal-badge year" id="modal-year">2026</span>
+                            <span class="modal-badge age" id="modal-age">12+</span>
+                        </div>
+                        <h2 class="modal-title" id="modal-title-text">Titre du film</h2>
+                        <p class="modal-synopsis" id="modal-synopsis-text">Le synopsis apparaîtra ici...</p>
+                        
+                        <div class="modal-action-row" style="display: flex; gap: 10px; width: 100%;">
+                            <button class="modal-action-btn tv-focusable" style="flex: 1;" onclick="startVideoPlayer()">
+                                <span class="material-icons-round">play_arrow</span> Commencer la lecture
+                            </button>
+                            <button class="modal-download-btn tv-focusable" id="modal-download-btn" onclick="toggleDownloadCurrentVideo()" style="width: 56px; height: 50px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #ffffff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease;">
+                                <span class="material-icons-round" id="modal-download-icon">download</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIDEO PLAYER OVERLAY -->
+            <div class="video-player-overlay" id="video-player-screen">
+                <button class="player-back-btn tv-focusable" onclick="closeVideoPlayer()">
+                    <span class="material-icons-round">arrow_back</span>
+                </button>
+                <div class="video-wrapper">
+                    <!-- Sample Video Player -->
+                    <video id="main-video-player" src="" playsinline></video>
+                    <!-- Custom controls overlay -->
+                    <div class="video-controls">
+                        <div class="video-timeline">
+                            <div class="video-progress" id="video-progress-bar"></div>
+                        </div>
+                        <div class="control-row-bottom">
+                            <button class="video-ctrl-btn tv-focusable" id="video-play-btn">
+                                <span class="material-icons-round" id="video-play-icon">play_arrow</span>
+                            </button>
+                            <span class="video-time-display" id="video-time">0:00 / 0:30</span>
+                            <button class="video-ctrl-btn tv-focusable" onclick="toggleMuteVideo()">
+                                <span class="material-icons-round" id="video-volume-icon">volume_up</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Loading Spinner -->
+                    <div class="video-spinner" id="video-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIMULATED ADVERTISING OVERLAY (PUBLICITÉ PARTENAIRE) -->
+            <div class="modal" id="ad-modal" style="display: none; justify-content: center; align-items: center; z-index: 3000;">
+                <div class="ad-container">
+                    <div class="ad-header">
+                        <span class="ad-badge">Sponsorisé</span>
+                        <span class="ad-title" id="ad-partner-name">Orange Money</span>
+                    </div>
+                    <div class="ad-content-box">
+                        <div class="ad-logo-container" id="ad-partner-logo">
+                            <span class="material-icons-round" style="font-size: 48px; color: #ff6600;">account_balance_wallet</span>
+                        </div>
+                        <h3 class="ad-slogan" id="ad-partner-slogan">Simplifiez vos transactions !</h3>
+                        <p class="ad-description" id="ad-partner-desc">Envoyez et recevez de l'argent instantanément, payez vos factures et achetez des crédits avec Orange Money, partout en Afrique de l'Ouest.</p>
+                    </div>
+                    <div class="ad-footer">
+                        <div class="ad-progress-bar-container">
+                            <div class="ad-progress-bar" id="ad-progress-bar"></div>
+                        </div>
+                        <div class="ad-action-row">
+                            <span class="ad-countdown" id="ad-countdown-text">Votre média commence dans 5s...</span>
+                            <button type="button" class="ad-skip-btn tv-focusable" id="ad-skip-btn" onclick="skipAd()" disabled>Passer la publicité</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MULTI-STEP REGISTRATION WIZARD & SUBSCRIPTION MODAL (ABONNEMENT) -->
+            <div class="modal" id="plans-modal">
+                <div class="modal-header">
+                    <button class="modal-close tv-focusable" onclick="closePlans()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <span class="modal-header-title">Inscription & Abonnement</span>
+                </div>
+                
+                <!-- Registration Flow Header Indicators -->
+                <div class="auth-flow-indicator">
+                    <span class="indicator-step active" id="ind-step-1">1. Coordonnées</span>
+                    <span class="indicator-connector"></span>
+                    <span class="indicator-step" id="ind-step-2">2. Forfait</span>
+                    <span class="indicator-connector"></span>
+                    <span class="indicator-step" id="ind-step-3">3. Finalisation</span>
+                </div>
+
+                <div class="modal-content" style="padding: 10px 24px;">
+
+                    <!-- STEP 1: USER INFO -->
+                    <div class="register-flow-step active" id="flow-step-1">
+                        <div class="modal-logo-container">
+                            <img src="assets/logo.png" alt="Djeli'S Logo" class="modal-logo-img">
+                        </div>
+                        <h2 class="plans-main-title">Créez votre compte</h2>
+                        <p class="plans-subtitle" style="margin-bottom: 20px;">Entrez vos coordonnées de connexion.</p>
+                        
+                        <form id="wizard-form-step-1" onsubmit="handleWizardStep1(event)">
+                            <div class="form-group">
+                                <label>Nom complet</label>
+                                <input type="text" placeholder="Sidiki Keita" required id="wiz-name" class="form-input">
+                            </div>
+
+                            <!-- Login methods switch (Email / Phone) -->
+                            <div class="auth-method-toggle" style="margin-top: 14px;">
+                                <button type="button" class="method-btn active tv-focusable" id="wiz-method-email" onclick="switchWizMethod('email')">S'inscrire par Email</button>
+                                <button type="button" class="method-btn tv-focusable" id="wiz-method-phone" onclick="switchWizMethod('phone')">S'inscrire par Téléphone</button>
+                            </div>
+
+                            <div class="form-group" id="wiz-group-email">
+                                <label>Adresse Email</label>
+                                <input type="email" placeholder="sidiki.keita@djelis.com" id="wiz-email" class="form-input">
+                            </div>
+                            <div class="form-group" id="wiz-group-phone" style="display:none;">
+                                <label>Numéro de Téléphone</label>
+                                <input type="tel" placeholder="+223 70 00 00 00" id="wiz-phone" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Mot de passe</label>
+                                <input type="password" placeholder="Min. 8 caractères" required id="wiz-pass" class="form-input">
+                            </div>
+
+                            <button type="submit" class="modal-action-btn tv-focusable" style="margin-top: 24px;">
+                                Suivant : Choisir mon forfait <span class="material-icons-round">chevron_right</span>
+                            </button>
+                        </form>
+
+                        <div class="wizard-login-shortcut">
+                            <p>Déjà inscrit ? <a href="#" onclick="showSimpleLogin()">Se connecter directement</a></p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: FORFAITS PRICING PLANS -->
+                    <div class="register-flow-step" id="flow-step-2">
+                        <h2 class="plans-main-title">Sélectionnez votre forfait</h2>
+                        <p class="plans-subtitle">Choisissez l'offre qui s'adapte le mieux à votre utilisation.</p>
+                        
+                        <div class="plans-filter-bar">
+                            <div class="filter-group">
+                                <label>Région d'Abonnement</label>
+                                <div class="pill-selector" id="plan-region-selector">
+                                    <button type="button" class="pill-btn active tv-focusable" data-region="ao">Afrique de l'Ouest</button>
+                                    <button type="button" class="pill-btn tv-focusable" data-region="diaspora">Diaspora</button>
+                                </div>
+                            </div>
+                            <div class="filter-group">
+                                <label>Cycle de facturation</label>
+                                <div class="pill-selector" id="plan-freq-selector">
+                                    <button type="button" class="pill-btn active tv-focusable" data-freq="weekly">Par semaine</button>
+                                    <button type="button" class="pill-btn tv-focusable" data-freq="monthly">Par mois</button>
+                                    <button type="button" class="pill-btn tv-focusable" data-freq="yearly">Par an</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Pricing plan cards -->
+                        <div class="plans-grid">
+                            <!-- Pack Gratuit Card -->
+                            <div class="plan-card tv-focusable">
+                                <div class="plan-header">
+                                    <div>
+                                        <h3>Pack Gratuit (Pubs)</h3>
+                                        <p class="plan-desc-text">Audio & Humour uniquement</p>
+                                    </div>
+                                    <span class="plan-price" id="price-gratuit">0 FCFA</span>
+                                </div>
+                                <ul class="plan-features">
+                                    <li><span class="material-icons-round">check</span> Musique & Podcasts (avec publicités)</li>
+                                    <li><span class="material-icons-round">check</span> Vidéos Humour (avec publicités)</li>
+                                    <li><span class="material-icons-round" style="color: #ff6b6b; font-size: 16px;">close</span> Téléchargement indisponible</li>
+                                    <li><span class="material-icons-round" style="color: #ff6b6b; font-size: 16px;">close</span> Cinéma, Séries & Documentaires bloqués</li>
+                                </ul>
+                                <button type="button" class="plan-btn" onclick="wizardSelectPlan('Gratuit')">Choisir ce forfait</button>
+                            </div>
+
+                            <!-- Solo Card -->
+                            <div class="plan-card tv-focusable">
+                                <div class="plan-header">
+                                    <div>
+                                        <h3>Pack Solo</h3>
+                                        <p class="plan-desc-text">1 écran smartphone uniquement</p>
+                                    </div>
+                                    <span class="plan-price" id="price-solo">5 000 FCFA</span>
+                                </div>
+                                <ul class="plan-features">
+                                    <li><span class="material-icons-round">check</span> Qualité Standard SD</li>
+                                    <li><span class="material-icons-round">check</span> Smartphone uniquement</li>
+                                    <li><span class="material-icons-round">check</span> Mode hors-ligne inclus</li>
+                                </ul>
+                                <button type="button" class="plan-btn" onclick="wizardSelectPlan('Solo')">Choisir ce forfait</button>
+                            </div>
+
+                            <!-- Famille Card -->
+                            <div class="plan-card featured tv-focusable">
+                                <div class="plan-badge">Idéal Famille</div>
+                                <div class="plan-header">
+                                    <div>
+                                        <h3>Pack Famille</h3>
+                                        <p class="plan-desc-text">4 smartphones + 2 écrans TV/PC</p>
+                                    </div>
+                                    <span class="plan-price" id="price-famille">15 000 FCFA</span>
+                                </div>
+                                <ul class="plan-features">
+                                    <li><span class="material-icons-round">check</span> Qualité Haute Définition HD</li>
+                                    <li><span class="material-icons-round">check</span> Jusqu'à 4 smartphones simultanés</li>
+                                    <li><span class="material-icons-round">check</span> 4 profils individuels distincts</li>
+                                    <li><span class="material-icons-round">check</span> 2 écrans TV ou ordinateur</li>
+                                </ul>
+                                <button type="button" class="plan-btn" onclick="wizardSelectPlan('Famille')">Choisir ce forfait</button>
+                            </div>
+
+                            <!-- Multi-Screens Card -->
+                            <div class="plan-card tv-focusable">
+                                <div class="plan-header">
+                                    <div>
+                                        <h3>Pack Multi-Écrans</h3>
+                                        <p class="plan-desc-text">Mobiles, Ordinateurs & Télévisions</p>
+                                    </div>
+                                    <span class="plan-price" id="price-multiecrans">10 000 FCFA</span>
+                                </div>
+                                <ul class="plan-features">
+                                    <li><span class="material-icons-round">check</span> Qualité Ultra HD 4K</li>
+                                    <li><span class="material-icons-round">check</span> 2 écrans (Mobile, PC, Smart TV)</li>
+                                    <li><span class="material-icons-round">check</span> Connexion sur 2 appareils max</li>
+                                </ul>
+                                <button type="button" class="plan-btn" onclick="wizardSelectPlan('Multi-Écrans')">Choisir ce forfait</button>
+                            </div>
+                        </div>
+
+                        <button type="button" class="modal-action-btn tv-focusable" style="margin-top: 24px; background: rgba(255,255,255,0.06); color: white; border: 1px solid var(--glass-border);" onclick="goToWizardStep(1)">
+                            <span class="material-icons-round">chevron_left</span> Retour aux coordonnées
+                        </button>
+                    </div>
+
+                    <!-- STEP 3: CONFIRMATION & PROFILE CREATION -->
+                    <div class="register-flow-step" id="flow-step-3">
+                        <h2 class="plans-main-title">Validation de votre compte</h2>
+                        <p class="plans-subtitle">Veuillez vérifier les informations ci-dessous avant d'activer votre profil.</p>
+                        
+                        <div class="wizard-summary-card">
+                            <div class="summary-item">
+                                <span class="summary-label">Nom</span>
+                                <span class="summary-value" id="sum-name">Sidiki Keita</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Identifiant</span>
+                                <span class="summary-value" id="sum-login">sidiki.keita@djelis.com</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Forfait sélectionné</span>
+                                <span class="summary-value" id="sum-plan" style="color: var(--primary-gold); font-weight: bold;">Pack Famille (15 000 FCFA / Mois)</span>
+                            </div>
+                        </div>
+
+                        <!-- DYNAMIC PAYMENT METHOD SECTION -->
+                        <div class="payment-method-section" id="payment-method-section" style="margin-top: 18px;">
+                            <h3 class="settings-sec-title" id="payment-title" style="margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Moyen de Paiement</h3>
+                            
+                            <!-- Notice for Free pack -->
+                            <div id="payment-free-notice" style="display: none; margin-bottom: 15px;" class="payment-simulation-notice">
+                                <span class="material-icons-round">info</span>
+                                <p>Aucun paiement n'est requis pour le Pack Gratuit.</p>
+                            </div>
+
+                            <!-- If region is West Africa ('ao') -->
+                            <div id="payment-ao-container" style="display: none; margin-bottom: 15px;">
+                                <div class="payment-form-grid">
+                                    <div class="form-group" style="margin-bottom: 12px;">
+                                        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; display: block;">Pays de résidence</label>
+                                        <select class="form-input" id="payment-country-select" onchange="updateMobileMoneyOperators()" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white;">
+                                            <option value="ml">Mali</option>
+                                            <option value="bf">Burkina Faso</option>
+                                            <option value="sn">Sénégal</option>
+                                            <option value="ci">Côte d'Ivoire</option>
+                                            <option value="gn">Guinée</option>
+                                            <option value="gq">Gambie</option>
+                                            <option value="bj">Bénin</option>
+                                            <option value="tg">Togo</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 12px;">
+                                        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; display: block;">Opérateur Mobile Money</label>
+                                        <div class="operator-selector-pills" id="momo-operator-pills">
+                                            <!-- Operators will be injected dynamically -->
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="momo-phone-group" style="margin-bottom: 12px;">
+                                        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; display: block;">Numéro Mobile Money</label>
+                                        <div class="phone-input-wrapper" style="display: flex; gap: 8px;">
+                                            <span class="phone-prefix" id="momo-phone-prefix" style="background: rgba(255,255,255,0.06); padding: 0 16px; border-radius: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; min-width: 65px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); color: var(--primary-gold);">+223</span>
+                                            <input type="tel" placeholder="70 00 00 00" id="momo-phone-input" class="form-input" style="flex: 1;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- If region is Diaspora ('diaspora') -->
+                            <div id="payment-diaspora-container" style="display: none; margin-bottom: 15px;">
+                                <div class="payment-method-selector-tabs" style="display: flex; gap: 8px; margin-bottom: 14px;">
+                                    <button type="button" class="method-btn active tv-focusable" id="paytab-card" onclick="switchDiasporaPayMethod('card')" style="flex: 1; padding: 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; border-radius: 10px;">Carte Bancaire</button>
+                                    <button type="button" class="method-btn tv-focusable" id="paytab-paypal" onclick="switchDiasporaPayMethod('paypal')" style="flex: 1; padding: 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; border-radius: 10px;">PayPal</button>
+                                </div>
+
+                                <div id="payform-card">
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; display: block;">Nom sur la carte</label>
+                                        <input type="text" placeholder="Sidiki Keita" id="card-name-input" class="form-input" style="padding: 10px;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; display: block;">Numéro de carte</label>
+                                        <div style="position: relative;">
+                                            <input type="text" placeholder="4000 1234 5678 9010" id="card-num-input" class="form-input" maxlength="19" style="padding: 10px; padding-right: 40px;">
+                                            <span class="material-icons-round" style="position: absolute; right: 12px; top: 10px; color: rgba(255,255,255,0.3); font-size: 20px;">credit_card</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px;">
+                                        <div class="form-group" style="flex: 1; margin-bottom: 10px;">
+                                            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; display: block;">Expiration</label>
+                                            <input type="text" placeholder="MM/YY" id="card-expiry-input" class="form-input" maxlength="5" style="padding: 10px; text-align: center;">
+                                        </div>
+                                        <div class="form-group" style="flex: 1; margin-bottom: 10px;">
+                                            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; display: block;">Code CVV</label>
+                                            <input type="password" placeholder="123" id="card-cvc-input" class="form-input" maxlength="3" style="padding: 10px; text-align: center;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="payform-paypal" style="display: none; text-align: center; padding: 22px; background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 16px;">
+                                    <span class="material-icons-round" style="font-size: 36px; color: #0079c1; display: block; margin: 0 auto 6px;">paypal</span>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 0; line-height: 1.4;">Vous serez redirigé vers le site sécurisé de PayPal pour autoriser votre paiement.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="modal-action-btn tv-focusable" style="margin-top: 24px;" onclick="wizardFinalize()">
+                            <span class="material-icons-round">done</span> Activer mon profil & S'abonner
+                        </button>
+                        
+                        <button type="button" class="modal-action-btn tv-focusable" style="margin-top: 12px; background: rgba(255,255,255,0.06); color: white; border: 1px solid var(--glass-border);" onclick="goToWizardStep(2)">
+                            <span class="material-icons-round">chevron_left</span> Retour aux forfaits
+                        </button>
+                    </div>
+
+                    <!-- SIMPLE LOGIN SCREEN PANEL (Direct path) -->
+                    <div class="register-flow-step" id="flow-step-login">
+                        <div class="modal-logo-container">
+                            <img src="assets/logo.png" alt="Djeli'S Logo" class="modal-logo-img">
+                        </div>
+                        <h2 class="plans-main-title">Connectez-vous</h2>
+                        <p class="plans-subtitle" style="margin-bottom: 20px;">Entrez vos identifiants pour ouvrir votre session.</p>
+
+                        <div class="auth-method-toggle">
+                            <button type="button" class="method-btn active tv-focusable" id="simple-login-email-btn" onclick="switchSimpleLoginMethod('email')">Connexion Email</button>
+                            <button type="button" class="method-btn tv-focusable" id="simple-login-phone-btn" onclick="switchSimpleLoginMethod('phone')">Connexion Téléphone</button>
+                        </div>
+
+                        <form id="simple-login-form" onsubmit="handleSimpleLogin(event)">
+                            <div class="form-group" id="simple-group-email">
+                                <label>Adresse Email</label>
+                                <input type="email" placeholder="nom@djelis.com" id="simple-email-input" class="form-input">
+                            </div>
+                            <div class="form-group" id="simple-group-phone" style="display:none;">
+                                <label>Numéro de Téléphone</label>
+                                <input type="tel" placeholder="+223 70 00 00 00" id="simple-phone-input" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Mot de passe</label>
+                                <input type="password" placeholder="••••••••" required id="simple-pass-input" class="form-input">
+                            </div>
+
+                            <button type="submit" class="modal-action-btn tv-focusable" style="margin-top: 24px;">
+                                Se connecter
+                            </button>
+                        </form>
+
+                        <div class="wizard-login-shortcut">
+                            <p>Nouveau sur Djeli'S ? <a href="#" onclick="goToWizardStep(1)">Créer un profil / S'abonner</a></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hidden HTML5 Audio Element for audio playback -->
+    <audio id="global-audio-element"></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>

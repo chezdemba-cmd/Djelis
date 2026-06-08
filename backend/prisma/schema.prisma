@@ -1,0 +1,291 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  USER
+  PARTNER
+  ADMIN
+  SUPERADMIN
+}
+
+enum PartnerStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum ContentType {
+  VIDEO
+  AUDIO
+}
+
+enum ContentFormat {
+  SINGLE
+  EPISODIC
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String?        @unique
+  phone         String?        @unique
+  passwordHash  String
+  role          UserRole       @default(USER)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  profiles      Profile[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  devices       Device[]
+
+  @@index([phone])
+  @@index([email])
+  @@map("users")
+}
+
+model Profile {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @db.Uuid
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  avatarUrl    String?
+  isChild      Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  watchHistory WatchHistory[]
+
+  @@index([userId])
+  @@map("profiles")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  slug     String    @unique
+  isActive Boolean   @default(true)
+  genres   Genre[]
+  contents Content[]
+
+  @@map("categories")
+}
+
+model Genre {
+  id         Int       @id @default(autoincrement())
+  categoryId Int
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name       String
+  slug       String
+  contents   Content[]
+
+  @@unique([categoryId, name])
+  @@map("genres")
+}
+
+model Partner {
+  id             String        @id @default(uuid()) @db.Uuid
+  companyName    String
+  taxId          String?
+  contactName    String?
+  contactEmail   String?
+  paymentDetails Bytes? // Encrypted banking information
+  status         PartnerStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  creators       Creator[]
+  contracts      Contract[]
+
+  @@map("partners")
+}
+
+model Creator {
+  id          String    @id @default(uuid()) @db.Uuid
+  partnerId   String?   @db.Uuid
+  partner     Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  displayName String
+  bio         String?   @db.Text
+  photoUrl    String?
+  createdAt   DateTime  @default(now())
+  contents    Content[]
+
+  @@index([partnerId])
+  @@map("creators")
+}
+
+model Contract {
+  id                       String         @id @default(uuid()) @db.Uuid
+  partnerId                String         @db.Uuid
+  partner                  Partner        @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  startDate                DateTime
+  endDate                  DateTime
+  revenueSharePercentage   Decimal        @db.Decimal(5, 2)
+  contractPdfUrl           String?
+  status                   ContractStatus @default(ACTIVE)
+  createdAt                DateTime       @default(now())
+
+  @@map("contracts")
+}
+
+model Content {
+  id               String            @id @default(uuid()) @db.Uuid
+  categoryId       Int
+  category         Category          @relation(fields: [categoryId], references: [id])
+  genreId          Int
+  genre            Genre             @relation(fields: [genreId], references: [id])
+  creatorId        String?           @db.Uuid
+  creator          Creator?          @relation(fields: [creatorId], references: [id])
+  title            String
+  slug             String            @unique
+  synopsis         String?           @db.Text
+  thumbnailUrl     String
+  bannerUrl        String?
+  trailerCfId      String?
+  type             ContentType
+  format           ContentFormat
+  ageRating        String            @default("G")
+  isPremium        Boolean           @default(true)
+  isActive         Boolean           @default(true)
+  publishedAt      DateTime?
+  createdAt        DateTime          @default(now())
+  episodes         Episode[]
+  rightsTerritories RightsTerritory[]
+  watchHistory     WatchHistory[]
+
+  @@index([categoryId])
+  @@index([publishedAt])
+  @@map("contents")
+}
+
+model Episode {
+  id            String         @id @default(uuid()) @db.Uuid
+  contentId     String         @db.Uuid
+  content       Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  title         String
+  synopsis      String?        @db.Text
+  seasonNumber  Int            @default(1)
+  episodeNumber Int
+  duration      Int            // in seconds
+  cfStreamId    String
+  createdAt     DateTime       @default(now())
+  watchHistory  WatchHistory[]
+
+  @@unique([contentId, seasonNumber, episodeNumber])
+  @@index([contentId])
+  @@map("episodes")
+}
+
+model RightsTerritory {
+  id          Int     @id @default(autoincrement())
+  contentId   String  @db.Uuid
+  content     Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  countryCode String  @db.VarChar(2) // ISO 2 Code (ML, SN, CI, FR, etc.)
+  isAllowed   Boolean @default(true)
+
+  @@unique([contentId, countryCode])
+  @@index([contentId])
+  @@map("rights_territories")
+}
+
+model Plan {
+  id            Int            @id @default(autoincrement())
+  name          String
+  durationDays  Int
+  priceFcfa     Int
+  priceEuro     Decimal        @db.Decimal(5, 2)
+  isActive      Boolean        @default(true)
+  subscriptions Subscription[]
+  payments      Payment[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id            String             @id @default(uuid()) @db.Uuid
+  userId        String             @db.Uuid
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        Int
+  plan          Plan               @relation(fields: [planId], references: [id])
+  startsAt      DateTime
+  endsAt        DateTime
+  status        SubscriptionStatus @default(ACTIVE)
+  paymentMethod String?
+  autoRenew     Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  payments      Payment[]
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                   String        @id @default(uuid()) @db.Uuid
+  userId               String?       @db.Uuid
+  user                 User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  planId               Int?
+  plan                 Plan?         @relation(fields: [planId], references: [id])
+  subscriptionId       String?       @db.Uuid
+  subscription         Subscription? @relation(fields: [subscriptionId], references: [id])
+  amount               Decimal       @db.Decimal(10, 2)
+  currency             String        @db.VarChar(3) // XOF, EUR
+  gateway              String
+  gatewayTransactionId String?       @unique
+  status               PaymentStatus @default(PENDING)
+  errorMessage         String?       @db.Text
+  createdAt            DateTime      @default(now())
+
+  @@index([userId])
+  @@index([gatewayTransactionId])
+  @@map("payments")
+}
+
+model WatchHistory {
+  id             String    @id @default(uuid()) @db.Uuid
+  profileId      String    @db.Uuid
+  profile        Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  contentId      String    @db.Uuid
+  content        Content   @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  episodeId      String?   @db.Uuid
+  episode        Episode?  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  progressSeconds Int       @default(0)
+  lastWatchedAt  DateTime  @default(now()) @updatedAt
+  isFinished     Boolean   @default(false)
+
+  @@unique([profileId, contentId, episodeId])
+  @@index([profileId])
+  @@map("watch_history")
+}
+
+model Device {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceUuid   String
+  deviceName   String?
+  os           String?
+  lastActiveAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, deviceUuid])
+  @@map("devices")
+}
