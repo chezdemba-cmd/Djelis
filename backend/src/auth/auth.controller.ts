@@ -13,9 +13,39 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @Post('register/email')
+  @HttpCode(HttpStatus.CREATED)
+  async registerEmail(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @Post('register/phone')
+  @HttpCode(HttpStatus.CREATED)
+  async registerPhone(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body('refresh_token') refreshToken: string) {
+    return this.authService.refresh(refreshToken);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout() {
+    return { success: true };
+  }
+
+  @Post('verify/otp')
+  @HttpCode(HttpStatus.OK)
+  async verifyOtp(@Body('phone') phone: string, @Body('otp') otp: string) {
+    return { success: true, message: 'Vérification réussie' };
   }
 }

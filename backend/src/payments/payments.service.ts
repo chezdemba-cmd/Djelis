@@ -79,12 +79,12 @@ export class PaymentsService {
       throw new BadRequestException('Passerelle de paiement non prise en charge.');
     }
 
-    // Find the pending payment
+    // Find the pending payment - check if transactionId is a valid UUID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(transactionId);
     const payment = await this.prisma.payment.findFirst({
-      where: {
-        id: transactionId,
-        status: PaymentStatus.PENDING,
-      },
+      where: isUuid
+        ? { id: transactionId, status: PaymentStatus.PENDING }
+        : { gatewayTransactionId: transactionId, status: PaymentStatus.PENDING },
     });
 
     if (!payment) {
@@ -142,5 +142,34 @@ export class PaymentsService {
       });
       return { status: 'failed' };
     }
+  }
+
+  async getPaymentStatus(id: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const payment = await this.prisma.payment.findFirst({
+      where: isUuid ? { id } : { gatewayTransactionId: id },
+    });
+    if (!payment) {
+      throw new NotFoundException('Transaction introuvable.');
+    }
+    return payment;
+  }
+
+  async getPlans(country?: string) {
+    const plans = await this.prisma.plan.findMany({
+      where: { isActive: true }
+    });
+    return plans.map(p => ({
+      id: p.id.toString(),
+      name: p.name,
+      slug: p.name.toLowerCase().replace(' ', '-'),
+      duration_type: p.durationDays === 1 ? 'day' : p.durationDays === 3 ? 'weekend' : 'month',
+      duration_value: p.durationDays === 1 ? 1 : p.durationDays === 3 ? 3 : 1,
+      price_xof: p.priceFcfa,
+      price_eur: p.priceEuro ? Number(p.priceEuro) : null,
+      countries: ['ML', 'SN', 'CI', 'FR'],
+      is_active: p.isActive,
+      badge: p.name === 'Pass Mois' ? 'Meilleur Prix' : p.name === 'Pass Week-end' ? 'Populaire' : null,
+    }));
   }
 }

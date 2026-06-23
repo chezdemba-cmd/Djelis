@@ -56,7 +56,7 @@ export class AuthService {
       },
     });
 
-    return this.generateUserTokens(user.id, user.role);
+    return await this.generateUserTokens(user.id, user.role);
   }
 
   async login(dto: LoginDto) {
@@ -81,20 +81,66 @@ export class AuthService {
       throw new UnauthorizedException('Identifiants incorrects.');
     }
 
-    return this.generateUserTokens(user.id, user.role);
+    return await this.generateUserTokens(user.id, user.role);
   }
 
-  private generateUserTokens(userId: string, role: string) {
+  async refresh(refreshToken: string) {
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'djelis_refresh_secret_key_789';
+    try {
+      const payload = this.jwtService.verify(refreshToken, { secret: jwtRefreshSecret });
+      return await this.generateUserTokens(payload.sub, payload.role);
+    } catch (e) {
+      throw new UnauthorizedException('Token de rafraîchissement invalide ou expiré.');
+    }
+  }
+
+  private async generateUserTokens(userId: string, role: string) {
+    const jwtSecret = process.env.JWT_SECRET || 'djelis_secret_key_123';
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'djelis_refresh_secret_key_789';
+
     const payload = { sub: userId, role };
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '15m',
+      secret: jwtSecret,
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: '30d',
+      secret: jwtRefreshSecret,
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profiles: true,
+        subscriptions: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur introuvable.');
+    }
+
+    const activeSub = user.subscriptions.some(
+      (sub) => sub.status === 'ACTIVE' && sub.endsAt.getTime() > Date.now(),
+    );
+
     return {
-      access_token: this.jwtService.sign(payload, {
-        expiresIn: '15m',
-        secret: process.env.JWT_SECRET || 'djelis_secret_key_123',
-      }),
-      refresh_token: this.jwtService.sign(payload, {
-        expiresIn: '30d',
-        secret: process.env.JWT_REFRESH_SECRET || 'djelis_refresh_secret_key_789',
-      }),
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: {
+        id: user.id,
+        email: user.email || null,
+        phone: user.phone || null,
+        phone_verified: true,
+        email_verified: true,
+        status: user.isActive ? 'active' : 'suspended',
+        country_code: null,
+        profile: {
+          display_name: user.profiles[0]?.name || 'Profil 1',
+          avatar_url: user.profiles[0]?.avatarUrl || null,
+        },
+        has_active_subscription: activeSub,
+      },
     };
   }
 }

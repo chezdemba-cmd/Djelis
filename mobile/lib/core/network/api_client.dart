@@ -3,8 +3,8 @@ import '../errors/app_exception.dart';
 import '../storage/secure_storage_service.dart';
 
 /// Base URLs — switch via --dart-define=API_ENV=prod
-const _baseUrlDev = 'http://10.0.2.2:3000/v1'; // Android emulator → localhost
-const _baseUrlProd = 'https://api.djeli-app.com/v1';
+const _baseUrlDev = 'http://10.0.2.2:3000/api/v1'; // Android emulator → localhost
+const _baseUrlProd = 'https://api.djeli-app.com/api/v1';
 
 const String apiBaseUrl =
     String.fromEnvironment('API_BASE_URL', defaultValue: _baseUrlDev);
