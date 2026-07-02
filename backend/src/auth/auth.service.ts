@@ -85,7 +85,7 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'djelis_refresh_secret_key_789';
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET as string;
     try {
       const payload = this.jwtService.verify(refreshToken, { secret: jwtRefreshSecret });
       return await this.generateUserTokens(payload.sub, payload.role);
@@ -95,8 +95,8 @@ export class AuthService {
   }
 
   private async generateUserTokens(userId: string, role: string) {
-    const jwtSecret = process.env.JWT_SECRET || 'djelis_secret_key_123';
-    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'djelis_refresh_secret_key_789';
+    const jwtSecret = process.env.JWT_SECRET as string;
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET as string;
 
     const payload = { sub: userId, role };
     const accessToken = this.jwtService.sign(payload, {

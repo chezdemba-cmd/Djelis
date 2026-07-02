@@ -1,6 +1,7 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PaymentStatus, SubscriptionStatus } from '@prisma/client';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class PaymentsService {
@@ -63,15 +64,39 @@ export class PaymentsService {
   }
 
   // Handle transaction confirmation from CinetPay / Wave Webhooks
-  async handleWebhook(gateway: string, body: any) {
+  async handleWebhook(gateway: string, headers: Record<string, string>, body: any) {
     let transactionId: string;
     let gatewayStatus: string;
     let errorMessage: string | undefined;
 
     if (gateway === 'wave') {
+      // Vérification HMAC Wave
+      const waveSignature = headers['wave-signature'];
+      if (!waveSignature) throw new UnauthorizedException('Signature Wave manquante');
+      
+      const waveSecret = process.env.WAVE_WEBHOOK_SECRET || 'test_secret';
+      const payloadString = JSON.stringify(body);
+      const expectedSignature = crypto.createHmac('sha256', waveSecret).update(payloadString).digest('hex');
+      
+      if (waveSignature !== expectedSignature && process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('Signature Wave invalide (Tentative de fraude détectée)');
+      }
+
       transactionId = body.id; // Wave session ID
       gatewayStatus = body.status; // succeeded, failed
     } else if (gateway === 'cinetpay') {
+      // Vérification HMAC CinetPay
+      const cinetpaySignature = headers['x-token'];
+      if (!cinetpaySignature) throw new UnauthorizedException('Signature CinetPay manquante');
+
+      const cinetpaySecret = process.env.CINETPAY_SECRET || 'test_secret';
+      const payloadString = JSON.stringify(body);
+      const expectedSignature = crypto.createHmac('sha256', cinetpaySecret).update(payloadString).digest('hex');
+
+      if (cinetpaySignature !== expectedSignature && process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('Signature CinetPay invalide (Tentative de fraude détectée)');
+      }
+
       transactionId = body.cpm_trans_id;
       gatewayStatus = body.status === 'ACCEPTED' ? 'succeeded' : 'failed';
       errorMessage = body.cpm_error_message;

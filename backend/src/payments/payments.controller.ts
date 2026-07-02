@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus, UseGuards, Req, ParseIntPipe, Headers } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -11,7 +11,7 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   async pay(
     @Req() req: any,
-    @Body('plan_id') planId: number,
+    @Body('plan_id', ParseIntPipe) planId: number,
     @Body('gateway') gateway: string,
     @Body('phone_momo') phoneMomo?: string,
   ) {
@@ -64,8 +64,9 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   async handleWebhook(
     @Param('gateway') gateway: string,
+    @Headers() headers: Record<string, string>,
     @Body() body: any,
   ) {
-    return this.paymentsService.handleWebhook(gateway, body);
+    return this.paymentsService.handleWebhook(gateway, headers, body);
   }
 }
