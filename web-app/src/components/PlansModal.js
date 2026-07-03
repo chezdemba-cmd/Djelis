@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function PlansModal({ isOpen, onClose }) {
+export default function PlansModal({ isOpen, onClose, onComplete }) {
   const [step, setStep] = useState(1);
   const [region, setRegion] = useState("ao");
   const [freq, setFreq] = useState("weekly");
@@ -21,6 +21,11 @@ export default function PlansModal({ isOpen, onClose }) {
   const selectPlan = (planName) => {
     setSelectedPlan(planName);
     setStep(3);
+  };
+
+  const finishFlow = () => {
+    if (onComplete) onComplete();
+    onClose();
   };
 
   return (
@@ -161,7 +166,7 @@ export default function PlansModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            <button type="button" className="modal-action-btn tv-focusable" style={{ marginTop: "24px" }} onClick={onClose}>
+            <button type="button" className="modal-action-btn tv-focusable" style={{ marginTop: "24px" }} onClick={finishFlow}>
               <span className="material-icons-round">done</span> Activer mon profil & S'abonner
             </button>
             

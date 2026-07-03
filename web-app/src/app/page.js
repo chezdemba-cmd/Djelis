@@ -14,6 +14,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("djaasoo");
   const [isPlansOpen, setIsPlansOpen] = useState(false);
   const [currentAudio, setCurrentAudio] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <div className="app-root">
@@ -36,18 +37,26 @@ export default function Home() {
           <button className={`sidebar-nav-item tv-focusable ${activePage === 'profile' ? 'active' : ''}`} onClick={() => setActivePage('profile')}>
             <span className="material-icons-round">person_outline</span> Mon Profil
           </button>
-          <button className="sidebar-nav-item side-plans-btn tv-focusable" onClick={() => setIsPlansOpen(true)}>
-            <span className="material-icons-round">stars</span> Abonnements
-          </button>
+          {!isAuthenticated && (
+            <button className="sidebar-nav-item side-plans-btn tv-focusable" onClick={() => setIsPlansOpen(true)}>
+              <span className="material-icons-round">stars</span> Abonnements
+            </button>
+          )}
         </nav>
       </aside>
 
       {/* Main App Container */}
       <div className="app-container">
         <header className="app-header">
-          <button className="header-auth-trigger-btn tv-focusable" onClick={() => setIsPlansOpen(true)}>
-            <span className="material-icons-round">vpn_key</span> S'abonner
-          </button>
+          {!isAuthenticated ? (
+            <button className="header-auth-trigger-btn tv-focusable" onClick={() => setIsPlansOpen(true)}>
+              <span className="material-icons-round">vpn_key</span> S'abonner
+            </button>
+          ) : (
+            <button className="icon-btn header-avatar tv-focusable" onClick={() => setActivePage('profile')} style={{ border: 'none', background: 'transparent' }}>
+              <span className="material-icons-round">account_circle</span>
+            </button>
+          )}
           
           {activePage === "home" && (
             <div className="header-tabs">
@@ -107,8 +116,8 @@ export default function Home() {
           )}
 
           {activePage === "search" && <SearchScreen />}
-          {activePage === "mylist" && <MyListScreen openAuthModal={() => setIsPlansOpen(true)} />}
-          {activePage === "profile" && <ProfileScreen openAuthModal={() => setIsPlansOpen(true)} />}
+          {activePage === "mylist" && <MyListScreen isAuthenticated={isAuthenticated} openAuthModal={() => setIsPlansOpen(true)} />}
+          {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)} openAuthModal={() => setIsPlansOpen(true)} />}
         </main>
 
         {/* Mobile Bottom Nav (Hidden on desktop via CSS) */}
@@ -131,7 +140,14 @@ export default function Home() {
           </button>
         </div>
         
-        <PlansModal isOpen={isPlansOpen} onClose={() => setIsPlansOpen(false)} />
+        <PlansModal 
+          isOpen={isPlansOpen} 
+          onClose={() => setIsPlansOpen(false)} 
+          onComplete={() => {
+            setIsAuthenticated(true);
+            setActivePage('profile');
+          }}
+        />
         <MiniPlayer audioItem={currentAudio} onClose={() => setCurrentAudio(null)} />
       </div>
     </div>
