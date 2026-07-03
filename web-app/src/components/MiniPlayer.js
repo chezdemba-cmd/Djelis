@@ -42,7 +42,7 @@ export default function MiniPlayer({ audioItem, onClose }) {
   if (!audioItem) return null;
 
   return (
-    <div className="mini-player" id="mini-player" style={{ transform: "translateY(0)" }}>
+    <div className="mini-player" id="mini-player" style={{ transform: "translateY(0)", display: "flex" }}>
       <div className="player-progress-container">
         <div className="player-progress-bar" id="player-progress" style={{ width: `${progress}%` }}></div>
       </div>
