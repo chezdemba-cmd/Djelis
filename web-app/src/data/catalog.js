@@ -1,4 +1,6 @@
-export const catalog = [
+import { supabase, isSupabaseConfigured } from "../utils/supabase";
+
+export const dummyCatalog = [
   {
     id: "c1",
     title: "Le Trône du Mandé",
@@ -116,7 +118,7 @@ export const catalog = [
   }
 ];
 
-export const audioCatalog = [
+export const dummyAudioCatalog = [
   {
     id: "a1",
     title: "Paroles de Griot",
@@ -148,3 +150,31 @@ export const audioCatalog = [
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
   }
 ];
+
+export async function getCatalog() {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from('contents').select('*').in('category', ['cinema', 'theatre', 'docs']);
+      if (error) throw error;
+      if (data && data.length > 0) return data;
+    } catch (err) {
+      console.error("Error fetching video catalog from Supabase:", err.message);
+    }
+  }
+  // Fallback to dummy data
+  return dummyCatalog;
+}
+
+export async function getAudioCatalog() {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from('contents').select('*').in('category', ['podcasts', 'music']);
+      if (error) throw error;
+      if (data && data.length > 0) return data;
+    } catch (err) {
+      console.error("Error fetching audio catalog from Supabase:", err.message);
+    }
+  }
+  // Fallback to dummy data
+  return dummyAudioCatalog;
+}

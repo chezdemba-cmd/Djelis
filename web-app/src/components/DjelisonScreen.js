@@ -1,8 +1,24 @@
-import { useState } from "react";
-import { audioCatalog } from "../data/catalog";
+import { useState, useEffect } from "react";
+import { getAudioCatalog } from "../data/catalog";
 
 export default function DjelisonScreen({ onPlayAudio }) {
   const [activeTab, setActiveTab] = useState("podcasts");
+  const [audioCatalog, setAudioCatalog] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAudio = async () => {
+      setIsLoading(true);
+      const data = await getAudioCatalog();
+      setAudioCatalog(data);
+      setIsLoading(false);
+    };
+    loadAudio();
+  }, []);
+
+  if (isLoading) {
+    return <div style={{ padding: "40px", textAlign: "center" }}>Chargement de l'audio...</div>;
+  }
 
   return (
     <>

@@ -1,12 +1,26 @@
-import { useState } from "react";
-import { catalog } from "../data/catalog";
+import { useState, useEffect } from "react";
+import { getCatalog } from "../data/catalog";
 import DetailsModal from "./DetailsModal";
 import VideoPlayerScreen from "./VideoPlayerScreen";
 
 export default function DjaasooScreen() {
   const [activeTab, setActiveTab] = useState("cinema");
+  const [catalog, setCatalog] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+  useEffect(() => {
+    const loadCatalog = async () => {
+      setIsLoading(true);
+      const data = await getCatalog();
+      setCatalog(data);
+      setIsLoading(false);
+    };
+    loadCatalog();
+  }, []);
 
   const filterByCategory = (category) => {
     return catalog.filter((item) => item.category === category);
@@ -16,22 +30,36 @@ export default function DjaasooScreen() {
   const theatreItems = filterByCategory("theatre");
   const docsItems = filterByCategory("docs");
 
-  const openDetails = (item) => setSelectedItem(item);
-  const closeDetails = () => setSelectedItem(null);
+  const openDetails = (item) => {
+    setSelectedItem(item);
+    setIsDetailsOpen(true);
+  };
+  const closeDetails = () => {
+    setSelectedItem(null);
+    setIsDetailsOpen(false);
+  };
   
   const playVideo = (item) => {
-    setSelectedItem(item);
+    setIsDetailsOpen(false);
+    setPlayingVideo(item);
     setIsVideoOpen(true);
   };
-  const closeVideo = () => setIsVideoOpen(false);
+  const closeVideo = () => {
+    setIsVideoOpen(false);
+    setPlayingVideo(null);
+  };
+
+  if (isLoading) {
+    return <div style={{ padding: "40px", textAlign: "center" }}>Chargement du catalogue...</div>;
+  }
 
   return (
     <>
       <DetailsModal 
-        isOpen={!!selectedItem && !isVideoOpen} 
+        isOpen={isDetailsOpen} 
         item={selectedItem} 
         onClose={closeDetails} 
-        onPlay={() => setIsVideoOpen(true)} 
+        onPlay={() => playVideo(selectedItem)} 
       />
       
       <VideoPlayerScreen 
