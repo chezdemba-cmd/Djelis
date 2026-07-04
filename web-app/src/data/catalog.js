@@ -152,28 +152,29 @@ export const dummyAudioCatalog = [
 ];
 
 export async function getCatalog() {
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase.from('contents').select('*').in('category', ['cinema', 'theatre', 'docs']);
-      if (error) throw error;
+  try {
+    const res = await fetch('http://localhost:3000/api/v1/catalog/home');
+    if (res.ok) {
+      const data = await res.json();
+      // On s'attend à ce que l'API NestJS renvoie le format adéquat, ou on mappe ici
       if (data && data.length > 0) return data;
-    } catch (err) {
-      console.error("Error fetching video catalog from Supabase:", err.message);
     }
+  } catch (err) {
+    console.error("Error fetching video catalog from NestJS API. Fallback to local data.", err.message);
   }
   // Fallback to dummy data
   return dummyCatalog;
 }
 
 export async function getAudioCatalog() {
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase.from('contents').select('*').in('category', ['podcasts', 'music']);
-      if (error) throw error;
+  try {
+    const res = await fetch('http://localhost:3000/api/v1/catalog/home?type=audio');
+    if (res.ok) {
+      const data = await res.json();
       if (data && data.length > 0) return data;
-    } catch (err) {
-      console.error("Error fetching audio catalog from Supabase:", err.message);
     }
+  } catch (err) {
+    console.error("Error fetching audio catalog from NestJS API. Fallback to local data.", err.message);
   }
   // Fallback to dummy data
   return dummyAudioCatalog;

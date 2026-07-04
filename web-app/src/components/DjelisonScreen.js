@@ -17,7 +17,7 @@ export default function DjelisonScreen({ onPlayAudio }) {
   }, []);
 
   if (isLoading) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Chargement de l'audio...</div>;
+    return <div style={{ padding: "40px", textAlign: "center" }}>Chargement de l&apos;audio...</div>;
   }
 
   return (

@@ -1,26 +1,37 @@
-import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { PrismaService } from '../prisma.service';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
+} from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { PrismaService } from "../prisma.service";
 
-@Controller('stream')
+@Controller("stream")
 export class StreamController {
   constructor(private prisma: PrismaService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post('progress')
+  @Post("progress")
   @HttpCode(HttpStatus.OK)
   async reportProgress(
     @Req() req: any,
-    @Body('content_id') contentId: string,
-    @Body('episode_id') episodeId: string | null,
-    @Body('progress_sec') progressSec: number,
+    @Body("content_id") contentId: string,
+    @Body("episode_id") episodeId: string | null,
+    @Body("progress_sec") progressSec: number
   ) {
     const profile = await this.prisma.profile.findFirst({
       where: { userId: req.user.id },
     });
 
     if (!profile) {
-      return { success: false, message: 'Aucun profil trouvé pour cet utilisateur.' };
+      return {
+        success: false,
+        message: "Aucun profil trouvé pour cet utilisateur.",
+      };
     }
 
     const existing = await this.prisma.watchHistory.findFirst({
@@ -54,12 +65,12 @@ export class StreamController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('token')
+  @Post("token")
   @HttpCode(HttpStatus.OK)
   async getStreamToken(
     @Req() req: any,
-    @Body('content_id') contentId: string,
-    @Body('episode_id') episodeId?: string,
+    @Body("content_id") contentId: string,
+    @Body("episode_id") episodeId?: string
   ) {
     const streamId = episodeId || contentId;
     return {

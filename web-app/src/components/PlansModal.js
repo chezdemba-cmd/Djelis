@@ -9,8 +9,30 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
 
   if (!isOpen) return null;
 
-  const handleNextStep = (e) => {
+  const handleNextStep = async (e) => {
     e.preventDefault();
+    if (step === 1) {
+      // Tentative de connexion / inscription via NestJS
+      try {
+        const payload = authMethod === 'email' 
+          ? { email: e.target.querySelector('input[type="email"]')?.value, password: e.target.querySelector('input[type="password"]').value }
+          : { phone: e.target.querySelector('input[type="tel"]')?.value, password: e.target.querySelector('input[type="password"]').value };
+          
+        const res = await fetch('http://localhost:3000/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.accessToken) {
+             localStorage.setItem('accessToken', data.accessToken);
+          }
+        }
+      } catch (err) {
+        console.error("Error connecting to NestJS Auth API. Using local simulated auth.", err);
+      }
+    }
     setStep((prev) => prev + 1);
   };
 
@@ -49,7 +71,7 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
         {step === 1 && (
           <div className="register-flow-step active">
             <div className="modal-logo-container">
-              <img src="/assets/logo.png" alt="Djeli'S Logo" className="modal-logo-img" />
+              <img src="/assets/logo.png" alt="Djeli&apos;S Logo" className="modal-logo-img" />
             </div>
             <h2 className="plans-main-title">Créez votre compte</h2>
             <p className="plans-subtitle" style={{ marginBottom: "20px" }}>Entrez vos coordonnées de connexion.</p>
@@ -61,8 +83,8 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
               </div>
 
               <div className="auth-method-toggle" style={{ marginTop: "14px" }}>
-                <button type="button" className={`method-btn tv-focusable ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod("email")}>S'inscrire par Email</button>
-                <button type="button" className={`method-btn tv-focusable ${authMethod === 'phone' ? 'active' : ''}`} onClick={() => setAuthMethod("phone")}>S'inscrire par Téléphone</button>
+                <button type="button" className={`method-btn tv-focusable ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod("email")}>S&apos;inscrire par Email</button>
+                <button type="button" className={`method-btn tv-focusable ${authMethod === 'phone' ? 'active' : ''}`} onClick={() => setAuthMethod("phone")}>S&apos;inscrire par Téléphone</button>
               </div>
 
               {authMethod === "email" ? (
@@ -92,13 +114,13 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
         {step === 2 && (
           <div className="register-flow-step active">
             <h2 className="plans-main-title">Sélectionnez votre forfait</h2>
-            <p className="plans-subtitle">Choisissez l'offre qui s'adapte le mieux à votre utilisation.</p>
+            <p className="plans-subtitle">Choisissez l&apos;offre qui s&apos;adapte le mieux à votre utilisation.</p>
             
             <div className="plans-filter-bar">
               <div className="filter-group">
-                <label>Région d'Abonnement</label>
+                <label>Région d&apos;Abonnement</label>
                 <div className="pill-selector">
-                  <button type="button" className={`pill-btn tv-focusable ${region === 'ao' ? 'active' : ''}`} onClick={() => setRegion("ao")}>Afrique de l'Ouest</button>
+                  <button type="button" className={`pill-btn tv-focusable ${region === 'ao' ? 'active' : ''}`} onClick={() => setRegion("ao")}>Afrique de l&apos;Ouest</button>
                   <button type="button" className={`pill-btn tv-focusable ${region === 'diaspora' ? 'active' : ''}`} onClick={() => setRegion("diaspora")}>Diaspora</button>
                 </div>
               </div>
@@ -157,7 +179,7 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
         {step === 3 && (
           <div className="register-flow-step active">
             <h2 className="plans-main-title">Validation de votre compte</h2>
-            <p className="plans-subtitle">Veuillez vérifier les informations ci-dessous avant d'activer votre profil.</p>
+            <p className="plans-subtitle">Veuillez vérifier les informations ci-dessous avant d&apos;activer votre profil.</p>
             
             <div className="wizard-summary-card">
               <div className="summary-item">
@@ -167,7 +189,7 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
             </div>
 
             <button type="button" className="modal-action-btn tv-focusable" style={{ marginTop: "24px" }} onClick={finishFlow}>
-              <span className="material-icons-round">done</span> Activer mon profil & S'abonner
+              <span className="material-icons-round">done</span> Activer mon profil & S&apos;abonner
             </button>
             
             <button type="button" className="modal-action-btn tv-focusable" style={{ marginTop: "12px", background: "rgba(255,255,255,0.06)", color: "white", border: "1px solid var(--glass-border)" }} onClick={handlePrevStep}>

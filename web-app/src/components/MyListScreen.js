@@ -27,7 +27,7 @@ export default function MyListScreen({ isAuthenticated, openAuthModal }) {
             <span className="material-icons-round mylist-empty-icon">favorite_border</span>
             <p>Connectez-vous pour ajouter et retrouver vos favoris.</p>
             <button className="modal-action-btn tv-focusable" style={{ marginTop: "14px" }} onClick={openAuthModal}>
-              S'abonner / Se connecter
+              S&apos;abonner / Se connecter
             </button>
           </div>
         ) : (
@@ -50,7 +50,7 @@ export default function MyListScreen({ isAuthenticated, openAuthModal }) {
                         <span className="material-icons-round">play_circle_filled</span>
                       </div>
                     </div>
-                    <div className="card-title">L'Or de Ségou</div>
+                    <div className="card-title">L&apos;Or de Ségou</div>
                   </div>
                 </div>
               </div>

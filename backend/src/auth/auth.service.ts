@@ -1,20 +1,24 @@
-import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma.service";
+import { RegisterDto } from "./dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
 
   async register(dto: RegisterDto) {
     if (!dto.email && !dto.phone) {
-      throw new BadRequestException('Veuillez fournir au moins un email ou un numéro de téléphone.');
+      throw new BadRequestException(
+        "Veuillez fournir au moins un email ou un numéro de téléphone."
+      );
     }
 
     // Check if user already exists
@@ -23,7 +27,7 @@ export class AuthService {
         where: { email: dto.email },
       });
       if (existingEmail) {
-        throw new ConflictException('Cet email est déjà enregistré.');
+        throw new ConflictException("Cet email est déjà enregistré.");
       }
     }
 
@@ -32,7 +36,9 @@ export class AuthService {
         where: { phone: dto.phone },
       });
       if (existingPhone) {
-        throw new ConflictException('Ce numéro de téléphone est déjà enregistré.');
+        throw new ConflictException(
+          "Ce numéro de téléphone est déjà enregistré."
+        );
       }
     }
 
@@ -47,7 +53,7 @@ export class AuthService {
         passwordHash,
         profiles: {
           create: {
-            name: dto.email ? dto.email.split('@')[0] : 'Profil 1',
+            name: dto.email ? dto.email.split("@")[0] : "Profil 1",
           },
         },
       },
@@ -61,7 +67,9 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     if (!dto.email && !dto.phone) {
-      throw new BadRequestException('Veuillez fournir votre email ou numéro de téléphone.');
+      throw new BadRequestException(
+        "Veuillez fournir votre email ou numéro de téléphone."
+      );
     }
 
     let user;
@@ -72,13 +80,18 @@ export class AuthService {
     }
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException('Identifiants incorrects ou compte désactivé.');
+      throw new UnauthorizedException(
+        "Identifiants incorrects ou compte désactivé."
+      );
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash
+    );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Identifiants incorrects.');
+      throw new UnauthorizedException("Identifiants incorrects.");
     }
 
     return await this.generateUserTokens(user.id, user.role);
@@ -87,10 +100,14 @@ export class AuthService {
   async refresh(refreshToken: string) {
     const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET as string;
     try {
-      const payload = this.jwtService.verify(refreshToken, { secret: jwtRefreshSecret });
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: jwtRefreshSecret,
+      });
       return await this.generateUserTokens(payload.sub, payload.role);
     } catch (e) {
-      throw new UnauthorizedException('Token de rafraîchissement invalide ou expiré.');
+      throw new UnauthorizedException(
+        "Token de rafraîchissement invalide ou expiré."
+      );
     }
   }
 
@@ -100,11 +117,11 @@ export class AuthService {
 
     const payload = { sub: userId, role };
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '15m',
+      expiresIn: "15m",
       secret: jwtSecret,
     });
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '30d',
+      expiresIn: "30d",
       secret: jwtRefreshSecret,
     });
 
@@ -117,11 +134,11 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Utilisateur introuvable.');
+      throw new UnauthorizedException("Utilisateur introuvable.");
     }
 
     const activeSub = user.subscriptions.some(
-      (sub) => sub.status === 'ACTIVE' && sub.endsAt.getTime() > Date.now(),
+      (sub) => sub.status === "ACTIVE" && sub.endsAt.getTime() > Date.now()
     );
 
     return {
@@ -133,10 +150,10 @@ export class AuthService {
         phone: user.phone || null,
         phone_verified: true,
         email_verified: true,
-        status: user.isActive ? 'active' : 'suspended',
+        status: user.isActive ? "active" : "suspended",
         country_code: null,
         profile: {
-          display_name: user.profiles[0]?.name || 'Profil 1',
+          display_name: user.profiles[0]?.name || "Profil 1",
           avatar_url: user.profiles[0]?.avatarUrl || null,
         },
         has_active_subscription: activeSub,

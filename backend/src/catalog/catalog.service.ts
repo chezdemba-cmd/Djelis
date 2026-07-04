@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-import { ContentType } from '@prisma/client';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma.service";
+import { ContentType } from "@prisma/client";
 
 @Injectable()
 export class CatalogService {
@@ -11,25 +11,31 @@ export class CatalogService {
     return {
       id: content.id,
       title: content.title,
-      synopsis: content.synopsis || '',
-      poster_url: content.thumbnailUrl || '',
-      trailer_url: content.trailerCfId ? `https://videodelivery.net/${content.trailerCfId}/manifest/video.m3u8` : null,
+      synopsis: content.synopsis || "",
+      poster_url: content.thumbnailUrl || "",
+      trailer_url: content.trailerCfId
+        ? `https://videodelivery.net/${content.trailerCfId}/manifest/video.m3u8`
+        : null,
       type: content.type.toLowerCase(),
       category_id: content.categoryId?.toString(),
       category: content.category ? { name: content.category.name } : null,
-      release_year: content.publishedAt ? new Date(content.publishedAt).getFullYear() : 2026,
-      age_rating: content.ageRating || 'G',
+      release_year: content.publishedAt
+        ? new Date(content.publishedAt).getFullYear()
+        : 2026,
+      age_rating: content.ageRating || "G",
       is_featured: content.isPremium || false,
       is_original: true,
-      episodes: content.episodes ? content.episodes.map(e => ({
-        id: e.id,
-        season: e.seasonNumber,
-        episode_number: e.episodeNumber,
-        title: e.title,
-        synopsis: e.synopsis || '',
-        duration_min: Math.ceil(e.duration / 60),
-        thumbnail_url: content.thumbnailUrl || '',
-      })) : [],
+      episodes: content.episodes
+        ? content.episodes.map((e) => ({
+            id: e.id,
+            season: e.seasonNumber,
+            episode_number: e.episodeNumber,
+            title: e.title,
+            synopsis: e.synopsis || "",
+            duration_min: Math.ceil(e.duration / 60),
+            thumbnail_url: content.thumbnailUrl || "",
+          }))
+        : [],
     };
   }
 
@@ -49,7 +55,7 @@ export class CatalogService {
           : undefined,
       },
       take: 10,
-      orderBy: { publishedAt: 'desc' },
+      orderBy: { publishedAt: "desc" },
       include: { creator: true, category: true },
     });
 
@@ -67,17 +73,17 @@ export class CatalogService {
           : undefined,
       },
       take: 10,
-      orderBy: { publishedAt: 'desc' },
+      orderBy: { publishedAt: "desc" },
       include: { creator: true, category: true },
     });
 
     return {
       djaasoo: {
-        title: 'DjaaSoo - Vidéos & Cinéma',
+        title: "DjaaSoo - Vidéos & Cinéma",
         contents: djaasooVideos,
       },
       djelison: {
-        title: 'DjeliSon - Musique & Podcasts',
+        title: "DjeliSon - Musique & Podcasts",
         contents: djelisonAudios,
       },
     };
@@ -98,7 +104,7 @@ export class CatalogService {
         isActive: true,
       },
       take: 10,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: { creator: true, category: true, episodes: true },
     });
 
@@ -108,7 +114,7 @@ export class CatalogService {
         isActive: true,
       },
       take: 10,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: { creator: true, category: true, episodes: true },
     });
 
@@ -116,12 +122,12 @@ export class CatalogService {
       hero: heroVideo ? this.mapContentToMobile(heroVideo) : null,
       rows: [
         {
-          title: 'Cinéma & Long-métrages',
-          contents: djaasooVideos.map(v => this.mapContentToMobile(v)),
+          title: "Cinéma & Long-métrages",
+          contents: djaasooVideos.map((v) => this.mapContentToMobile(v)),
         },
         {
-          title: 'Podcasts & Contes',
-          contents: djelisonAudios.map(a => this.mapContentToMobile(a)),
+          title: "Podcasts & Contes",
+          contents: djelisonAudios.map((a) => this.mapContentToMobile(a)),
         },
       ],
     };
@@ -132,15 +138,23 @@ export class CatalogService {
     categoryId?: string,
     countryCode?: string,
     page = 1,
-    limit = 20,
+    limit = 20
   ) {
     const skip = (page - 1) * limit;
 
     let contentTypes: ContentType[] = [];
     if (type) {
-      if (type.toLowerCase() === 'video' || type.toLowerCase() === 'film' || type.toLowerCase() === 'series') {
+      if (
+        type.toLowerCase() === "video" ||
+        type.toLowerCase() === "film" ||
+        type.toLowerCase() === "series"
+      ) {
         contentTypes = [ContentType.VIDEO];
-      } else if (type.toLowerCase() === 'audio' || type.toLowerCase() === 'podcast' || type.toLowerCase() === 'music') {
+      } else if (
+        type.toLowerCase() === "audio" ||
+        type.toLowerCase() === "podcast" ||
+        type.toLowerCase() === "music"
+      ) {
         contentTypes = [ContentType.AUDIO];
       }
     }
@@ -163,14 +177,14 @@ export class CatalogService {
         where: whereClause,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: { creator: true, category: true, episodes: true },
       }),
       this.prisma.content.count({ where: whereClause }),
     ]);
 
     return {
-      data: contents.map(c => this.mapContentToMobile(c)),
+      data: contents.map((c) => this.mapContentToMobile(c)),
       meta: {
         total,
         page,
@@ -186,13 +200,13 @@ export class CatalogService {
         creator: true,
         category: true,
         episodes: {
-          orderBy: { episodeNumber: 'asc' },
+          orderBy: { episodeNumber: "asc" },
         },
       },
     });
 
     if (!content || !content.isActive) {
-      throw new NotFoundException('Contenu introuvable ou indisponible.');
+      throw new NotFoundException("Contenu introuvable ou indisponible.");
     }
 
     return content;
@@ -200,7 +214,10 @@ export class CatalogService {
 
   async getContentDetail(id: string) {
     let content;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id
+      );
 
     if (isUuid) {
       content = await this.prisma.content.findUnique({
@@ -215,7 +232,7 @@ export class CatalogService {
     }
 
     if (!content || !content.isActive) {
-      throw new NotFoundException('Contenu introuvable ou indisponible.');
+      throw new NotFoundException("Contenu introuvable ou indisponible.");
     }
 
     return this.mapContentToMobile(content);
@@ -227,11 +244,11 @@ export class CatalogService {
         isActive: true,
       },
       take: 10,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: { creator: true, category: true, episodes: true },
     });
 
-    return contents.map(c => this.mapContentToMobile(c));
+    return contents.map((c) => this.mapContentToMobile(c));
   }
 
   async search(query: string, page = 1, limit = 10) {
@@ -242,9 +259,13 @@ export class CatalogService {
         where: {
           isActive: true,
           OR: [
-            { title: { contains: query, mode: 'insensitive' } },
-            { synopsis: { contains: query, mode: 'insensitive' } },
-            { creator: { displayName: { contains: query, mode: 'insensitive' } } },
+            { title: { contains: query, mode: "insensitive" } },
+            { synopsis: { contains: query, mode: "insensitive" } },
+            {
+              creator: {
+                displayName: { contains: query, mode: "insensitive" },
+              },
+            },
           ],
         },
         skip,
@@ -255,16 +276,20 @@ export class CatalogService {
         where: {
           isActive: true,
           OR: [
-            { title: { contains: query, mode: 'insensitive' } },
-            { synopsis: { contains: query, mode: 'insensitive' } },
-            { creator: { displayName: { contains: query, mode: 'insensitive' } } },
+            { title: { contains: query, mode: "insensitive" } },
+            { synopsis: { contains: query, mode: "insensitive" } },
+            {
+              creator: {
+                displayName: { contains: query, mode: "insensitive" },
+              },
+            },
           ],
         },
       }),
     ]);
 
     return {
-      data: results.map(c => this.mapContentToMobile(c)),
+      data: results.map((c) => this.mapContentToMobile(c)),
       meta: {
         total,
         page,

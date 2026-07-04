@@ -1,4 +1,4 @@
-export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal }) {
+export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal, onOpenAdmin }) {
   return (
     <div id="page-profile" className="app-page active" style={{ width: "100%", height: "100%" }}>
       <div className="profile-container">
@@ -7,12 +7,17 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
           <div className="profile-subpage active" id="profile-subpage-unauth">
             <div className="profile-header-card">
               <div className="profile-logo-large">
-                <img src="/assets/logo.png" alt="Djeli'S Logo" className="profile-logo-img-large" />
+                <img src="/assets/logo.png" alt="Djeli&apos;S Logo" className="profile-logo-img-large" />
               </div>
-              <h2 className="profile-name">Djeli'S</h2>
-              <p className="profile-email">Rejoignez Djeli'S pour profiter de l'expérience</p>
+              <h2 className="profile-name">Djeli&apos;S</h2>
+              <p className="profile-email">Rejoignez Djeli&apos;S pour profiter de l&apos;expérience</p>
               <button className="modal-action-btn tv-focusable" style={{ marginTop: "14px" }} onClick={openAuthModal}>
                 Créer mon compte / Se connecter
+              </button>
+              
+              <button className="modal-action-btn tv-focusable" style={{ marginTop: "14px", background: '#333', color: '#ffb300' }} onClick={onOpenAdmin}>
+                <span className="material-icons-round" style={{ fontSize: '18px', marginRight: '8px', verticalAlign: 'middle' }}>admin_panel_settings</span>
+                Accès Admin (Simulateur)
               </button>
             </div>
           </div>
@@ -32,7 +37,7 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
                 <span className="material-icons-round">stars</span>
                 <div>
                   <h4>Gérer mon Abonnement</h4>
-                  <p>Modifier l'offre, facturation et reçus</p>
+                  <p>Modifier l&apos;offre, facturation et reçus</p>
                 </div>
               </div>
               <span className="material-icons-round">chevron_right</span>
@@ -40,9 +45,16 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
 
             <div className="profile-actions-list">
               <div className="profile-action-item tv-focusable">
-                <span className="material-icons-round">settings</span>
-                <span>Paramètres du compte</span>
-                <span className="material-icons-round arrow">chevron_right</span>
+                <span className="material-icons-round">settings</span> Paramètres de l&apos;application
+              </div>
+
+              {/* Lien vers l'Espace Admin */}
+              <div className="profile-action-item tv-focusable" style={{ color: '#ffb300' }} onClick={onOpenAdmin}>
+                <span className="material-icons-round">admin_panel_settings</span> Espace Administrateur
+              </div>
+
+              <div className="profile-action-item tv-focusable">
+                <span className="material-icons-round">help_outline</span> Centre d&apos;aide
               </div>
               <div className="profile-action-item profile-plans-btn tv-focusable" onClick={openAuthModal}>
                 <span className="material-icons-round">account_balance_wallet</span>

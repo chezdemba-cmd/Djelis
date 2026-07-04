@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getCatalog } from "../data/catalog";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
   const [allData, setAllData] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const isSearching = query.trim().length > 0;
 
   useEffect(() => {
     const loadData = async () => {
@@ -15,18 +14,14 @@ export default function SearchScreen() {
     loadData();
   }, []);
 
-  useEffect(() => {
+  const results = useMemo(() => {
     if (query.trim().length > 0) {
-      setIsSearching(true);
-      const filtered = allData.filter(item => 
+      return allData.filter(item => 
         item.title.toLowerCase().includes(query.toLowerCase()) || 
         item.synopsis?.toLowerCase().includes(query.toLowerCase())
       );
-      setResults(filtered);
-    } else {
-      setIsSearching(false);
-      setResults([]);
     }
+    return [];
   }, [query, allData]);
 
   return (
@@ -73,7 +68,7 @@ export default function SearchScreen() {
               </div>
             ) : (
               <div style={{ textAlign: "center", marginTop: "40px", color: "var(--text-secondary)" }}>
-                Aucun résultat pour "{query}"
+                Aucun résultat pour &quot;{query}&quot;
               </div>
             )}
           </div>

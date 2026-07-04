@@ -65,6 +65,7 @@ export default function DjaasooScreen() {
       <VideoPlayerScreen 
         isOpen={isVideoOpen} 
         videoUrl={selectedItem?.videoUrl} 
+        contentId={selectedItem?.id}
         onClose={closeVideo} 
       />
 

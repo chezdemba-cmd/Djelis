@@ -1,51 +1,51 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { Controller, Post, Body, HttpCode, HttpStatus } from "@nestjs/common";
+import { AuthService } from "./auth.service";
+import { RegisterDto } from "./dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
 
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('register')
+  @Post("register")
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
-  @Post('register/email')
+  @Post("register/email")
   @HttpCode(HttpStatus.CREATED)
   async registerEmail(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
-  @Post('register/phone')
+  @Post("register/phone")
   @HttpCode(HttpStatus.CREATED)
   async registerPhone(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
-  @Post('login')
+  @Post("login")
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
-  @Post('refresh')
+  @Post("refresh")
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body('refresh_token') refreshToken: string) {
+  async refresh(@Body("refresh_token") refreshToken: string) {
     return this.authService.refresh(refreshToken);
   }
 
-  @Post('logout')
+  @Post("logout")
   @HttpCode(HttpStatus.OK)
   async logout() {
     return { success: true };
   }
 
-  @Post('verify/otp')
+  @Post("verify/otp")
   @HttpCode(HttpStatus.OK)
-  async verifyOtp(@Body('phone') phone: string, @Body('otp') otp: string) {
-    return { success: true, message: 'Vérification réussie' };
+  async verifyOtp(@Body("phone") phone: string, @Body("otp") otp: string) {
+    return { success: true, message: "Vérification réussie" };
   }
 }
