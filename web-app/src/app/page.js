@@ -9,6 +9,7 @@ import ProfileScreen from "../components/ProfileScreen";
 import PlansModal from "../components/PlansModal";
 import MiniPlayer from "../components/MiniPlayer";
 import AdminScreen from "../components/AdminScreen";
+import ProfileSelector from "../components/ProfileSelector";
 
 export default function Home() {
   const [activePage, setActivePage] = useState("home");
@@ -21,6 +22,7 @@ export default function Home() {
     }
     return false;
   });
+  const [currentProfile, setCurrentProfile] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -70,11 +72,18 @@ export default function Home() {
           )}
           
           {activePage === "home" && activeTab !== null && (
-            <div className="header-app-indicator" onClick={() => setActiveTab(null)} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '20px', transition: '0.2s' }}>
+            <div className="header-app-indicator" onClick={() => setActiveTab(null)} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '20px', transition: '0.2s', marginRight: '10px' }}>
               <span className="material-icons-round" style={{ fontSize: '18px', marginRight: '5px' }}>arrow_back</span>
               <span style={{ fontWeight: 'bold', fontSize: '14px' }}>
                 {activeTab === 'djaasoo' ? '🎬 DjaaSoo' : '🎵 DjeliSon'}
               </span>
+            </div>
+          )}
+
+          {currentProfile !== null && (
+            <div className="header-profile-badge tv-focusable" onClick={() => { setCurrentProfile(null); setActiveTab(null); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '20px', transition: '0.2s' }} title="Changer de profil">
+              <span style={{ fontSize: '18px' }}>{currentProfile.avatar}</span>
+              <span style={{ fontWeight: '800', fontSize: '13px', color: currentProfile.color }}>{currentProfile.name}</span>
             </div>
           )}
 
@@ -127,44 +136,50 @@ export default function Home() {
         )}
 
         <main className="app-content">
-          {activePage === "home" && (
-            <div id="page-home" className="app-page active">
-              {activeTab === null && (
-                <div className="app-selection-screen" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '60vh', gap: '40px', padding: '20px' }}>
-                  <h2 style={{ fontSize: 'clamp(20px, 4vw, 32px)', textAlign: 'center' }}>Que souhaitez-vous explorer ?</h2>
-                  <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <div className="app-select-card tv-focusable" onClick={() => setActiveTab('djaasoo')} style={{ cursor: 'pointer', background: 'linear-gradient(145deg, #2a2a2d, #1b1b1d)', padding: '40px', borderRadius: '20px', textAlign: 'center', width: '260px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transition: 'transform 0.3s' }}>
-                      <span style={{ fontSize: '60px' }}>🎬</span>
-                      <h3 style={{ marginTop: '20px', color: '#fff', fontSize: '24px' }}>DjaaSoo</h3>
-                      <p style={{ color: '#aaa', fontSize: '15px', marginTop: '10px' }}>Cinéma, Séries & Documentaires</p>
+          {currentProfile === null ? (
+            <ProfileSelector onSelectProfile={setCurrentProfile} />
+          ) : (
+            <>
+              {activePage === "home" && (
+                <div id="page-home" className="app-page active">
+                  {activeTab === null && (
+                    <div className="app-selection-screen" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '60vh', gap: '40px', padding: '20px' }}>
+                      <h2 style={{ fontSize: 'clamp(20px, 4vw, 32px)', textAlign: 'center' }}>Que souhaitez-vous explorer ?</h2>
+                      <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <div className="app-select-card tv-focusable" onClick={() => setActiveTab('djaasoo')} style={{ cursor: 'pointer', background: 'linear-gradient(145deg, #2a2a2d, #1b1b1d)', padding: '40px', borderRadius: '20px', textAlign: 'center', width: '260px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transition: 'transform 0.3s' }}>
+                          <span style={{ fontSize: '60px' }}>🎬</span>
+                          <h3 style={{ marginTop: '20px', color: '#fff', fontSize: '24px' }}>DjaaSoo</h3>
+                          <p style={{ color: '#aaa', fontSize: '15px', marginTop: '10px' }}>Cinéma, Séries & Documentaires</p>
+                        </div>
+                        <div className="app-select-card tv-focusable" onClick={() => setActiveTab('djelison')} style={{ cursor: 'pointer', background: 'linear-gradient(145deg, #2a2a2d, #1b1b1d)', padding: '40px', borderRadius: '20px', textAlign: 'center', width: '260px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transition: 'transform 0.3s' }}>
+                          <span style={{ fontSize: '60px' }}>🎵</span>
+                          <h3 style={{ marginTop: '20px', color: '#ffb300', fontSize: '24px' }}>DjeliSon</h3>
+                          <p style={{ color: '#aaa', fontSize: '15px', marginTop: '10px' }}>Musique, Contes & Podcasts</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="app-select-card tv-focusable" onClick={() => setActiveTab('djelison')} style={{ cursor: 'pointer', background: 'linear-gradient(145deg, #2a2a2d, #1b1b1d)', padding: '40px', borderRadius: '20px', textAlign: 'center', width: '260px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transition: 'transform 0.3s' }}>
-                      <span style={{ fontSize: '60px' }}>🎵</span>
-                      <h3 style={{ marginTop: '20px', color: '#ffb300', fontSize: '24px' }}>DjeliSon</h3>
-                      <p style={{ color: '#aaa', fontSize: '15px', marginTop: '10px' }}>Musique, Contes & Podcasts</p>
-                    </div>
-                  </div>
+                  )}
+                  
+                  {activeTab === "djaasoo" && (
+                    <section id="screen-djaasoo" className="screen-tab active">
+                      <DjaasooScreen currentProfile={currentProfile} />
+                    </section>
+                  )}
+                  
+                  {activeTab === "djelison" && (
+                    <section id="screen-djelison" className="screen-tab active">
+                      <DjelisonScreen currentProfile={currentProfile} onPlayAudio={setCurrentAudio} />
+                    </section>
+                  )}
                 </div>
               )}
-              
-              {activeTab === "djaasoo" && (
-                <section id="screen-djaasoo" className="screen-tab active">
-                  <DjaasooScreen />
-                </section>
-              )}
-              
-              {activeTab === "djelison" && (
-                <section id="screen-djelison" className="screen-tab active">
-                  <DjelisonScreen onPlayAudio={setCurrentAudio} />
-                </section>
-              )}
-            </div>
-          )}
 
-          {activePage === "search" && <SearchScreen />}
-          {activePage === "mylist" && <MyListScreen isAuthenticated={isAuthenticated} openAuthModal={() => setIsPlansOpen(true)} />}
-          {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} onLogout={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); }} openAuthModal={() => setIsPlansOpen(true)} onOpenAdmin={() => setActivePage("admin")} />}
-          {activePage === "admin" && <AdminScreen onBack={() => setActivePage("profile")} />}
+              {activePage === "search" && <SearchScreen />}
+              {activePage === "mylist" && <MyListScreen isAuthenticated={isAuthenticated} openAuthModal={() => setIsPlansOpen(true)} />}
+              {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} onLogout={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); }} openAuthModal={() => setIsPlansOpen(true)} onOpenAdmin={() => setActivePage("admin")} />}
+              {activePage === "admin" && <AdminScreen onBack={() => setActivePage("profile")} />}
+            </>
+          )}
         </main>
 
         {/* Mobile Bottom Nav (Hidden on desktop via CSS) */}

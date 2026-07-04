@@ -18,7 +18,20 @@ export default function MiniPlayer({ audioItem, onClose }) {
 
   const handleTimeUpdate = () => {
     if (audioRef.current && audioRef.current.duration > 0) {
-      setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100);
+      const prog = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+      setProgress(prog);
+      
+      // Enregistrer l'avancement dans le localStorage pour le widget "Continuer la lecture"
+      if (audioItem) {
+        localStorage.setItem('djelis_last_watched', JSON.stringify({
+          id: audioItem.id,
+          title: audioItem.title,
+          image: audioItem.image || '/assets/anansi.png',
+          type: 'Audio',
+          progress: prog,
+          audioUrl: audioItem.audioUrl
+        }));
+      }
     }
   };
 

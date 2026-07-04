@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useMediaProgress } from "../hooks/useMediaProgress";
 
-export default function VideoPlayerScreen({ isOpen, onClose, videoUrl, contentId }) {
+export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
+  const videoUrl = videoItem?.videoUrl;
+  const contentId = videoItem?.id;
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
@@ -50,9 +52,23 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoUrl, contentId
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const total = videoRef.current.duration || 0;
-      setProgress((current / total) * 100);
+      const prog = (current / total) * 100;
+      setProgress(prog);
       setCurrentTime(formatTime(current));
       setDuration(formatTime(total));
+      
+      // Enregistrer l'avancement dans le localStorage pour le widget "Continuer la lecture"
+      if (videoItem && total > 0) {
+        localStorage.setItem('djelis_last_watched', JSON.stringify({
+          id: videoItem.id,
+          title: videoItem.title,
+          image: videoItem.image,
+          type: 'Video',
+          progress: prog,
+          videoUrl: videoItem.videoUrl,
+          currentTime: current
+        }));
+      }
     }
   };
 
