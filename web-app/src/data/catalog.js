@@ -156,8 +156,19 @@ export async function getCatalog() {
     const res = await fetch('http://localhost:3000/api/v1/catalog/home');
     if (res.ok) {
       const data = await res.json();
-      // On s'attend à ce que l'API NestJS renvoie le format adéquat, ou on mappe ici
-      if (data && data.length > 0) return data;
+      if (data && data.djaasoo && data.djaasoo.contents && data.djaasoo.contents.length > 0) {
+        return data.djaasoo.contents.map(item => ({
+          id: item.id,
+          title: item.title,
+          type: item.type === 'VIDEO' ? 'Film' : item.type,
+          synopsis: item.synopsis || "",
+          image: item.thumbnailUrl || '/assets/baobab.png',
+          videoUrl: item.trailerCfId 
+            ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8` 
+            : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+          category: 'cinema'
+        }));
+      }
     }
   } catch (err) {
     console.error("Error fetching video catalog from NestJS API. Fallback to local data.", err.message);
@@ -168,10 +179,21 @@ export async function getCatalog() {
 
 export async function getAudioCatalog() {
   try {
-    const res = await fetch('http://localhost:3000/api/v1/catalog/home?type=audio');
+    const res = await fetch('http://localhost:3000/api/v1/catalog/home');
     if (res.ok) {
       const data = await res.json();
-      if (data && data.length > 0) return data;
+      if (data && data.djelison && data.djelison.contents && data.djelison.contents.length > 0) {
+        return data.djelison.contents.map(item => ({
+          id: item.id,
+          title: item.title,
+          artist: item.creator?.displayName || "Artiste Djeli'S",
+          category: 'podcasts',
+          tag: item.category?.name || "Audio",
+          year: item.publishedAt ? new Date(item.publishedAt).getFullYear().toString() : "2026",
+          image: item.thumbnailUrl || '/assets/anansi.png',
+          audioUrl: item.audioUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+        }));
+      }
     }
   } catch (err) {
     console.error("Error fetching audio catalog from NestJS API. Fallback to local data.", err.message);
