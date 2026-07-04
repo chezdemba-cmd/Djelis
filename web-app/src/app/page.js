@@ -126,7 +126,7 @@ export default function Home() {
                     <span className="material-icons-round">vpn_key</span> S&apos;abonner
                   </button>
                 ) : (
-                  <button className="drawer-nav-item" style={{ color: "var(--accent-crimson)" }} onClick={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); setIsMobileMenuOpen(false); }}>
+                  <button className="drawer-nav-item" style={{ color: "var(--accent-crimson)" }} onClick={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); setCurrentProfile(null); setActivePage('home'); setActiveTab(null); setIsMobileMenuOpen(false); }}>
                     <span className="material-icons-round">logout</span> Déconnexion
                   </button>
                 )}
@@ -136,7 +136,20 @@ export default function Home() {
         )}
 
         <main className="app-content">
-          {currentProfile === null ? (
+          {!isAuthenticated ? (
+            <div className="landing-screen" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '70vh', textAlign: 'center', padding: '20px', gap: '30px', animation: 'fadeIn 0.5s ease-out' }}>
+              <h1 style={{ fontSize: 'clamp(26px, 5vw, 44px)', fontWeight: '900', color: 'white', maxWidth: '800px', lineHeight: '1.2', margin: '0 0 10px 0' }}>
+                Films, Séries & Contes <br />
+                <span style={{ color: '#ffb300' }}>Illimités</span> en Afrique de l&apos;Ouest
+              </h1>
+              <p style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', color: '#aaa', maxWidth: '600px', margin: '0' }}>
+                Découvrez le meilleur du cinéma avec DjaaSoo et de la musique traditionnelle avec DjeliSon. Regardez et écoutez vos artistes préférés.
+              </p>
+              <button className="tv-focusable" onClick={() => setIsPlansOpen(true)} style={{ background: 'linear-gradient(135deg, #ffb300, #ff4081)', color: 'white', border: 'none', padding: '16px 40px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 8px 25px rgba(255, 64, 129, 0.4)', transition: '0.3s' }}>
+                Commencer l&apos;aventure
+              </button>
+            </div>
+          ) : currentProfile === null ? (
             <ProfileSelector onSelectProfile={setCurrentProfile} />
           ) : (
             <>
@@ -176,7 +189,7 @@ export default function Home() {
 
               {activePage === "search" && <SearchScreen />}
               {activePage === "mylist" && <MyListScreen isAuthenticated={isAuthenticated} openAuthModal={() => setIsPlansOpen(true)} />}
-              {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} onLogout={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); }} openAuthModal={() => setIsPlansOpen(true)} onOpenAdmin={() => setActivePage("admin")} />}
+              {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} onLogout={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); setCurrentProfile(null); setActivePage('home'); setActiveTab(null); }} openAuthModal={() => setIsPlansOpen(true)} onOpenAdmin={() => setActivePage("admin")} />}
               {activePage === "admin" && <AdminScreen onBack={() => setActivePage("profile")} />}
             </>
           )}
@@ -208,7 +221,9 @@ export default function Home() {
           onComplete={() => {
             localStorage.setItem('accessToken', 'simulated_test_jwt_token_for_tracking');
             setIsAuthenticated(true);
-            setActivePage('profile');
+            setCurrentProfile({ id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false });
+            setActivePage('home');
+            setActiveTab('djaasoo'); // redirection vers l'accueil de base
           }}
         />
         <MiniPlayer key={currentAudio?.id} audioItem={currentAudio} onClose={() => setCurrentAudio(null)} />
