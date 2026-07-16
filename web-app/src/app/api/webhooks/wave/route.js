@@ -10,12 +10,23 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
     }
 
-    const secret = process.env.WAVE_WEBHOOK_SECRET || 'default-secret';
+    const secret = process.env.WAVE_WEBHOOK_SECRET;
+    
+    if (!secret) {
+      return NextResponse.json({ error: 'Webhook secret is not configured' }, { status: 500 });
+    }
+
     const hmac = crypto.createHmac('sha256', secret);
     const expectedSignature = hmac.update(rawBody).digest('hex');
 
-    // In production we enforce signature check
-    if (signature !== expectedSignature && process.env.NODE_ENV === 'production') {
+    // Use constant-time comparison to prevent timing attacks
+    const signatureBuffer = Buffer.from(signature, 'hex');
+    const expectedSignatureBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (
+      signatureBuffer.length !== expectedSignatureBuffer.length ||
+      !crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer)
+    ) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
