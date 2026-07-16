@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import * as crypto from "crypto";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
 @Controller("stream")
 export class StreamController {
