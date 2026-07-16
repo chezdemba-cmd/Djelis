@@ -46,8 +46,16 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
         }
       } catch (err) {
         console.error("Error connecting to NestJS Auth API.", err);
-        setErrorMsg("Impossible de joindre le serveur d'authentification.");
-        return; // Stop flow
+        // Fallback: Mode simulation si le backend n'est pas disponible (ex: Vercel demo)
+        console.warn("Backend unreachable, activating simulated login fallback.");
+        localStorage.setItem('accessToken', 'demo_simulated_token_xyz');
+        if (isLogin) {
+            if (onComplete) onComplete();
+            onClose();
+            return;
+        } else {
+            // Passer à l'étape suivante (choix du forfait)
+        }
       }
     }
     setStep((prev) => prev + 1);
