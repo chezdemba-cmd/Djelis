@@ -6,7 +6,7 @@ export class ProfileService {
   constructor(private prisma: PrismaService) {}
 
   async list(userId: string) {
-    return this.prisma.profile.findMany({
+    return this.prisma.withUser(userId).profile.findMany({
       where: { userId },
       orderBy: { createdAt: "asc" },
     });
@@ -16,7 +16,7 @@ export class ProfileService {
     userId: string,
     data: { name: string; avatarUrl?: string; isChild?: boolean }
   ) {
-    return this.prisma.profile.create({
+    return this.prisma.withUser(userId).profile.create({
       data: {
         userId,
         name: data.name,
@@ -31,13 +31,14 @@ export class ProfileService {
     id: string,
     data: { name?: string; avatarUrl?: string; isChild?: boolean }
   ) {
-    const profile = await this.prisma.profile.findFirst({
+    const prismaRLS = this.prisma.withUser(userId);
+    const profile = await prismaRLS.profile.findFirst({
       where: { id, userId },
     });
     if (!profile) {
       throw new NotFoundException("Profil non trouvé.");
     }
-    return this.prisma.profile.update({
+    return prismaRLS.profile.update({
       where: { id },
       data: {
         name: data.name ?? profile.name,
@@ -49,13 +50,14 @@ export class ProfileService {
   }
 
   async delete(userId: string, id: string) {
-    const profile = await this.prisma.profile.findFirst({
+    const prismaRLS = this.prisma.withUser(userId);
+    const profile = await prismaRLS.profile.findFirst({
       where: { id, userId },
     });
     if (!profile) {
       throw new NotFoundException("Profil non trouvé.");
     }
-    await this.prisma.profile.delete({
+    await prismaRLS.profile.delete({
       where: { id },
     });
     return { success: true };
