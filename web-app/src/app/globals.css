@@ -2360,14 +2360,14 @@ select.form-input {
     
     body:not(.mode-mobile):not(.mode-tv) .mini-player {
         bottom: 24px;
-        left: 280px;
+        left: 40px;
         right: 40px;
         border-radius: 20px;
     }
     
     body:not(.mode-mobile):not(.mode-tv) .modal {
         top: 0;
-        left: 240px;
+        left: 0;
     }
     
     body:not(.mode-mobile):not(.mode-tv) .plans-grid {

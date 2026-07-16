@@ -4,6 +4,7 @@ import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { AuthModule } from "./auth/auth.module";
 import { CatalogModule } from "./catalog/catalog.module";
 import { PaymentsModule } from "./payments/payments.module";
+import { ProfileModule } from "./profile/profile.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PaymentsModule } from "./payments/payments.module";
     AuthModule,
     CatalogModule,
     PaymentsModule,
+    ProfileModule,
   ],
   controllers: [],
   providers: [

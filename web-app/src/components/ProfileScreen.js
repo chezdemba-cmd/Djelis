@@ -1,4 +1,4 @@
-export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal, onOpenAdmin }) {
+export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal, onOpenAdmin, currentProfile }) {
   return (
     <div id="page-profile" className="app-page active" style={{ width: "100%", height: "100%" }}>
       <div className="profile-container">
@@ -24,11 +24,11 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
         ) : (
           <div className="profile-subpage active" id="profile-subpage-home">
             <div className="profile-header-card">
-              <div className="profile-avatar-large">
-                <span className="material-icons-round">person</span>
+              <div className="profile-avatar-large" style={{ backgroundColor: currentProfile?.color || '#ffb300', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50%' }}>
+                <span style={{ fontSize: '48px', lineHeight: '1' }}>{currentProfile?.avatar || '😎'}</span>
               </div>
-              <h2 className="profile-name" id="user-display-name">Sidiki Keita</h2>
-              <p className="profile-email" id="user-display-email">sidiki.keita@djelis.com</p>
+              <h2 className="profile-name" id="user-display-name">{currentProfile?.name || 'Sidiki Keita'}</h2>
+              <p className="profile-email" id="user-display-email">{currentProfile?.role === 'Kids' ? 'Profil Enfant' : 'Profil Principal'}</p>
               <span className="profile-status-badge" id="user-display-status">Membre Premium VIP</span>
             </div>
 

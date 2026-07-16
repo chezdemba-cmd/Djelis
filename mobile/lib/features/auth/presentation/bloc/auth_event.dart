@@ -42,3 +42,24 @@ class AuthRegisterWithEmail extends AuthEvent {
 class AuthLogout extends AuthEvent {
   const AuthLogout();
 }
+
+class AuthRegisterWithPhone extends AuthEvent {
+  final String phone;
+  final String password;
+  final String countryCode;
+  const AuthRegisterWithPhone({
+    required this.phone,
+    required this.password,
+    required this.countryCode,
+  });
+  @override
+  List<Object?> get props => [phone, countryCode];
+}
+
+class AuthVerifyOtp extends AuthEvent {
+  final String phone;
+  final String otp;
+  const AuthVerifyOtp({required this.phone, required this.otp});
+  @override
+  List<Object?> get props => [phone, otp];
+}

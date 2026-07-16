@@ -75,20 +75,14 @@
    ========================================================================== */
 
 .mobile-menu-btn {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 15px;
   background: transparent;
   border: none;
   color: white;
   cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .mobile-menu-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
 }
 
 .mobile-drawer-overlay {

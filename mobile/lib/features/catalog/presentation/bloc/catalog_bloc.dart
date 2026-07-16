@@ -14,6 +14,7 @@ class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
     on<CatalogLoadByType>(_onLoadByType);
     on<CatalogSearch>(_onSearch);
     on<CatalogClearSearch>(_onClearSearch);
+    on<CatalogReportProgress>(_onReportProgress);
   }
 
   Future<void> _onLoadFeatured(
@@ -59,5 +60,16 @@ class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
 
   void _onClearSearch(CatalogClearSearch event, Emitter<CatalogState> emit) {
     emit(const CatalogInitial());
+  }
+
+  Future<void> _onReportProgress(
+      CatalogReportProgress event, Emitter<CatalogState> emit) async {
+    await _repository.reportProgress(
+      contentId: event.contentId,
+      episodeId: event.episodeId,
+      progressSec: event.progressSec,
+      quality: event.quality,
+      deviceType: event.deviceType,
+    );
   }
 }

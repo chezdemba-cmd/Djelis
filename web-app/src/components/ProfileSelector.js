@@ -1,17 +1,107 @@
-import React from 'react';
-
-const PREDEFINED_PROFILES = [
-  { id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false },
-  { id: '2', name: 'Maman', role: 'Premium', avatar: '👩‍🦱', color: '#FF4081', isKids: false },
-  { id: '3', name: 'Enfant', role: 'Kids', avatar: '👶', color: '#00E5FF', isKids: true },
-];
+import React, { useState, useEffect } from 'react';
 
 export default function ProfileSelector({ onSelectProfile }) {
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const mapProfiles = (data) => {
+    return data.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      avatar: p.avatarUrl || ['😎', '👩‍🦱', '👶', '🦊', '🦁'][idx % 5],
+      color: ['#FFB300', '#FF4081', '#00E5FF', '#4CAF50', '#9C27B0'][idx % 5],
+      role: p.isChild ? 'Kids' : 'Premium',
+      isKids: p.isChild,
+    }));
+  };
+
+  useEffect(() => {
+    async function loadProfiles() {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setLoading(false);
+        // Fallback to static mock profiles if not authenticated
+        setProfiles([
+          { id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false },
+          { id: '2', name: 'Maman', role: 'Premium', avatar: '👩‍🦱', color: '#FF4081', isKids: false },
+          { id: '3', name: 'Enfant', role: 'Kids', avatar: '👶', color: '#00E5FF', isKids: true },
+        ]);
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:3000/api/v1/profiles', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setProfiles(mapProfiles(data));
+          } else {
+            setProfiles([
+              { id: 'default', name: 'Utilisateur', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false }
+            ]);
+          }
+        } else {
+          throw new Error("HTTP error " + res.status);
+        }
+      } catch (err) {
+        console.error("Error loading profiles from NestJS:", err);
+        setProfiles([
+          { id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false },
+          { id: '2', name: 'Maman', role: 'Premium', avatar: '👩‍🦱', color: '#FF4081', isKids: false },
+          { id: '3', name: 'Enfant', role: 'Kids', avatar: '👶', color: '#00E5FF', isKids: true },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfiles();
+  }, []);
+
+  const handleAddProfile = async () => {
+    const name = prompt("Entrez le nom du nouveau profil :");
+    if (!name || name.trim() === "") return;
+
+    const isChild = confirm("Est-ce un profil enfant ?");
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      const res = await fetch('http://localhost:3000/api/v1/profiles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          is_child: isChild
+        })
+      });
+      if (res.ok) {
+        const refreshRes = await fetch('http://localhost:3000/api/v1/profiles', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          setProfiles(mapProfiles(data));
+        }
+      }
+    } catch (err) {
+      alert("Erreur lors de la création du profil");
+    }
+  };
+
   return (
     <div className="profile-selector-container">
       <h1 className="profile-selector-title">Qui regarde Djeli&apos;S ?</h1>
       <div className="profile-grid">
-        {PREDEFINED_PROFILES.map((profile) => (
+        {profiles.map((profile) => (
           <div 
             key={profile.id} 
             className="profile-card tv-focusable" 
@@ -30,6 +120,16 @@ export default function ProfileSelector({ onSelectProfile }) {
             <span className="profile-badge">{profile.role}</span>
           </div>
         ))}
+
+        {!loading && localStorage.getItem('accessToken') && (
+          <div className="profile-card profile-add-card tv-focusable" onClick={handleAddProfile}>
+            <div className="profile-avatar-wrapper" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.2)', boxShadow: 'none' }}>
+              <span className="profile-avatar-emoji" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '50px' }}>+</span>
+            </div>
+            <h3 className="profile-name" style={{ color: 'rgba(255,255,255,0.4)' }}>Ajouter</h3>
+            <span className="profile-badge" style={{ opacity: 0 }}>Kids</span>
+          </div>
+        )}
       </div>
       
       <style dangerouslySetInnerHTML={{__html: `

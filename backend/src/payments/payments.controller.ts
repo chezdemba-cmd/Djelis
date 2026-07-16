@@ -10,6 +10,7 @@ import {
   Req,
   ParseIntPipe,
   Headers,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { PaymentsService } from "./payments.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
@@ -91,8 +92,29 @@ export class PaymentsController {
   async handleWebhook(
     @Param("gateway") gateway: string,
     @Headers() headers: Record<string, string>,
-    @Body() body: any
+    @Body() body: any,
+    @Req() req: any
   ) {
+    this.verifyWebhookIp(gateway, req);
     return this.paymentsService.handleWebhook(gateway, headers, body);
+  }
+
+  private verifyWebhookIp(gateway: string, req: any) {
+    if (process.env.NODE_ENV !== "production") return;
+
+    // Get client IP
+    const rawIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const ip = typeof rawIp === "string" ? rawIp.split(",")[0].trim() : "";
+
+    // Load allowed IPs from environment variables
+    const allowedIpsEnv = process.env[`ALLOWED_IPS_${gateway.toUpperCase()}`];
+    if (!allowedIpsEnv) return; // If not set, allow all by default
+
+    const allowedIps = allowedIpsEnv.split(",").map((item) => item.trim());
+    if (!allowedIps.includes(ip)) {
+      throw new UnauthorizedException(
+        `IP ${ip} non autorisée pour les webhooks ${gateway}`
+      );
+    }
   }
 }

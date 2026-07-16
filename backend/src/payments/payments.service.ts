@@ -84,6 +84,7 @@ export class PaymentsService {
     let transactionId: string;
     let gatewayStatus: string;
     let errorMessage: string | undefined;
+    let clientRefId: string | undefined;
 
     if (gateway === "wave") {
       // Vérification HMAC Wave
@@ -108,6 +109,7 @@ export class PaymentsService {
       }
 
       transactionId = body.id; // Wave session ID
+      clientRefId = body.client_reference_id || (body.metadata?.payment_id as string) || (body.metadata?.client_reference_id as string);
       gatewayStatus = body.status; // succeeded, failed
     } else if (gateway === "cinetpay") {
       // Vérification HMAC CinetPay
@@ -140,16 +142,17 @@ export class PaymentsService {
       );
     }
 
-    // Find the pending payment - check if transactionId is a valid UUID
+    // Find the pending payment - check if clientRefId or transactionId is a valid UUID
+    const lookupId = clientRefId || transactionId;
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        transactionId
+        lookupId
       );
     const payment = await this.prisma.payment.findFirst({
       where: isUuid
-        ? { id: transactionId, status: PaymentStatus.PENDING }
+        ? { id: lookupId, status: PaymentStatus.PENDING }
         : {
-            gatewayTransactionId: transactionId,
+            gatewayTransactionId: lookupId,
             status: PaymentStatus.PENDING,
           },
     });

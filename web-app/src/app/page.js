@@ -27,32 +27,7 @@ export default function Home() {
 
   return (
     <div className="app-root">
-      {/* Desktop Sidebar (Hidden on mobile via CSS) */}
-      <aside className="desktop-sidebar">
-        <div className="sidebar-logo">
-          <img src="/assets/logo.png" alt="Djeli&apos;S Logo" className="sidebar-logo-img" />
-          <span className="sidebar-logo-text">Djeli&apos;S</span>
-        </div>
-        <nav className="sidebar-nav">
-          <button className={`sidebar-nav-item tv-focusable ${activePage === 'home' ? 'active' : ''}`} onClick={() => setActivePage('home')}>
-            <span className="material-icons-round">home</span> Accueil
-          </button>
-          <button className={`sidebar-nav-item tv-focusable ${activePage === 'search' ? 'active' : ''}`} onClick={() => setActivePage('search')}>
-            <span className="material-icons-round">search</span> Recherche
-          </button>
-          <button className={`sidebar-nav-item tv-focusable ${activePage === 'mylist' ? 'active' : ''}`} onClick={() => setActivePage('mylist')}>
-            <span className="material-icons-round">favorite_border</span> Ma Liste
-          </button>
-          <button className={`sidebar-nav-item tv-focusable ${activePage === 'profile' ? 'active' : ''}`} onClick={() => setActivePage('profile')}>
-            <span className="material-icons-round">person_outline</span> Mon Profil
-          </button>
-          {!isAuthenticated && (
-            <button className="sidebar-nav-item side-plans-btn tv-focusable" onClick={() => setIsPlansOpen(true)}>
-              <span className="material-icons-round">stars</span> Abonnements
-            </button>
-          )}
-        </nav>
-      </aside>
+
 
       {/* Main App Container */}
       <div className="app-container">
@@ -189,41 +164,21 @@ export default function Home() {
 
               {activePage === "search" && <SearchScreen />}
               {activePage === "mylist" && <MyListScreen isAuthenticated={isAuthenticated} openAuthModal={() => setIsPlansOpen(true)} />}
-              {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} onLogout={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); setCurrentProfile(null); setActivePage('home'); setActiveTab(null); }} openAuthModal={() => setIsPlansOpen(true)} onOpenAdmin={() => setActivePage("admin")} />}
+              {activePage === "profile" && <ProfileScreen isAuthenticated={isAuthenticated} currentProfile={currentProfile} onLogout={() => { localStorage.removeItem('accessToken'); setIsAuthenticated(false); setCurrentProfile(null); setActivePage('home'); setActiveTab(null); }} openAuthModal={() => setIsPlansOpen(true)} onOpenAdmin={() => setActivePage("admin")} />}
               {activePage === "admin" && <AdminScreen onBack={() => setActivePage("profile")} />}
             </>
           )}
         </main>
 
-        {/* Mobile Bottom Nav (Hidden on desktop via CSS) */}
-        <div className="bottom-nav">
-          <button className={`nav-item tv-focusable ${activePage === 'home' ? 'active' : ''}`} onClick={() => setActivePage('home')}>
-            <span className="material-icons-round">home</span>
-            <span>Accueil</span>
-          </button>
-          <button className={`nav-item tv-focusable ${activePage === 'search' ? 'active' : ''}`} onClick={() => setActivePage('search')}>
-            <span className="material-icons-round">search</span>
-            <span>Recherche</span>
-          </button>
-          <button className={`nav-item tv-focusable ${activePage === 'mylist' ? 'active' : ''}`} onClick={() => setActivePage('mylist')}>
-            <span className="material-icons-round">favorite_border</span>
-            <span>Ma Liste</span>
-          </button>
-          <button className={`nav-item tv-focusable ${activePage === 'profile' ? 'active' : ''}`} onClick={() => setActivePage('profile')}>
-            <span className="material-icons-round">person_outline</span>
-            <span>Profil</span>
-          </button>
-        </div>
+
         
         <PlansModal 
           isOpen={isPlansOpen} 
           onClose={() => setIsPlansOpen(false)} 
           onComplete={() => {
-            localStorage.setItem('accessToken', 'simulated_test_jwt_token_for_tracking');
             setIsAuthenticated(true);
-            setCurrentProfile({ id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false });
             setActivePage('home');
-            setActiveTab('djaasoo'); // redirection vers l'accueil de base
+            setActiveTab(null); // Return to profile/universe selection
           }}
         />
         <MiniPlayer key={currentAudio?.id} audioItem={currentAudio} onClose={() => setCurrentAudio(null)} />

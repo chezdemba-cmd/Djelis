@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAudioCatalog } from "../data/catalog";
+import ContinueWatching from "./ContinueWatching";
 
 export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
   const [activeTab, setActiveTab] = useState("podcasts");
@@ -13,13 +14,7 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
       const data = await getAudioCatalog();
       setAudioCatalog(data);
 
-      const saved = localStorage.getItem('djelis_last_watched');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.type === 'Audio') {
-          setLastWatched(parsed);
-        }
-      }
+      setIsLoading(false);
       setIsLoading(false);
     };
     loadAudio();
@@ -31,34 +26,7 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
 
   return (
     <>
-      {lastWatched && (
-        <div className="content-row last-watched-row" style={{ padding: '0 20px', marginBottom: '20px', marginTop: '20px' }}>
-          <div className="row-header">
-            <h2>Reprendre l&apos;écoute</h2>
-          </div>
-          <div 
-            className="media-card tv-focusable last-watched-card" 
-            onClick={() => {
-              const matchedItem = audioCatalog.find(i => i.id === lastWatched.id) || lastWatched;
-              if (onPlayAudio) onPlayAudio(matchedItem);
-            }}
-            style={{ width: '280px', display: 'flex', gap: '15px', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '12px', cursor: 'pointer' }}
-          >
-            <div className="card-image" style={{ width: '80px', height: '80px', borderRadius: '8px', backgroundImage: `url(${lastWatched.image})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }}>
-              <div className="card-play-overlay" style={{ opacity: 1, background: 'rgba(0,0,0,0.3)' }}>
-                <span className="material-icons-round" style={{ fontSize: '24px' }}>play_circle_filled</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden', flex: 1 }}>
-              <div style={{ fontWeight: 'bold', fontSize: '14px', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lastWatched.title}</div>
-              <div style={{ fontSize: '12px', color: '#ffb300', marginTop: '4px', fontWeight: 'bold' }}>Audio - {Math.round(lastWatched.progress)}%</div>
-              <div className="progress-bar-mini" style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', marginTop: '6px', overflow: 'hidden' }}>
-                <div style={{ width: `${lastWatched.progress}%`, height: '100%', background: '#ffb300' }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ContinueWatching currentProfile={currentProfile} type="AUDIO" />
 
       <div className="djelison-tabs-container">
         <div className="djelison-tabs">

@@ -35,6 +35,8 @@ class AppRouter {
           final extra = state.extra;
           if (extra is Map<String, dynamic>) {
             return PlayerScreen(
+              contentId: extra['contentId'] as String?,
+              episodeId: extra['episodeId'] as String?,
               title: (extra['title'] as String?) ?? 'Lecteur',
               videoUrl: extra['videoUrl'] as String?,
               isAudio: (extra['isAudio'] as bool?) ?? false,

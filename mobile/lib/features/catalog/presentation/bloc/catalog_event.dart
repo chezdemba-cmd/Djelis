@@ -32,3 +32,22 @@ class CatalogSearch extends CatalogEvent {
 class CatalogClearSearch extends CatalogEvent {
   const CatalogClearSearch();
 }
+
+class CatalogReportProgress extends CatalogEvent {
+  final String contentId;
+  final String? episodeId;
+  final int progressSec;
+  final String quality;
+  final String deviceType;
+
+  const CatalogReportProgress({
+    required this.contentId,
+    this.episodeId,
+    required this.progressSec,
+    required this.quality,
+    required this.deviceType,
+  });
+
+  @override
+  List<Object?> get props => [contentId, episodeId, progressSec, quality, deviceType];
+}

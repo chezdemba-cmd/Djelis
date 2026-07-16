@@ -62,7 +62,9 @@ model User {
   profiles      Profile[]
   subscriptions Subscription[]
   payments      Payment[]
+  rentals       Rental[]
   devices       Device[]
+  sessions      Session[]
 
   @@index([phone])
   @@index([email])
@@ -173,6 +175,10 @@ model Content {
   episodes         Episode[]
   rightsTerritories RightsTerritory[]
   watchHistory     WatchHistory[]
+  rentals          Rental[]
+
+  rentalPriceFcfa  Int?
+  rentalPriceEuro  Decimal?          @db.Decimal(5, 2)
 
   @@index([categoryId])
   @@index([publishedAt])
@@ -248,6 +254,8 @@ model Payment {
   plan                 Plan?         @relation(fields: [planId], references: [id])
   subscriptionId       String?       @db.Uuid
   subscription         Subscription? @relation(fields: [subscriptionId], references: [id])
+  rentalId             String?       @db.Uuid
+  rental               Rental?       @relation(fields: [rentalId], references: [id])
   amount               Decimal       @db.Decimal(10, 2)
   currency             String        @db.VarChar(3) // XOF, EUR
   gateway              String
@@ -289,4 +297,32 @@ model Device {
 
   @@unique([userId, deviceUuid])
   @@map("devices")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String   @unique
+  deviceUuid   String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Rental {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId String   @db.Uuid
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  payments  Payment[]
+
+  @@index([userId])
+  @@index([contentId])
+  @@map("rentals")
 }

@@ -14,6 +14,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginWithEmail>(_onLoginWithEmail);
     on<AuthLoginWithPhone>(_onLoginWithPhone);
     on<AuthRegisterWithEmail>(_onRegisterWithEmail);
+    on<AuthRegisterWithPhone>(_onRegisterWithPhone);
+    on<AuthVerifyOtp>(_onVerifyOtp);
     on<AuthLogout>(_onLogout);
   }
 
@@ -75,6 +77,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogout(AuthLogout event, Emitter<AuthState> emit) async {
     await _repository.logout();
     emit(const AuthUnauthenticated());
+  }
+
+  Future<void> _onRegisterWithPhone(
+      AuthRegisterWithPhone event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.registerWithPhone(
+        phone: event.phone,
+        password: event.password,
+        countryCode: event.countryCode,
+      );
+      emit(AuthOtpRequired(event.phone));
+    } on AppException catch (e) {
+      emit(AuthError(e.message));
+    } catch (_) {
+      // Dev fallback: transition to OTP even if backend is unreachable
+      emit(AuthOtpRequired(event.phone));
+    }
+  }
+
+  Future<void> _onVerifyOtp(
+      AuthVerifyOtp event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.verifyOtp(
+        phone: event.phone,
+        otp: event.otp,
+      );
+      emit(const AuthUnauthenticated());
+    } on AppException catch (e) {
+      emit(AuthError(e.message));
+    } catch (_) {
+      // Dev fallback
+      emit(const AuthUnauthenticated());
+    }
   }
 }
 

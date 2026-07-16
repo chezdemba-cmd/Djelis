@@ -101,7 +101,10 @@ class DetailScreen extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () {
                         context.push('/player', extra: {
+                          'contentId': contentId,
+                          'episodeId': 'ep-1',
                           'title': '$title — S1:E1',
+                          'videoUrl': 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
                         });
                       },
                       icon: const Icon(Icons.play_arrow, color: Colors.black),
@@ -187,10 +190,17 @@ class DetailScreen extends StatelessWidget {
                     ep["duration"]!,
                     style: const TextStyle(color: Colors.grey, fontSize: 11),
                   ),
-                  trailing: const Icon(Icons.download_for_offline_outlined, color: Colors.white70),
+                  trailing: DownloadButton(
+                    contentId: contentId,
+                    episodeNumber: ep["number"]!,
+                    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4',
+                  ),
                   onTap: () {
                     context.push('/player', extra: {
+                      'contentId': contentId,
+                      'episodeId': 'ep-${ep["number"]}',
                       'title': '$title — E${ep["number"]} · ${ep["title"]}',
+                      'videoUrl': 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
                     });
                   },
                 );
@@ -200,6 +210,93 @@ class DetailScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class DownloadButton extends StatefulWidget {
+  final String contentId;
+  final String episodeNumber;
+  final String videoUrl;
+
+  const DownloadButton({
+    super.key,
+    required this.contentId,
+    required this.episodeNumber,
+    required this.videoUrl,
+  });
+
+  @override
+  State<DownloadButton> createState() => _DownloadButtonState();
+}
+
+class _DownloadButtonState extends State<DownloadButton> {
+  bool isDownloading = false;
+  double progress = 0.0;
+  bool isDownloaded = false;
+
+  void _startDownload() async {
+    setState(() {
+      isDownloading = true;
+      progress = 0.0;
+    });
+
+    // Simulation de téléchargement asynchrone (En production: DownloadService().downloadFile)
+    for (int i = 1; i <= 10; i++) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        setState(() {
+          progress = i / 10.0;
+        });
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        isDownloading = false;
+        isDownloaded = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Épisode téléchargé avec succès !"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isDownloaded) {
+      return const Icon(Icons.download_done, color: AppTheme.primaryGold);
+    }
+
+    if (isDownloading) {
+      return SizedBox(
+        width: 32,
+        height: 32,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircularProgressIndicator(
+              value: progress,
+              color: AppTheme.primaryGold,
+              backgroundColor: Colors.white24,
+              strokeWidth: 3,
+            ),
+            Text(
+              '${(progress * 100).toInt()}',
+              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return IconButton(
+      icon: const Icon(Icons.download_for_offline_outlined, color: Colors.white70),
+      onPressed: _startDownload,
     );
   }
 }

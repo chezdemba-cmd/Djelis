@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
+import 'package:audio_session/audio_session.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../bloc/catalog_bloc.dart';
+import '../bloc/catalog_event.dart';
 
 // ─── Quality model ────────────────────────────────────────────────────────────
 
@@ -15,6 +19,8 @@ class _Quality {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 class PlayerScreen extends StatefulWidget {
+  final String? contentId;
+  final String? episodeId;
   final String title;
   final String? videoUrl;
   final bool isAudio;
@@ -23,6 +29,8 @@ class PlayerScreen extends StatefulWidget {
 
   const PlayerScreen({
     super.key,
+    this.contentId,
+    this.episodeId,
     required this.title,
     this.videoUrl,
     this.isAudio = false,
@@ -70,7 +78,10 @@ class _PlayerScreenState extends State<PlayerScreen>
       duration: const Duration(milliseconds: 250),
       value: 1.0,
     );
-    if (!widget.isAudio) _initPlayer();
+    if (widget.isAudio) {
+      _initAudioSession();
+    }
+    _initPlayer();
     _scheduleHide();
   }
 
@@ -84,6 +95,16 @@ class _PlayerScreenState extends State<PlayerScreen>
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  Future<void> _initAudioSession() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+      await session.setActive(true);
+    } catch (e) {
+      debugPrint('[DjeliS] Error initializing AudioSession: $e');
+    }
   }
 
   // ─── Player init / quality switch ───────────────────────────────────────────
@@ -138,7 +159,17 @@ class _PlayerScreenState extends State<PlayerScreen>
     _progressTimer?.cancel();
     _progressTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       final pos = _controller?.value.position.inSeconds ?? 0;
-      // TODO Phase 2: POST /stream/progress { content_id, progress_sec, quality_used }
+      if (widget.contentId != null) {
+        context.read<CatalogBloc>().add(
+              CatalogReportProgress(
+                contentId: widget.contentId!,
+                episodeId: widget.episodeId,
+                progressSec: pos,
+                quality: _selectedQuality,
+                deviceType: 'mobile',
+              ),
+            );
+      }
       debugPrint('[DjeliS] progress=$pos s  quality=$_selectedQuality');
     });
   }
@@ -276,7 +307,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           children: [
             _buildContent(),
             FadeTransition(opacity: _fadeAnim, child: _buildOverlay()),
-            if (!_isInitialized && !_hasError && !widget.isAudio)
+            if (!_isInitialized && !_hasError)
               const Center(
                 child: CircularProgressIndicator(
                   color: AppTheme.primaryGold,

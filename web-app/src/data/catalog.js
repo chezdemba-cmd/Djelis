@@ -153,7 +153,9 @@ export const dummyAudioCatalog = [
 
 export async function getCatalog() {
   try {
-    const res = await fetch('http://localhost:3000/api/v1/catalog/home');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const res = await fetch('http://localhost:3000/api/v1/catalog/home', { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && data.djaasoo && data.djaasoo.contents && data.djaasoo.contents.length > 0) {
@@ -179,7 +181,9 @@ export async function getCatalog() {
 
 export async function getAudioCatalog() {
   try {
-    const res = await fetch('http://localhost:3000/api/v1/catalog/home');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const res = await fetch('http://localhost:3000/api/v1/catalog/home', { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && data.djelison && data.djelison.contents && data.djelison.contents.length > 0) {

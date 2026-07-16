@@ -90,10 +90,20 @@ export class CatalogService {
   }
 
   async getFeatured(country?: string) {
+    const territoryFilter = country
+      ? {
+          some: {
+            countryCode: country.toUpperCase(),
+            isAllowed: true,
+          },
+        }
+      : undefined;
+
     const heroVideo = await this.prisma.content.findFirst({
       where: {
         type: ContentType.VIDEO,
         isActive: true,
+        rightsTerritories: territoryFilter,
       },
       include: { creator: true, category: true, episodes: true },
     });
@@ -102,6 +112,7 @@ export class CatalogService {
       where: {
         type: ContentType.VIDEO,
         isActive: true,
+        rightsTerritories: territoryFilter,
       },
       take: 10,
       orderBy: { createdAt: "desc" },
@@ -112,6 +123,7 @@ export class CatalogService {
       where: {
         type: ContentType.AUDIO,
         isActive: true,
+        rightsTerritories: territoryFilter,
       },
       take: 10,
       orderBy: { createdAt: "desc" },
@@ -242,6 +254,14 @@ export class CatalogService {
     const contents = await this.prisma.content.findMany({
       where: {
         isActive: true,
+        rightsTerritories: country
+          ? {
+              some: {
+                countryCode: country.toUpperCase(),
+                isAllowed: true,
+              },
+            }
+          : undefined,
       },
       take: 10,
       orderBy: { createdAt: "desc" },

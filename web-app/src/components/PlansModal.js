@@ -6,31 +6,47 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
   const [freq, setFreq] = useState("weekly");
   const [authMethod, setAuthMethod] = useState("email");
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isLogin, setIsLogin] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   if (!isOpen) return null;
 
   const handleNextStep = async (e) => {
     e.preventDefault();
     if (step === 1) {
-      // Tentative de connexion / inscription via NestJS
+      setErrorMsg("");
       try {
         const payload = authMethod === 'email' 
           ? { email: e.target.querySelector('input[type="email"]')?.value, password: e.target.querySelector('input[type="password"]').value }
           : { phone: e.target.querySelector('input[type="tel"]')?.value, password: e.target.querySelector('input[type="password"]').value };
           
-        const res = await fetch('http://localhost:3000/api/v1/auth/login', {
+        const endpoint = isLogin ? 'http://localhost:3000/api/v1/auth/login' : 'http://localhost:3000/api/v1/auth/register';
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        
+        const data = await res.json();
+        
         if (res.ok) {
-          const data = await res.json();
-          if (data.accessToken) {
-             localStorage.setItem('accessToken', data.accessToken);
+          const token = data.access_token || data.accessToken;
+          if (token) {
+             localStorage.setItem('accessToken', token);
+             if (isLogin) {
+                if (onComplete) onComplete();
+                onClose();
+                return;
+             }
           }
+        } else {
+          setErrorMsg(data.message || "Une erreur est survenue.");
+          return; // Stop flow
         }
       } catch (err) {
-        console.error("Error connecting to NestJS Auth API. Using local simulated auth.", err);
+        console.error("Error connecting to NestJS Auth API.", err);
+        setErrorMsg("Impossible de joindre le serveur d'authentification.");
+        return; // Stop flow
       }
     }
     setStep((prev) => prev + 1);
@@ -73,14 +89,18 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
             <div className="modal-logo-container">
               <img src="/assets/logo.png" alt="Djeli&apos;S Logo" className="modal-logo-img" />
             </div>
-            <h2 className="plans-main-title">Créez votre compte</h2>
-            <p className="plans-subtitle" style={{ marginBottom: "20px" }}>Entrez vos coordonnées de connexion.</p>
+            <h2 className="plans-main-title">{isLogin ? "Connexion" : "Créez votre compte"}</h2>
+            <p className="plans-subtitle" style={{ marginBottom: "20px" }}>{isLogin ? "Connectez-vous pour continuer." : "Entrez vos coordonnées de connexion."}</p>
             
+            {errorMsg && <div style={{ color: '#ff4444', marginBottom: '15px', padding: '10px', background: 'rgba(255,0,0,0.1)', borderRadius: '8px' }}>{errorMsg}</div>}
+
             <form onSubmit={handleNextStep}>
-              <div className="form-group">
-                <label>Nom complet</label>
-                <input type="text" placeholder="Sidiki Keita" required className="form-input" />
-              </div>
+              {!isLogin && (
+                <div className="form-group">
+                  <label>Nom complet</label>
+                  <input type="text" placeholder="Sidiki Keita" required className="form-input" />
+                </div>
+              )}
 
               <div className="auth-method-toggle" style={{ marginTop: "14px" }}>
                 <button type="button" className={`method-btn tv-focusable ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod("email")}>S&apos;inscrire par Email</button>
@@ -105,8 +125,14 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
               </div>
 
               <button type="submit" className="modal-action-btn tv-focusable" style={{ marginTop: "24px" }}>
-                Suivant : Choisir mon forfait <span className="material-icons-round">chevron_right</span>
+                {isLogin ? "Se connecter" : "Suivant : Choisir mon forfait"} <span className="material-icons-round">chevron_right</span>
               </button>
+              
+              <div style={{ marginTop: "15px", textAlign: "center" }}>
+                <button type="button" onClick={() => { setIsLogin(!isLogin); setErrorMsg(""); }} style={{ background: 'none', border: 'none', color: '#ffb300', cursor: 'pointer', textDecoration: 'underline' }}>
+                  {isLogin ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
+                </button>
+              </div>
             </form>
           </div>
         )}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/plan_model.dart';
 import '../bloc/subscription_bloc.dart';
@@ -367,6 +368,29 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         ));
   }
 
+  void _launchPaymentUrl(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Impossible d'ouvrir le lien de paiement"),
+            backgroundColor: AppTheme.accentCrimson,
+          ));
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Erreur lors de l'ouverture du lien de paiement"),
+          backgroundColor: AppTheme.accentCrimson,
+        ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<SubscriptionBloc, SubscriptionState>(
@@ -374,6 +398,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         if (state is SubscriptionPaymentSuccess ||
             state is SubscriptionPaymentFailed) {
           if (Navigator.canPop(context)) Navigator.of(context).pop();
+        } else if (state is SubscriptionPaymentPending && state.redirectUrl != null) {
+          _launchPaymentUrl(state.redirectUrl!);
         }
       },
       child: Padding(

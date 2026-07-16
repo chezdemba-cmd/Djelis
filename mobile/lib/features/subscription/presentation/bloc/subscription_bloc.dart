@@ -54,7 +54,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       SubscriptionCheckStatus event, Emitter<SubscriptionState> emit) async {
     try {
       final status = await _repository.checkPaymentStatus(event.paymentId);
-      if (status == 'success') {
+      if (status == 'success' || status == 'successful') {
         _pollTimer?.cancel();
         emit(const SubscriptionPaymentSuccess());
       } else if (status == 'failed') {

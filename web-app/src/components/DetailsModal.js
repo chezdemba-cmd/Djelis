@@ -28,9 +28,20 @@ export default function DetailsModal({ isOpen, onClose, item, onPlay }) {
           <h2 className="modal-title" id="modal-title-text">{item.title}</h2>
           <p className="modal-synopsis" id="modal-synopsis-text">{item.synopsis}</p>
           
-          <div className="modal-action-row" style={{ display: "flex", gap: "10px", width: "100%" }}>
-            <button className="modal-action-btn tv-focusable" style={{ flex: 1 }} onClick={onPlay}>
-              <span className="material-icons-round">play_arrow</span> Commencer la lecture
+          <div className="modal-action-row" style={{ display: "flex", flexWrap: "wrap", gap: "10px", width: "100%" }}>
+            <button className="modal-action-btn tv-focusable" style={{ flex: 1, minWidth: "200px" }} onClick={onPlay}>
+              <span className="material-icons-round">play_arrow</span> Regarder
+            </button>
+            
+            {/* Bouton TVOD */}
+            <button 
+              className="modal-action-btn tv-focusable" 
+              style={{ flex: 1, minWidth: "200px", background: "linear-gradient(135deg, #FFB300, #F57C00)", color: "#000" }} 
+              onClick={() => {
+                alert(`Redirection vers la passerelle de paiement (Wave/Orange Money) pour la location de "${item.title}" au tarif de 500 FCFA (Valable 48h).`);
+              }}
+            >
+              <span className="material-icons-round">shopping_cart</span> Louer (500 FCFA)
             </button>
             <button 
               className="modal-download-btn tv-focusable" 
