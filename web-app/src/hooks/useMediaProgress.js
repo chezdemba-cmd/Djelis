@@ -20,7 +20,8 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null) {
         const token = localStorage.getItem('accessToken') || localStorage.getItem('jwt_token');
         if (!token) return; // Si non authentifié, on ne synchronise pas
 
-        await fetch('http://localhost:3000/api/v1/stream/progress', {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        await fetch(`${baseUrl}/api/v1/stream/progress`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

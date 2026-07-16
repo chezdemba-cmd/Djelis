@@ -11,7 +11,8 @@ export default function ContinueWatching({ currentProfile, type }) {
       if (!token) return;
 
       try {
-        const res = await fetch(`http://localhost:3000/api/v1/stream/history?profile_id=${currentProfile.id}&type=${type}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/v1/stream/history?profile_id=${currentProfile.id}&type=${type}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

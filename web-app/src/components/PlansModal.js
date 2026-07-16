@@ -20,7 +20,8 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
           ? { email: e.target.querySelector('input[type="email"]')?.value, password: e.target.querySelector('input[type="password"]').value }
           : { phone: e.target.querySelector('input[type="tel"]')?.value, password: e.target.querySelector('input[type="password"]').value };
           
-        const endpoint = isLogin ? 'http://localhost:3000/api/v1/auth/login' : 'http://localhost:3000/api/v1/auth/register';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const endpoint = isLogin ? `${baseUrl}/api/v1/auth/login` : `${baseUrl}/api/v1/auth/register`;
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

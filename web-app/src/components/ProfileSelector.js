@@ -29,7 +29,8 @@ export default function ProfileSelector({ onSelectProfile }) {
         return;
       }
       try {
-        const res = await fetch('http://localhost:3000/api/v1/profiles', {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/profiles`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -70,7 +71,8 @@ export default function ProfileSelector({ onSelectProfile }) {
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:3000/api/v1/profiles', {
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/profiles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +84,8 @@ export default function ProfileSelector({ onSelectProfile }) {
         })
       });
       if (res.ok) {
-        const refreshRes = await fetch('http://localhost:3000/api/v1/profiles', {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const refreshRes = await fetch(`${baseUrl}/api/v1/profiles`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

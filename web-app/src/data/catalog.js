@@ -155,7 +155,8 @@ export async function getCatalog() {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-    const res = await fetch('http://localhost:3000/api/v1/catalog/home', { headers });
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && data.djaasoo && data.djaasoo.contents && data.djaasoo.contents.length > 0) {
@@ -183,7 +184,8 @@ export async function getAudioCatalog() {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-    const res = await fetch('http://localhost:3000/api/v1/catalog/home', { headers });
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && data.djelison && data.djelison.contents && data.djelison.contents.length > 0) {

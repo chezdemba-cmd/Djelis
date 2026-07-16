@@ -24,7 +24,8 @@ export default function AdminScreen({ onBack }) {
     // Simuler le chargement des contenus depuis l'API NestJS
     const fetchAdminContents = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/v1/catalog/contents?limit=50');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/v1/catalog/contents?limit=50`);
         if (res.ok) {
           const data = await res.json();
           setContents(data);
