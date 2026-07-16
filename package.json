@@ -1,0 +1,15 @@
+{
+  "name": "djelis-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix web-app",
+    "dev:backend": "npm run start:dev --prefix backend",
+    "dev:web": "npm run dev --prefix web-app",
+    "build": "npm run build --prefix web-app"
+  },
+  "workspaces": [
+    "web-app",
+    "backend"
+  ]
+}
