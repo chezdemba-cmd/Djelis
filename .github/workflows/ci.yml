@@ -37,6 +37,9 @@ jobs:
     - name: Build Backend
       run: npm run build --prefix backend
 
+    - name: Run E2E Tests (Backend)
+      run: npm run test:e2e --prefix backend
+
     # --- WEB-APP CHECKS ---
     - name: Lint Web-App
       run: npm run lint --prefix web-app
