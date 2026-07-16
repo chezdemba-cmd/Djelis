@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install Monorepo Dependencies
+      run: npm install
+
+    # --- BACKEND CHECKS ---
+    - name: Generate Prisma Client (Backend)
+      run: npm run prisma:generate --prefix backend
+
+    - name: Lint Backend
+      run: npm run lint --prefix backend
+
+    - name: Build Backend
+      run: npm run build --prefix backend
+
+    # --- WEB-APP CHECKS ---
+    - name: Lint Web-App
+      run: npm run lint --prefix web-app
+
+    - name: Build Web-App
+      run: npm run build --prefix web-app
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:3000
