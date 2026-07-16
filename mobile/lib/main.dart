@@ -12,6 +12,9 @@ import 'features/catalog/presentation/bloc/catalog_bloc.dart';
 import 'features/catalog/presentation/bloc/catalog_event.dart';
 import 'features/subscription/data/repositories/subscription_repository.dart';
 import 'features/subscription/presentation/bloc/subscription_bloc.dart';
+import 'features/downloads/data/download_service.dart';
+import 'features/catalog/data/repositories/download_repository.dart';
+import 'features/downloads/presentation/bloc/download_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +33,8 @@ class DjelisApp extends StatelessWidget {
     final authRepo = AuthRepository(api: api, storage: storage);
     final catalogRepo = CatalogRepository(api: api);
     final subscriptionRepo = SubscriptionRepository(api: api);
+    final downloadService = DownloadService();
+    final downloadRepo = DownloadRepository(downloadService: downloadService);
 
     return MultiBlocProvider(
       providers: [
@@ -43,6 +48,9 @@ class DjelisApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => SubscriptionBloc(repository: subscriptionRepo),
+        ),
+        BlocProvider(
+          create: (_) => DownloadBloc(repository: downloadRepo),
         ),
       ],
       child: MaterialApp.router(

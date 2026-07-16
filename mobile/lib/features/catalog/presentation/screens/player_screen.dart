@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,8 @@ import 'package:audio_session/audio_session.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../bloc/catalog_bloc.dart';
 import '../bloc/catalog_event.dart';
+import '../data/repositories/download_repository.dart';
+import '../../../downloads/data/download_service.dart';
 
 // ─── Quality model ────────────────────────────────────────────────────────────
 
@@ -129,7 +132,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       _hasError = false;
     });
 
-    final ctrl = VideoPlayerController.networkUrl(Uri.parse(url));
+    final ctrl = widget.videoUrl == 'local' && widget.contentId != null 
+        ? VideoPlayerController.file(File((await DownloadRepository().getLocalFilePath('${widget.contentId}.mp4'))!))
+        : VideoPlayerController.networkUrl(Uri.parse(url));
     _controller = ctrl;
     ctrl.addListener(_onUpdate);
 

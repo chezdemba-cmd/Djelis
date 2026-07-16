@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../data/models/content_model.dart';
+import '../../../downloads/presentation/bloc/download_bloc.dart';
+import '../../../downloads/presentation/bloc/download_event.dart';
+import '../../../downloads/presentation/bloc/download_state.dart';
 
 class DetailScreen extends StatelessWidget {
   final String contentId;
@@ -231,72 +236,81 @@ class DownloadButton extends StatefulWidget {
 }
 
 class _DownloadButtonState extends State<DownloadButton> {
-  bool isDownloading = false;
-  double progress = 0.0;
-  bool isDownloaded = false;
+  @override
+  void initState() {
+    super.initState();
+    // Refresh the download state to know if it's already downloaded
+    context.read<DownloadBloc>().add(const LoadDownloads());
+  }
 
-  void _startDownload() async {
-    setState(() {
-      isDownloading = true;
-      progress = 0.0;
-    });
-
-    // Simulation de téléchargement asynchrone (En production: DownloadService().downloadFile)
-    for (int i = 1; i <= 10; i++) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (mounted) {
-        setState(() {
-          progress = i / 10.0;
-        });
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        isDownloading = false;
-        isDownloaded = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Épisode téléchargé avec succès !"),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+  void _startDownload() {
+    // Construct a minimal content model for download
+    final content = ContentModel(
+      id: widget.contentId,
+      title: '${widget.contentId} - Ep ${widget.episodeNumber}',
+      type: 'video',
+      posterUrl: null, // Should pass from parent in a real app
+    );
+    
+    context.read<DownloadBloc>().add(StartDownload(
+      content: content, 
+      url: widget.videoUrl
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isDownloaded) {
-      return const Icon(Icons.download_done, color: AppTheme.primaryGold);
-    }
+    return BlocConsumer<DownloadBloc, DownloadState>(
+      listener: (context, state) {
+        if (state is DownloadError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      builder: (context, state) {
+        bool isDownloaded = false;
+        bool isDownloading = false;
+        double progress = 0.0;
 
-    if (isDownloading) {
-      return SizedBox(
-        width: 32,
-        height: 32,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            CircularProgressIndicator(
-              value: progress,
-              color: AppTheme.primaryGold,
-              backgroundColor: Colors.white24,
-              strokeWidth: 3,
-            ),
-            Text(
-              '${(progress * 100).toInt()}',
-              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      );
-    }
+        if (state is DownloadsLoaded) {
+          isDownloaded = state.downloads.any((c) => c.id == widget.contentId);
+        } else if (state is DownloadInProgress && state.contentId == widget.contentId) {
+          isDownloading = true;
+          progress = state.progress;
+        }
 
-    return IconButton(
-      icon: const Icon(Icons.download_for_offline_outlined, color: Colors.white70),
-      onPressed: _startDownload,
+        if (isDownloaded) {
+          return const Icon(Icons.download_done, color: AppTheme.primaryGold);
+        }
+
+        if (isDownloading) {
+          return SizedBox(
+            width: 32,
+            height: 32,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: progress,
+                  color: AppTheme.primaryGold,
+                  backgroundColor: Colors.white24,
+                  strokeWidth: 3,
+                ),
+                Text(
+                  '${(progress * 100).toInt()}',
+                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return IconButton(
+          icon: const Icon(Icons.download_for_offline_outlined, color: Colors.white70),
+          onPressed: _startDownload,
+        );
+      },
     );
   }
 }

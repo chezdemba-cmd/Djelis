@@ -53,6 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => _showSearch(context),
             ),
             IconButton(
+              icon: const Icon(Icons.download_for_offline, color: Colors.white),
+              onPressed: () => context.push('/downloads'),
+            ),
+            IconButton(
               icon: const Icon(Icons.account_circle_outlined, color: Colors.white),
               onPressed: () => context.push('/plans'),
             ),

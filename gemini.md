@@ -123,3 +123,7 @@ Si vous devez modifier ce projet, veuillez respecter les règles de conception s
 
 ### Exécution sur Windows / PowerShell
 * Sur la machine de l'utilisateur, l'exécution des scripts PowerShell (`npm.ps1`) est bloquée par la politique système. Pour exécuter ou installer des dépendances, utilisez toujours le préfixe `cmd.exe /c` (ex: `cmd.exe /c npm run build` ou `cmd.exe /c npm install`).
+
+### Règle de Déploiement Continu (Production Vercel & Supabase)
+* **Obligation Absolue** : Le projet n'est plus testé en local par l'utilisateur, mais directement en production sur le nom de domaine `djelis.com` (hébergé sur Vercel et relié à Supabase). 
+* **Action requise** : Après **chaque** modification ou ajout de fonctionnalité (HTML, CSS, JS, etc.), vous **devez impérativement** faire un commit et pousser les changements sur GitHub (`git add .`, `git commit -m "..."`, `git push`). Cela déclenchera automatiquement le déploiement sur Vercel pour que l'utilisateur puisse tester en temps réel. Ne présumez jamais que des tests locaux suffisent.

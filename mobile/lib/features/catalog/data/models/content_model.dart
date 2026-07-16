@@ -61,6 +61,27 @@ class ContentModel extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'synopsis': synopsis,
+      'poster_url': posterUrl,
+      'trailer_url': trailerUrl,
+      'type': type,
+      'category_id': categoryId,
+      'category': categoryName != null ? {'name': categoryName} : null,
+      'duration_min': durationMin,
+      'release_year': releaseYear,
+      'age_rating': ageRating,
+      'is_featured': isFeatured,
+      'is_original': isOriginal,
+      'view_count': viewCount,
+      'episodes': episodes.map((e) => e.toJson()).toList(),
+      'tag': tag,
+    };
+  }
+
   @override
   List<Object?> get props => [id, title, type];
 }
@@ -93,6 +114,18 @@ class EpisodeModel extends Equatable {
         durationMin: json['duration_min'] as int?,
         thumbnailUrl: json['thumbnail_url'] as String?,
       );
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'season': season,
+      'episode_number': episodeNumber,
+      'title': title,
+      'synopsis': synopsis,
+      'duration_min': durationMin,
+      'thumbnail_url': thumbnailUrl,
+    };
+  }
 
   @override
   List<Object?> get props => [id, season, episodeNumber];
