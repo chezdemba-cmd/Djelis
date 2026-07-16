@@ -2,12 +2,9 @@ import 'package:dio/dio.dart';
 import '../errors/app_exception.dart';
 import '../storage/secure_storage_service.dart';
 
-/// Base URLs — switch via --dart-define=API_ENV=prod
-const _baseUrlDev = 'http://10.0.2.2:3000/api/v1'; // Android emulator → localhost
-const _baseUrlProd = 'https://api.djeli-app.com/api/v1';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-const String apiBaseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: _baseUrlDev);
+final String apiBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
 
 class ApiClient {
   late final Dio _dio;

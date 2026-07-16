@@ -16,8 +16,11 @@ import 'features/downloads/data/download_service.dart';
 import 'features/catalog/data/repositories/download_repository.dart';
 import 'features/downloads/presentation/bloc/download_bloc.dart';
 
-void main() {
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const DjelisApp());
 }
 
