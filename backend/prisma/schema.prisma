@@ -231,7 +231,7 @@ model Plan {
 model Subscription {
   id            String             @id @default(uuid()) @db.Uuid
   userId        String             @db.Uuid
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User               @relation(fields: [userId], references: [id], onDelete: Restrict)
   planId        Int
   plan          Plan               @relation(fields: [planId], references: [id])
   startsAt      DateTime

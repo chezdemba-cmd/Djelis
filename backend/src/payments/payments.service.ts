@@ -161,6 +161,21 @@ export class PaymentsService {
       throw new NotFoundException("Transaction introuvable ou déjà traitée.");
     }
 
+    // 🔒 SECURITE CRITIQUE : Vérification du montant payé par rapport au prix exigé
+    let webhookAmount = 0;
+    if (gateway === "wave" && body.amount) {
+      webhookAmount = Number(body.amount);
+    } else if (gateway === "cinetpay" && body.cpm_amount) {
+      webhookAmount = Number(body.cpm_amount);
+    }
+
+    // Si la passerelle nous fournit un montant, on vérifie qu'il est suffisant
+    if (webhookAmount > 0 && webhookAmount < Number(payment.amount)) {
+      gatewayStatus = "failed";
+      errorMessage = `ALERTE FRAUDE : Montant insuffisant (${webhookAmount} au lieu de ${payment.amount})`;
+      console.warn(`[SECURITY] Tentative de contournement de prix bloquée sur la transaction: ${payment.id}`);
+    }
+
     if (gatewayStatus === "succeeded") {
       // 1. Update payment to successful
       await this.prisma.payment.update({
