@@ -169,7 +169,7 @@ export async function getCatalog() {
           videoUrl: item.trailerCfId 
             ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8` 
             : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-          category: 'cinema'
+          category: item.genre?.slug || 'cinema'
         }));
       }
     }

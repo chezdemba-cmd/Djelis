@@ -56,7 +56,7 @@ export class CatalogService {
       },
       take: 10,
       orderBy: { publishedAt: "desc" },
-      include: { creator: true, category: true },
+      include: { creator: true, category: true, genre: true },
     });
 
     const djelisonAudios = await this.prisma.content.findMany({
@@ -74,7 +74,7 @@ export class CatalogService {
       },
       take: 10,
       orderBy: { publishedAt: "desc" },
-      include: { creator: true, category: true },
+      include: { creator: true, category: true, genre: true },
     });
 
     return {
