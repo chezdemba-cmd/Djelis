@@ -21,8 +21,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onCheckSession(
       AuthCheckSession event, Emitter<AuthState> emit) async {
-    final hasSession = await _repository.restoreSession();
-    emit(hasSession ? const AuthAuthenticated(_mockUser) : const AuthUnauthenticated());
+    // Currently no /auth/me endpoint to fetch user details.
+    // Force re-login or use stored info if implemented in future.
+    await _repository.logout();
+    emit(const AuthUnauthenticated());
   }
 
   Future<void> _onLoginWithEmail(
@@ -36,9 +38,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(tokens.user));
     } on AppException catch (e) {
       emit(AuthError(e.message));
-    } catch (_) {
-      // Dev fallback: allow login when backend is unreachable
-      emit(const AuthAuthenticated(_mockUser));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 
@@ -53,8 +54,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(tokens.user));
     } on AppException catch (e) {
       emit(AuthError(e.message));
-    } catch (_) {
-      emit(const AuthAuthenticated(_mockUser));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 
@@ -91,9 +92,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthOtpRequired(event.phone));
     } on AppException catch (e) {
       emit(AuthError(e.message));
-    } catch (_) {
-      // Dev fallback: transition to OTP even if backend is unreachable
-      emit(AuthOtpRequired(event.phone));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 
@@ -108,23 +108,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthUnauthenticated());
     } on AppException catch (e) {
       emit(AuthError(e.message));
-    } catch (_) {
-      // Dev fallback
-      emit(const AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
-}
-
-// Mock user for dev fallback (no running backend)
-const _mockUser = _MockUser();
-
-class _MockUser extends UserModel {
-  const _MockUser()
-      : super(
-          id: 'mock-user-001',
-          email: 'demo@djeli.app',
-          displayName: 'Utilisateur Djeli',
-          hasActiveSubscription: true,
-          countryCode: 'ML',
-        );
 }
