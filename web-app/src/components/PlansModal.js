@@ -94,7 +94,7 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
 
       <div className="modal-content" style={{ padding: "10px 24px" }}>
         {step === 1 && (
-          <div className="register-flow-step active">
+          <div className="register-flow-step active auth-form-wrapper">
             <div className="modal-logo-container">
               <img src="/assets/logo.png" alt="Djeli&apos;S Logo" className="modal-logo-img" />
             </div>
@@ -212,7 +212,7 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
         )}
 
         {step === 3 && (
-          <div className="register-flow-step active">
+          <div className="register-flow-step active auth-form-wrapper">
             <h2 className="plans-main-title">Validation de votre compte</h2>
             <p className="plans-subtitle">Veuillez vérifier les informations ci-dessous avant d&apos;activer votre profil.</p>
             
