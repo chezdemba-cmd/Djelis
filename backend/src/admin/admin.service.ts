@@ -72,7 +72,7 @@ export class AdminService {
       throw new BadRequestException('Le fichier média est requis.');
     }
 
-    return this.prisma.content.create({
+    const content = await this.prisma.content.create({
       data: {
         title: data.title,
         slug: slug,
@@ -80,12 +80,25 @@ export class AdminService {
         format: 'SINGLE',
         synopsis: data.synopsis || '',
         thumbnailUrl: coverUrl,
-        cfStreamId: mediaUrl, // Pour l'instant, on stocke l'URL locale ici
         categoryId: category?.id || 1,
         genreId: genre?.id || 1,
         publishedAt: data.publishedAtStart ? new Date(data.publishedAtStart) : new Date(),
         isActive: true,
       }
     });
+
+    // Pour un contenu "SINGLE", le fichier média est souvent un Episode unique
+    await this.prisma.episode.create({
+      data: {
+        contentId: content.id,
+        title: data.title,
+        episodeNumber: 1,
+        seasonNumber: 1,
+        duration: 0,
+        cfStreamId: mediaUrl,
+      }
+    });
+
+    return content;
   }
 }
