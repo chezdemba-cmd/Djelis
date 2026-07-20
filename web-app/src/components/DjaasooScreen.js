@@ -109,35 +109,66 @@ export default function DjaasooScreen({ currentProfile }) {
       {activeTab === "cinema" && (
         <div className="djaasoo-sub-tab-content active">
           {cinemaItems.length > 0 && (
-            <div className={`hero-banner tv-focusable ${cinemaItems[0].bannerClass || ''}`} style={cinemaItems[0].bannerClass ? {} : { backgroundImage: `url(${cinemaItems[0].image})` }}>
-              <div className="hero-badge">{cinemaItems[0].tag}</div>
-              <h1 className="hero-title">{cinemaItems[0].title}</h1>
-              <p className="hero-synopsis">{cinemaItems[0].synopsis}</p>
-              <div className="hero-actions">
-                <button className="play-btn-large tv-focusable">
-                  <span className="material-icons-round">play_arrow</span> Regarder
-                </button>
+            <div className={`netflix-hero-banner tv-focusable ${cinemaItems[0].bannerClass || ''}`} style={cinemaItems[0].bannerClass ? {} : { backgroundImage: `url(${cinemaItems[0].image})` }}>
+              <div className="netflix-hero-vignette"></div>
+              <div className="netflix-hero-content">
+                <div className="netflix-hero-badge">{cinemaItems[0].tag}</div>
+                <h1 className="netflix-hero-title">{cinemaItems[0].title}</h1>
+                <p className="netflix-hero-synopsis">{cinemaItems[0].synopsis}</p>
+                <div className="netflix-hero-actions">
+                  <button className="btn-netflix-play tv-focusable" onClick={() => playVideo(cinemaItems[0])}>
+                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> Lecture
+                  </button>
+                  <button className="btn-netflix-info tv-focusable" onClick={() => openDetails(cinemaItems[0])}>
+                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '8px' }}>info_outline</span> Plus d'infos
+                  </button>
+                </div>
+              </div>
+              <div className="netflix-hero-age-rating">
+                <span>{cinemaItems[0].age || '13+'}</span>
               </div>
             </div>
           )}
           
-          <div className="content-row">
-            <div className="row-header">
-              <h2>Les Plus Populaires</h2>
-              <a href="#" className="see-all">Voir tout</a>
-            </div>
-            <div className="horizontal-scroll">
+          <div className="netflix-content-row">
+            <h2 className="netflix-row-title">Films Populaires <span className="explore-all">Tout explorer <span className="material-icons-round">chevron_right</span></span></h2>
+            <div className="netflix-slider">
               {cinemaItems.map((item) => (
-                <div key={item.id} className="media-card tv-focusable" onClick={() => openDetails(item)}>
-                  <div className="card-image" style={{ backgroundImage: `url(${item.image})` }}>
-                    <div className="card-play-overlay">
-                      <span className="material-icons-round">play_circle_filled</span>
-                    </div>
+                <div key={item.id} className="netflix-card tv-focusable" onClick={() => openDetails(item)}>
+                  <div className="netflix-card-img-container">
+                    <img src={item.image} alt={item.title} className="netflix-card-img" />
                   </div>
-                  <div className="card-title">{item.title}</div>
-                  <div className="card-meta">
-                    <span className="card-desc">{item.synopsis.substring(0, 40)}...</span>
-                    <span className="card-rating"><span className="material-icons-round">star</span> 4.8</span>
+                  <div className="netflix-card-hover">
+                    <div className="netflix-card-hover-img" style={{ backgroundImage: `url(${item.image})` }}></div>
+                    <div className="netflix-card-hover-content">
+                      <div className="netflix-card-controls">
+                        <div className="controls-left">
+                          <button className="circle-btn play-btn" onClick={(e) => { e.stopPropagation(); playVideo(item); }}>
+                            <span className="material-icons-round">play_arrow</span>
+                          </button>
+                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
+                            <span className="material-icons-round">add</span>
+                          </button>
+                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
+                            <span className="material-icons-round">thumb_up</span>
+                          </button>
+                        </div>
+                        <div className="controls-right">
+                          <button className="circle-btn" onClick={() => openDetails(item)}>
+                            <span className="material-icons-round">expand_more</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="netflix-card-metadata">
+                        <span className="match-score">Recommandé à 98%</span>
+                        <span className="age-rating">{item.age || '16+'}</span>
+                        <span className="duration">1 h {Math.floor(Math.random() * 59)} min</span>
+                        <span className="resolution">HD</span>
+                      </div>
+                      <div className="netflix-card-tags">
+                        <span>Sensationnel</span> • <span>Action</span> • <span>Palpitant</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -149,35 +180,66 @@ export default function DjaasooScreen({ currentProfile }) {
       {activeTab === "theatre" && (
         <div className="djaasoo-sub-tab-content active">
           {theatreItems.length > 0 && (
-            <div className={`hero-banner tv-focusable ${theatreItems[0].bannerClass || ''}`} style={theatreItems[0].bannerClass ? {} : { backgroundImage: `url(${theatreItems[0].image})` }}>
-              <div className="hero-badge">{theatreItems[0].tag}</div>
-              <h1 className="hero-title">{theatreItems[0].title}</h1>
-              <p className="hero-synopsis">{theatreItems[0].synopsis}</p>
-              <div className="hero-actions">
-                <button className="play-btn-large tv-focusable">
-                  <span className="material-icons-round">play_arrow</span> Regarder
-                </button>
+            <div className={`netflix-hero-banner tv-focusable ${theatreItems[0].bannerClass || ''}`} style={theatreItems[0].bannerClass ? {} : { backgroundImage: `url(${theatreItems[0].image})` }}>
+              <div className="netflix-hero-vignette"></div>
+              <div className="netflix-hero-content">
+                <div className="netflix-hero-badge">{theatreItems[0].tag}</div>
+                <h1 className="netflix-hero-title">{theatreItems[0].title}</h1>
+                <p className="netflix-hero-synopsis">{theatreItems[0].synopsis}</p>
+                <div className="netflix-hero-actions">
+                  <button className="btn-netflix-play tv-focusable" onClick={() => playVideo(theatreItems[0])}>
+                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> Lecture
+                  </button>
+                  <button className="btn-netflix-info tv-focusable" onClick={() => openDetails(theatreItems[0])}>
+                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '8px' }}>info_outline</span> Plus d'infos
+                  </button>
+                </div>
+              </div>
+              <div className="netflix-hero-age-rating">
+                <span>{theatreItems[0].age || '13+'}</span>
               </div>
             </div>
           )}
           
-          <div className="content-row">
-            <div className="row-header">
-              <h2>Spectacles en vedette</h2>
-              <a href="#" className="see-all">Voir tout</a>
-            </div>
-            <div className="horizontal-scroll">
+          <div className="netflix-content-row">
+            <h2 className="netflix-row-title">Spectacles en vedette <span className="explore-all">Tout explorer <span className="material-icons-round">chevron_right</span></span></h2>
+            <div className="netflix-slider">
               {theatreItems.map((item) => (
-                <div key={item.id} className="media-card tv-focusable" onClick={() => openDetails(item)}>
-                  <div className="card-image" style={{ backgroundImage: `url(${item.image})` }}>
-                    <div className="card-play-overlay">
-                      <span className="material-icons-round">play_circle_filled</span>
-                    </div>
+                <div key={item.id} className="netflix-card tv-focusable" onClick={() => openDetails(item)}>
+                  <div className="netflix-card-img-container">
+                    <img src={item.image} alt={item.title} className="netflix-card-img" />
                   </div>
-                  <div className="card-title">{item.title}</div>
-                  <div className="card-meta">
-                    <span className="card-desc">{item.synopsis.substring(0, 40)}...</span>
-                    <span className="card-rating"><span className="material-icons-round">star</span> 4.7</span>
+                  <div className="netflix-card-hover">
+                    <div className="netflix-card-hover-img" style={{ backgroundImage: `url(${item.image})` }}></div>
+                    <div className="netflix-card-hover-content">
+                      <div className="netflix-card-controls">
+                        <div className="controls-left">
+                          <button className="circle-btn play-btn" onClick={(e) => { e.stopPropagation(); playVideo(item); }}>
+                            <span className="material-icons-round">play_arrow</span>
+                          </button>
+                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
+                            <span className="material-icons-round">add</span>
+                          </button>
+                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
+                            <span className="material-icons-round">thumb_up</span>
+                          </button>
+                        </div>
+                        <div className="controls-right">
+                          <button className="circle-btn" onClick={() => openDetails(item)}>
+                            <span className="material-icons-round">expand_more</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="netflix-card-metadata">
+                        <span className="match-score">Recommandé à 98%</span>
+                        <span className="age-rating">{item.age || '16+'}</span>
+                        <span className="duration">1 h {Math.floor(Math.random() * 59)} min</span>
+                        <span className="resolution">HD</span>
+                      </div>
+                      <div className="netflix-card-tags">
+                        <span>Hilarant</span> • <span>Stand-up</span> • <span>Live</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -189,35 +251,66 @@ export default function DjaasooScreen({ currentProfile }) {
       {activeTab === "docs" && (
         <div className="djaasoo-sub-tab-content active">
           {docsItems.length > 0 && (
-            <div className={`hero-banner tv-focusable ${docsItems[0].bannerClass || ''}`} style={docsItems[0].bannerClass ? {} : { backgroundImage: `url(${docsItems[0].image})` }}>
-              <div className="hero-badge">{docsItems[0].tag}</div>
-              <h1 className="hero-title">{docsItems[0].title}</h1>
-              <p className="hero-synopsis">{docsItems[0].synopsis}</p>
-              <div className="hero-actions">
-                <button className="play-btn-large tv-focusable">
-                  <span className="material-icons-round">play_arrow</span> Regarder
-                </button>
+            <div className={`netflix-hero-banner tv-focusable ${docsItems[0].bannerClass || ''}`} style={docsItems[0].bannerClass ? {} : { backgroundImage: `url(${docsItems[0].image})` }}>
+              <div className="netflix-hero-vignette"></div>
+              <div className="netflix-hero-content">
+                <div className="netflix-hero-badge">{docsItems[0].tag}</div>
+                <h1 className="netflix-hero-title">{docsItems[0].title}</h1>
+                <p className="netflix-hero-synopsis">{docsItems[0].synopsis}</p>
+                <div className="netflix-hero-actions">
+                  <button className="btn-netflix-play tv-focusable" onClick={() => playVideo(docsItems[0])}>
+                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> Lecture
+                  </button>
+                  <button className="btn-netflix-info tv-focusable" onClick={() => openDetails(docsItems[0])}>
+                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '8px' }}>info_outline</span> Plus d'infos
+                  </button>
+                </div>
+              </div>
+              <div className="netflix-hero-age-rating">
+                <span>{docsItems[0].age || '10+'}</span>
               </div>
             </div>
           )}
           
-          <div className="content-row">
-            <div className="row-header">
-              <h2>Culture & Découverte</h2>
-              <a href="#" className="see-all">Voir tout</a>
-            </div>
-            <div className="horizontal-scroll">
+          <div className="netflix-content-row">
+            <h2 className="netflix-row-title">Culture & Découverte <span className="explore-all">Tout explorer <span className="material-icons-round">chevron_right</span></span></h2>
+            <div className="netflix-slider">
               {docsItems.map((item) => (
-                <div key={item.id} className="media-card tv-focusable" onClick={() => openDetails(item)}>
-                  <div className="card-image" style={{ backgroundImage: `url(${item.image})` }}>
-                    <div className="card-play-overlay">
-                      <span className="material-icons-round">play_circle_filled</span>
-                    </div>
+                <div key={item.id} className="netflix-card tv-focusable" onClick={() => openDetails(item)}>
+                  <div className="netflix-card-img-container">
+                    <img src={item.image} alt={item.title} className="netflix-card-img" />
                   </div>
-                  <div className="card-title">{item.title}</div>
-                  <div className="card-meta">
-                    <span className="card-desc">{item.synopsis.substring(0, 40)}...</span>
-                    <span className="card-rating"><span className="material-icons-round">star</span> 4.9</span>
+                  <div className="netflix-card-hover">
+                    <div className="netflix-card-hover-img" style={{ backgroundImage: `url(${item.image})` }}></div>
+                    <div className="netflix-card-hover-content">
+                      <div className="netflix-card-controls">
+                        <div className="controls-left">
+                          <button className="circle-btn play-btn" onClick={(e) => { e.stopPropagation(); playVideo(item); }}>
+                            <span className="material-icons-round">play_arrow</span>
+                          </button>
+                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
+                            <span className="material-icons-round">add</span>
+                          </button>
+                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
+                            <span className="material-icons-round">thumb_up</span>
+                          </button>
+                        </div>
+                        <div className="controls-right">
+                          <button className="circle-btn" onClick={() => openDetails(item)}>
+                            <span className="material-icons-round">expand_more</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="netflix-card-metadata">
+                        <span className="match-score">Recommandé à 98%</span>
+                        <span className="age-rating">{item.age || '10+'}</span>
+                        <span className="duration">52 min</span>
+                        <span className="resolution">HD</span>
+                      </div>
+                      <div className="netflix-card-tags">
+                        <span>Fascinant</span> • <span>Histoire</span> • <span>Nature</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

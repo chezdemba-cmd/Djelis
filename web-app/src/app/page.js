@@ -31,43 +31,53 @@ export default function Home() {
 
       {/* Main App Container */}
       <div className="app-container">
-        <header className="app-header">
-          {!isAuthenticated ? (
-            <div style={{ width: '36px', height: '36px' }}></div>
-          ) : (
-            <button className="icon-btn mobile-menu-btn tv-focusable" onClick={() => setIsMobileMenuOpen(true)}>
-              <span className="material-icons-round">menu</span>
-            </button>
-          )}
-          
-          {!isAuthenticated ? (
-            <div style={{ width: '36px', height: '36px' }}></div>
-          ) : (
-            <button className="icon-btn header-avatar tv-focusable" onClick={() => setActivePage('profile')} style={{ border: 'none', background: 'transparent' }}>
-              <span className="material-icons-round">account_circle</span>
-            </button>
-          )}
-          
-          {activePage === "home" && activeTab !== null && (
-            <div className="header-app-indicator" onClick={() => setActiveTab(null)} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '20px', transition: '0.2s', marginRight: '10px' }}>
-              <span className="material-icons-round" style={{ fontSize: '18px', marginRight: '5px' }}>arrow_back</span>
-              <span style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                {activeTab === 'djaasoo' ? '🎬 DjaaSoo' : '🎵 DjeliSon'}
-              </span>
-            </div>
-          )}
+        <header className="netflix-navbar">
+          <div className="navbar-left">
+            <h1 className="netflix-logo" style={{ color: '#E50914', margin: 0, fontSize: '24px', cursor: 'pointer', fontFamily: 'Arial, sans-serif', fontWeight: '900', letterSpacing: '1px' }} onClick={() => setActivePage('home')}>
+              DJELI'S
+            </h1>
+            
+            {isAuthenticated && currentProfile !== null && (
+              <nav className="navbar-links">
+                <a href="#" className={activePage === 'home' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActivePage('home'); }}>Accueil</a>
+                <a href="#">Séries</a>
+                <a href="#">Films</a>
+                <a href="#">Jeux</a>
+                <a href="#">Nouveautés les plus regardées</a>
+                <a href="#" className={activePage === 'mylist' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActivePage('mylist'); }}>Ma Liste</a>
+                <a href="#">Explorer par langue</a>
+              </nav>
+            )}
+          </div>
 
-          {currentProfile !== null && (
-            <div className="header-profile-badge tv-focusable" onClick={() => { setCurrentProfile(null); setActiveTab(null); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '20px', transition: '0.2s' }} title="Changer de profil">
-              <span style={{ fontSize: '18px' }}>{currentProfile.avatar}</span>
-              <span style={{ fontWeight: '800', fontSize: '13px', color: currentProfile.color }}>{currentProfile.name}</span>
-            </div>
-          )}
+          <div className="navbar-right">
+            {isAuthenticated && currentProfile !== null && (
+              <>
+                <button className="icon-btn tv-focusable" onClick={() => setActivePage('search')}>
+                  <span className="material-icons-round">search</span>
+                </button>
+                <button className="icon-btn tv-focusable">
+                  <span className="material-icons-round">notifications</span>
+                </button>
+                
+                <div className="navbar-profile-menu">
+                  <div className="navbar-profile-trigger" onClick={() => { setActivePage('profile'); }}>
+                    <div className="mini-avatar" style={{ background: `linear-gradient(to bottom, ${currentProfile.color}dd, ${currentProfile.color})` }}>
+                       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+                        <circle cx="30" cy="40" r="4" fill="white" />
+                        <circle cx="70" cy="40" r="4" fill="white" />
+                        <path d="M 30 65 Q 50 80 70 65" stroke="white" strokeWidth="4" strokeLinecap="round" fill="none" />
+                      </svg>
+                    </div>
+                    <span className="material-icons-round drop-icon">arrow_drop_down</span>
+                  </div>
+                </div>
+              </>
+            )}
 
-          <div className="header-actions">
-            <button className="icon-btn tv-focusable" onClick={() => setActivePage('search')}>
-              <span className="material-icons-round">search</span>
-            </button>
+            {!isAuthenticated && (
+              <button className="btn-signin" onClick={() => setIsPlansOpen(true)}>S'identifier</button>
+            )}
           </div>
         </header>
 

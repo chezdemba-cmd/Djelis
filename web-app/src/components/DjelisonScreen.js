@@ -49,19 +49,24 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
 
       {activeTab === "podcasts" && (
         <div className="djelison-sub-tab-content active">
-          <div className="audio-banner tv-focusable" style={{ backgroundImage: "url('/assets/griot.png')" }}>
-            <span className="banner-badge">Podcasts & Contes</span>
-            <h2 className="banner-title">Écoutez la sagesse de nos ancêtres contée par les plus grands griots.</h2>
-            <button className="listen-btn">ÉCOUTER MAINTENANT</button>
+          <div className="netflix-hero-banner tv-focusable" style={{ backgroundImage: "url('/assets/griot.png')", minHeight: '400px' }}>
+             <div className="netflix-hero-vignette"></div>
+             <div className="netflix-hero-content">
+              <div className="netflix-hero-badge">Podcasts & Contes</div>
+              <h2 className="netflix-hero-title" style={{ fontSize: 'clamp(30px, 4vw, 50px)' }}>Écoutez la sagesse de nos ancêtres contée par les plus grands griots.</h2>
+              <div className="netflix-hero-actions">
+                <button className="btn-netflix-play tv-focusable">
+                  <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> ÉCOUTER MAINTENANT
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="content-row">
-            <div className="row-header">
-              <h2>Les Plus Populaires</h2>
-            </div>
-            <div className="horizontal-scroll">
+          <div className="netflix-content-row">
+            <h2 className="netflix-row-title">Les Plus Populaires</h2>
+            <div className="netflix-slider">
               {audioCatalog.map((item) => (
-                <div key={item.id} className="audio-card tv-focusable" onClick={() => onPlayAudio && onPlayAudio(item)}>
+                <div key={item.id} className="audio-card tv-focusable" onClick={() => onPlayAudio && onPlayAudio(item)} style={{ flex: '0 0 200px', marginRight: '15px' }}>
                   <div className="audio-card-image" style={{ backgroundImage: `url(${item.image})` }}>
                     <button className="audio-card-download tv-focusable">
                       <span className="material-icons-round icon">download</span>
@@ -78,16 +83,21 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
 
       {activeTab === "music" && (
         <div className="djelison-sub-tab-content active">
-           <div className="audio-banner tv-focusable" style={{ backgroundImage: "url('/assets/kora.png')" }}>
-            <span className="banner-badge">Festival Acoustique</span>
-            <h2 className="banner-title">Célébration des rythmes traditionnels.</h2>
-            <button className="listen-btn">ÉCOUTER MAINTENANT</button>
-          </div>
-          <div className="content-row">
-            <div className="row-header">
-              <h2>Musique</h2>
+           <div className="netflix-hero-banner tv-focusable" style={{ backgroundImage: "url('/assets/kora.png')", minHeight: '400px' }}>
+            <div className="netflix-hero-vignette"></div>
+            <div className="netflix-hero-content">
+              <div className="netflix-hero-badge">Festival Acoustique</div>
+              <h2 className="netflix-hero-title" style={{ fontSize: 'clamp(30px, 4vw, 50px)' }}>Célébration des rythmes traditionnels.</h2>
+              <div className="netflix-hero-actions">
+                <button className="btn-netflix-play tv-focusable">
+                  <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> ÉCOUTER MAINTENANT
+                </button>
+              </div>
             </div>
-            <p style={{ color: 'var(--text-dim)', padding: '0 5%' }}>Le catalogue musical sera bientôt disponible.</p>
+          </div>
+          <div className="netflix-content-row">
+            <h2 className="netflix-row-title">Musique</h2>
+            <p style={{ color: 'var(--text-dim)' }}>Le catalogue musical sera bientôt disponible.</p>
           </div>
         </div>
       )}
