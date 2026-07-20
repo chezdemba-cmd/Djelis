@@ -24,6 +24,19 @@ export default function Home() {
   });
   const [currentProfile, setCurrentProfile] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [plansModalMode, setPlansModalMode] = useState("register");
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (isProfileMenuOpen && !e.target.closest('.navbar-profile-menu')) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isProfileMenuOpen]);
 
   return (
     <div className="app-root">
@@ -40,12 +53,12 @@ export default function Home() {
             {isAuthenticated && currentProfile !== null && (
               <nav className="navbar-links">
                 <a href="#" className={activePage === 'home' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActivePage('home'); }}>Accueil</a>
-                <a href="#">Séries</a>
-                <a href="#">Films</a>
-                <a href="#">Jeux</a>
-                <a href="#">Nouveautés les plus regardées</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); alert("Séries: Fonctionnalité à venir !"); }}>Séries</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); alert("Films: Fonctionnalité à venir !"); }}>Films</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); alert("Jeux: Fonctionnalité à venir !"); }}>Jeux</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); alert("Nouveautés: Fonctionnalité à venir !"); }}>Nouveautés les plus regardées</a>
                 <a href="#" className={activePage === 'mylist' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setActivePage('mylist'); }}>Ma Liste</a>
-                <a href="#">Explorer par langue</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); alert("Explorer: Fonctionnalité à venir !"); }}>Explorer par langue</a>
               </nav>
             )}
           </div>
@@ -61,7 +74,7 @@ export default function Home() {
                 </button>
                 
                 <div className="navbar-profile-menu">
-                  <div className="navbar-profile-trigger" onClick={() => { setActivePage('profile'); }}>
+                  <div className="navbar-profile-trigger" onClick={(e) => { e.stopPropagation(); setIsProfileMenuOpen(!isProfileMenuOpen); }}>
                     <div className="mini-avatar" style={{ background: `linear-gradient(to bottom, ${currentProfile.color}dd, ${currentProfile.color})` }}>
                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
                         <circle cx="30" cy="40" r="4" fill="white" />
@@ -69,14 +82,41 @@ export default function Home() {
                         <path d="M 30 65 Q 50 80 70 65" stroke="white" strokeWidth="4" strokeLinecap="round" fill="none" />
                       </svg>
                     </div>
-                    <span className="material-icons-round drop-icon">arrow_drop_down</span>
+                    <span className="material-icons-round drop-icon" style={{ transform: isProfileMenuOpen ? 'rotate(180deg)' : 'none' }}>arrow_drop_down</span>
                   </div>
+                  
+                  {isProfileMenuOpen && (
+                    <div className="profile-dropdown-content">
+                      <div className="dropdown-item" onClick={() => { setIsProfileMenuOpen(false); setActivePage('profile'); }}>
+                        <span className="material-icons-round">edit</span> Gérer les profils
+                      </div>
+                      <div className="dropdown-item" onClick={() => { setIsProfileMenuOpen(false); setCurrentProfile(null); setActiveTab(null); }}>
+                        <span className="material-icons-round">people</span> Changer de profil
+                      </div>
+                      {isAuthenticated && (
+                        <div className="dropdown-item" onClick={() => { setIsProfileMenuOpen(false); setActivePage('admin'); }}>
+                          <span className="material-icons-round">admin_panel_settings</span> Espace Admin
+                        </div>
+                      )}
+                      <div className="dropdown-divider"></div>
+                      <div className="dropdown-item" onClick={() => { 
+                        setIsProfileMenuOpen(false); 
+                        localStorage.removeItem('accessToken'); 
+                        setIsAuthenticated(false); 
+                        setCurrentProfile(null); 
+                        setActivePage('home'); 
+                        setActiveTab(null); 
+                      }}>
+                        Se déconnecter de Djeli'S
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
             {!isAuthenticated && (
-              <button className="btn-signin" onClick={() => setIsPlansOpen(true)}>S'identifier</button>
+              <button className="btn-signin" onClick={() => { setPlansModalMode("login"); setIsPlansOpen(true); }}>S'identifier</button>
             )}
           </div>
         </header>
@@ -135,7 +175,7 @@ export default function Home() {
                 <p style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', color: '#eee', maxWidth: '600px', margin: '0', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontWeight: '500' }}>
                   Découvrez le meilleur du cinéma avec DjaaSoo et de la musique traditionnelle avec DjeliSon. Regardez et écoutez vos artistes préférés.
                 </p>
-                <button className="tv-focusable" onClick={() => setIsPlansOpen(true)} style={{ background: 'linear-gradient(135deg, #ffb300, #ff4081)', color: 'white', border: 'none', padding: '16px 40px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 8px 30px rgba(255, 64, 129, 0.6)', transition: 'transform 0.3s, box-shadow 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+                <button className="tv-focusable" onClick={() => { setPlansModalMode("register"); setIsPlansOpen(true); }} style={{ background: 'linear-gradient(135deg, #ffb300, #ff4081)', color: 'white', border: 'none', padding: '16px 40px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 8px 30px rgba(255, 64, 129, 0.6)', transition: 'transform 0.3s, box-shadow 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
                   Commencer l&apos;aventure
                 </button>
               </div>
@@ -190,6 +230,7 @@ export default function Home() {
         
         <PlansModal 
           isOpen={isPlansOpen} 
+          initialMode={plansModalMode}
           onClose={() => setIsPlansOpen(false)} 
           onComplete={() => {
             setIsAuthenticated(true);

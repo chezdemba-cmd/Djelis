@@ -441,6 +441,47 @@ body {
   transform: rotate(180deg);
 }
 
+.profile-dropdown-content {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid #333;
+  border-radius: 4px;
+  min-width: 200px;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  margin-top: 10px;
+}
+
+.dropdown-item {
+  padding: 10px 20px;
+  color: #e5e5e5;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, text-decoration 0.2s;
+}
+
+.dropdown-item:hover {
+  text-decoration: underline;
+}
+
+.dropdown-item .material-icons-round {
+  font-size: 20px;
+  color: #b3b3b3;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #333;
+  margin: 10px 0;
+}
+
 .btn-signin {
   background-color: #e50914;
   color: white;

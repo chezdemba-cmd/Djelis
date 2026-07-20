@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function PlansModal({ isOpen, onClose, onComplete }) {
+export default function PlansModal({ isOpen, onClose, onComplete, initialMode = "register" }) {
   const [step, setStep] = useState(1);
   const [region, setRegion] = useState("ao");
   const [freq, setFreq] = useState("weekly");
   const [authMethod, setAuthMethod] = useState("email");
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLogin(initialMode === "login");
+      setStep(1);
+      setErrorMsg("");
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
@@ -112,8 +120,8 @@ export default function PlansModal({ isOpen, onClose, onComplete }) {
               )}
 
               <div className="auth-method-toggle" style={{ marginTop: "14px" }}>
-                <button type="button" className={`method-btn tv-focusable ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod("email")}>S&apos;inscrire par Email</button>
-                <button type="button" className={`method-btn tv-focusable ${authMethod === 'phone' ? 'active' : ''}`} onClick={() => setAuthMethod("phone")}>S&apos;inscrire par Téléphone</button>
+                <button type="button" className={`method-btn tv-focusable ${authMethod === 'email' ? 'active' : ''}`} onClick={() => setAuthMethod("email")}>{isLogin ? "Se connecter par Email" : "S'inscrire par Email"}</button>
+                <button type="button" className={`method-btn tv-focusable ${authMethod === 'phone' ? 'active' : ''}`} onClick={() => setAuthMethod("phone")}>{isLogin ? "Se connecter par Téléphone" : "S'inscrire par Téléphone"}</button>
               </div>
 
               {authMethod === "email" ? (
