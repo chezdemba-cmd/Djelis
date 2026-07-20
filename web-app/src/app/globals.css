@@ -3897,3 +3897,13 @@ body:not(.mode-mobile):not(.mode-tv) .plans-main-title,
 body:not(.mode-mobile):not(.mode-tv) .plans-subtitle {
     text-align: center;
 }
+
+/* ==========================================================================
+   PROFILE PAGE DESKTOP RESPONSIVENESS
+   ========================================================================== */
+
+body:not(.mode-mobile):not(.mode-tv) .profile-container {
+    max-width: 700px;
+    width: 100%;
+    margin: 40px auto;
+}
