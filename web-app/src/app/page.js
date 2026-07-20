@@ -32,9 +32,13 @@ export default function Home() {
       {/* Main App Container */}
       <div className="app-container">
         <header className="app-header">
-          <button className="icon-btn mobile-menu-btn tv-focusable" onClick={() => setIsMobileMenuOpen(true)}>
-            <span className="material-icons-round">menu</span>
-          </button>
+          {!isAuthenticated ? (
+            <div style={{ width: '36px', height: '36px' }}></div>
+          ) : (
+            <button className="icon-btn mobile-menu-btn tv-focusable" onClick={() => setIsMobileMenuOpen(true)}>
+              <span className="material-icons-round">menu</span>
+            </button>
+          )}
           
           {!isAuthenticated ? (
             <div style={{ width: '36px', height: '36px' }}></div>
@@ -116,7 +120,7 @@ export default function Home() {
               <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
                 <h1 style={{ fontSize: 'clamp(26px, 5vw, 44px)', fontWeight: '900', color: 'white', maxWidth: '800px', lineHeight: '1.2', margin: '0 0 10px 0', textShadow: '0 4px 20px rgba(0,0,0,0.8)' }}>
                   Films, Séries & Contes <br />
-                  <span style={{ color: '#ffb300' }}>Illimités</span> en Afrique de l&apos;Ouest
+                  <span style={{ color: '#ffb300' }}>Illimités</span>{" "}en Afrique de l&apos;Ouest
                 </h1>
                 <p style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', color: '#eee', maxWidth: '600px', margin: '0', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontWeight: '500' }}>
                   Découvrez le meilleur du cinéma avec DjaaSoo et de la musique traditionnelle avec DjeliSon. Regardez et écoutez vos artistes préférés.
