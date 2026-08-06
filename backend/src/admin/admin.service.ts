@@ -56,11 +56,17 @@ export class AdminService {
   }
 
   async createContent(data: any, files: { media?: Express.Multer.File[], cover?: Express.Multer.File[] }) {
-    let category = await this.prisma.category.findFirst({ where: { name: data.category } });
+    let genre = await this.prisma.genre.findFirst({ where: { slug: data.category } });
+    if (!genre) {
+      genre = await this.prisma.genre.findFirst();
+    }
+    let category = null;
+    if (genre) {
+      category = await this.prisma.category.findUnique({ where: { id: genre.categoryId } });
+    }
     if (!category) {
       category = await this.prisma.category.findFirst();
     }
-    const genre = await this.prisma.genre.findFirst();
 
     const contentType = data.type === 'Audio / Podcast' ? 'AUDIO' : 'VIDEO';
     const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
@@ -80,6 +86,7 @@ export class AdminService {
         format: 'SINGLE',
         synopsis: data.synopsis || '',
         thumbnailUrl: coverUrl,
+        trailerCfId: mediaUrl, // Used by frontend for single videos
         categoryId: category?.id || 1,
         genreId: genre?.id || 1,
         publishedAt: data.publishedAtStart ? new Date(data.publishedAtStart) : new Date(),

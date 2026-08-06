@@ -6,7 +6,7 @@ import { PrismaService } from "../prisma.service";
 import { StreamController } from "./stream.controller";
 
 @Module({
-  imports: [CacheModule.register()],
+  imports: [],
   controllers: [CatalogController, StreamController],
   providers: [CatalogService, PrismaService],
   exports: [CatalogService],

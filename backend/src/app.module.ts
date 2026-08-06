@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { CacheModule } from "@nestjs/cache-manager";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -11,6 +12,7 @@ import { AdminModule } from "./admin/admin.module";
 
 @Module({
   imports: [
+    CacheModule.register({ isGlobal: true }),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

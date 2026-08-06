@@ -245,8 +245,6 @@ export default function AdminScreen({ onBack }) {
                 <select value={uploadData.type} onChange={e => setUploadData({...uploadData, type: e.target.value, category: ''})} style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white' }}>
                   <option value="Film">Film</option>
                   <option value="Série">Série</option>
-                  <option value="Théâtre">Théâtre</option>
-                  <option value="Documentaire">Documentaire</option>
                   <option value="Audio / Podcast">Audio / Podcast</option>
                 </select>
               </div>
@@ -256,18 +254,14 @@ export default function AdminScreen({ onBack }) {
                   <option value="" disabled>Sélectionnez une catégorie...</option>
                   {uploadData.type === 'Audio / Podcast' ? (
                     <>
-                      <option value="Rap">Rap</option>
-                      <option value="Country">Country</option>
-                      <option value="Traditionnel">Traditionnel</option>
-                      <option value="Moderne">Moderne</option>
-                      <option value="Podcast">Podcast</option>
+                      <option value="musique">Musique</option>
+                      <option value="podcasts">Podcasts & Contes</option>
                     </>
                   ) : (
                     <>
-                      <option value="Action">Action</option>
-                      <option value="Policier">Policier</option>
-                      <option value="Drame">Drame</option>
-                      <option value="Comédie">Comédie</option>
+                      <option value="cinema">Cinéma & Films</option>
+                      <option value="theatre">Théâtre</option>
+                      <option value="docs">Documentaire</option>
                     </>
                   )}
                   <option value="autre">Autre...</option>

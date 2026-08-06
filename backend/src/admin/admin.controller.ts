@@ -1,12 +1,17 @@
-import { Controller, Get, Patch, Param, Delete, Post, Body, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Delete, Post, Body, UseInterceptors, UploadedFiles, Inject } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AdminService } from './admin.service';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Controller('v1/admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
+  ) {}
 
   @Get('dashboard')
   async getDashboardStats() {
@@ -20,12 +25,16 @@ export class AdminController {
 
   @Patch('contents/:id/toggle')
   async toggleContentStatus(@Param('id') id: string) {
-    return this.adminService.toggleContentStatus(id);
+    const result = await this.adminService.toggleContentStatus(id);
+    await this.cacheManager.del('catalog_home_feed');
+    return result;
   }
 
   @Delete('contents/:id')
   async deleteContent(@Param('id') id: string) {
-    return this.adminService.deleteContent(id);
+    const result = await this.adminService.deleteContent(id);
+    await this.cacheManager.del('catalog_home_feed');
+    return result;
   }
 
   @Post('contents')
@@ -45,6 +54,8 @@ export class AdminController {
     @Body() createDto: any,
     @UploadedFiles() files: { media?: Express.Multer.File[], cover?: Express.Multer.File[] }
   ) {
-    return this.adminService.createContent(createDto, files);
+    const result = await this.adminService.createContent(createDto, files);
+    await this.cacheManager.del('catalog_home_feed');
+    return result;
   }
 }
