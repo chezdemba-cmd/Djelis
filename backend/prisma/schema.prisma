@@ -67,8 +67,6 @@ model User {
   devices       Device[]
   sessions      Session[]
 
-  @@index([phone])
-  @@index([email])
   @@map("users")
 }
 
@@ -80,6 +78,7 @@ model Profile {
   avatarUrl    String?
   isChild      Boolean        @default(false)
   createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   watchHistory WatchHistory[]
 
   @@index([userId])
@@ -118,6 +117,7 @@ model Partner {
   paymentDetails Bytes? // Encrypted banking information
   status         PartnerStatus @default(PENDING)
   createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   creators       Creator[]
   contracts      Contract[]
 
@@ -132,6 +132,7 @@ model Creator {
   bio         String?   @db.Text
   photoUrl    String?
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   contents    Content[]
 
   @@index([partnerId])
@@ -148,6 +149,7 @@ model Contract {
   contractPdfUrl           String?
   status                   ContractStatus @default(ACTIVE)
   createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
 
   @@map("contracts")
 }
@@ -173,6 +175,7 @@ model Content {
   isActive         Boolean           @default(true)
   publishedAt      DateTime?
   createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   episodes         Episode[]
   rightsTerritories RightsTerritory[]
   watchHistory     WatchHistory[]
@@ -197,6 +200,7 @@ model Episode {
   duration      Int            // in seconds
   cfStreamId    String
   createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   watchHistory  WatchHistory[]
 
   @@unique([contentId, seasonNumber, episodeNumber])
@@ -213,6 +217,7 @@ model RightsTerritory {
 
   @@unique([contentId, countryCode])
   @@index([contentId])
+  @@index([countryCode])
   @@map("rights_territories")
 }
 
@@ -241,6 +246,7 @@ model Subscription {
   paymentMethod String?
   autoRenew     Boolean            @default(false)
   createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
   payments      Payment[]
 
   @@index([userId])
@@ -264,6 +270,7 @@ model Payment {
   status               PaymentStatus @default(PENDING)
   errorMessage         String?       @db.Text
   createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
   @@index([userId])
   @@index([gatewayTransactionId])
@@ -321,6 +328,7 @@ model Rental {
   content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   payments  Payment[]
 
   @@index([userId])

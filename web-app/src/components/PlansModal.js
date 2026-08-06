@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
 export default function PlansModal({ isOpen, onClose, onComplete, initialMode = "register" }) {

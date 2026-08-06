@@ -1,4 +1,6 @@
 import "./globals.css";
+import { SessionProvider } from "../context/SessionContext";
+import LayoutClient from "./LayoutClient";
 
 export const metadata = {
   title: "Djeli'S - Streaming VOD & Audio",
@@ -8,7 +10,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        <SessionProvider>
+          <LayoutClient>
+            {children}
+          </LayoutClient>
+        </SessionProvider>
+      </body>
     </html>
   );
 }
