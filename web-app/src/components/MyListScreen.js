@@ -1,8 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getFavorites, removeFavorite } from "../data/catalog";
 
 export default function MyListScreen({ isAuthenticated, openAuthModal }) {
   const [activeTab, setActiveTab] = useState("fav");
-  
+  const [favorites, setFavorites] = useState([]);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const loadFavorites = async () => {
+      setIsLoadingFavorites(true);
+      setFavorites(await getFavorites());
+      setIsLoadingFavorites(false);
+    };
+    loadFavorites();
+  }, [isAuthenticated]);
+
+  const handleRemove = async (e, contentId) => {
+    e.stopPropagation();
+    setFavorites(prev => prev.filter(item => item.id !== contentId));
+    await removeFavorite(contentId);
+  };
+
   return (
     <div id="page-mylist" className="app-page active" style={{ width: "100%", height: "100%" }}>
       <div className="mylist-container">
@@ -35,24 +54,35 @@ export default function MyListScreen({ isAuthenticated, openAuthModal }) {
             {activeTab === 'fav' && (
               <div id="mylist-fav-content">
                 <p className="mylist-subtitle">Retrouvez tous vos contenus préférés sauvegardés.</p>
-                <div className="mylist-grid" id="mylist-items-grid">
-                  <div className="media-card tv-focusable">
-                    <div className="card-image" style={{ backgroundImage: "url('/assets/baobab.png')" }}>
-                      <div className="card-play-overlay">
-                        <span className="material-icons-round">play_circle_filled</span>
-                      </div>
-                    </div>
-                    <div className="card-title">Les Secrets du Baobab</div>
+                {isLoadingFavorites ? (
+                  <p style={{ textAlign: "center", marginTop: "40px", color: "var(--text-secondary)" }}>Chargement...</p>
+                ) : favorites.length === 0 ? (
+                  <div className="mylist-unauth-view">
+                    <span className="material-icons-round mylist-empty-icon">favorite_border</span>
+                    <p>Aucun favori pour l&apos;instant. Ajoutez des contenus depuis DjaaSoo.</p>
                   </div>
-                  <div className="media-card tv-focusable">
-                    <div className="card-image" style={{ backgroundImage: "url('/assets/king.png')" }}>
-                      <div className="card-play-overlay">
-                        <span className="material-icons-round">play_circle_filled</span>
+                ) : (
+                  <div className="mylist-grid" id="mylist-items-grid">
+                    {favorites.map(item => (
+                      <div key={item.id} className="media-card tv-focusable">
+                        <div className="card-image" style={{ backgroundImage: `url(${item.image})` }}>
+                          <div className="card-play-overlay">
+                            <span className="material-icons-round">play_circle_filled</span>
+                          </div>
+                          <button
+                            className="control-icon-btn"
+                            style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.5)" }}
+                            onClick={(e) => handleRemove(e, item.id)}
+                            title="Retirer des favoris"
+                          >
+                            <span className="material-icons-round" style={{ color: "#fff", fontSize: "18px" }}>close</span>
+                          </button>
+                        </div>
+                        <div className="card-title">{item.title}</div>
                       </div>
-                    </div>
-                    <div className="card-title">L&apos;Or de Ségou</div>
+                    ))}
                   </div>
-                </div>
+                )}
               </div>
             )}
 

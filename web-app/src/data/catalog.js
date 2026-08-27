@@ -180,6 +180,79 @@ export async function getCatalog() {
   return dummyCatalog;
 }
 
+function authHeaders() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  return token ? { Authorization: `Bearer ${token}` } : null;
+}
+
+export async function getFavorites() {
+  const headers = authHeaders();
+  if (!headers) return [];
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/favorites`, { headers });
+    if (res.ok) {
+      const contents = await res.json();
+      return contents.map(item => ({
+        id: item.id,
+        title: item.title,
+        type: item.type === 'VIDEO' ? 'Film' : item.type,
+        synopsis: item.synopsis || "",
+        image: item.thumbnailUrl || '/assets/baobab.png',
+        videoUrl: item.trailerCfId
+          ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8`
+          : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      }));
+    }
+  } catch (err) {
+    console.error("Error fetching favorites from NestJS API.", err.message);
+  }
+  return [];
+}
+
+export async function addFavorite(contentId) {
+  const headers = authHeaders();
+  if (!headers) return false;
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, { method: 'POST', headers });
+    return res.ok;
+  } catch (err) {
+    console.error("Error adding favorite.", err.message);
+    return false;
+  }
+}
+
+export async function removeFavorite(contentId) {
+  const headers = authHeaders();
+  if (!headers) return false;
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, { method: 'DELETE', headers });
+    return res.ok;
+  } catch (err) {
+    console.error("Error removing favorite.", err.message);
+    return false;
+  }
+}
+
+export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const params = new URLSearchParams({ q: query, page: String(page), limit: String(limit) });
+    const res = await fetch(`${baseUrl}/api/v1/catalog/search?${params}`, { headers });
+    if (res.ok) {
+      const { data } = await res.json();
+      return data || [];
+    }
+  } catch (err) {
+    console.error("Error searching catalog from NestJS API.", err.message);
+  }
+  return null;
+}
+
 export async function getAudioCatalog() {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;

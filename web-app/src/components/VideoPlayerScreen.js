@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import Hls from "hls.js";
 import { useMediaProgress } from "../hooks/useMediaProgress";
 
 export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
@@ -17,6 +18,28 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useMediaProgress(videoRef, contentId);
+
+  // Charge la source vidéo : hls.js pour les manifests HLS sur les navigateurs
+  // sans support natif (Chrome/Firefox/Android), lecture directe sinon (Safari, MP4).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoUrl) return;
+
+    let hls;
+    const isHlsManifest = videoUrl.includes(".m3u8");
+
+    if (isHlsManifest && !video.canPlayType("application/vnd.apple.mpegurl") && Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(videoUrl);
+      hls.attachMedia(video);
+    } else {
+      video.src = videoUrl;
+    }
+
+    return () => {
+      if (hls) hls.destroy();
+    };
+  }, [videoUrl]);
 
   const resetControlsTimeout = () => {
     setShowControls(true);
@@ -45,6 +68,18 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
         videoRef.current.pause();
         setIsPlaying(false);
       }
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (!videoRef.current || !videoItem) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('djelis_last_watched') || 'null');
+      if (saved && saved.id === videoItem.id && saved.currentTime > 0 && saved.currentTime < videoRef.current.duration - 5) {
+        videoRef.current.currentTime = saved.currentTime;
+      }
+    } catch {
+      // Donnée de reprise invalide ou absente: on démarre simplement du début.
     }
   };
 
@@ -127,13 +162,12 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
       onClick={resetControlsTimeout}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
-      <video 
+      <video
         ref={videoRef}
-        src={videoUrl} 
-        playsInline 
-        autoPlay
+        playsInline
         className="custom-video-element"
         onClick={togglePlay}
+        onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}

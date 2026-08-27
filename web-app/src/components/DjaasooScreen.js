@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCatalog } from "../data/catalog";
+import { getCatalog, getFavorites, addFavorite, removeFavorite } from "../data/catalog";
 import DetailsModal from "./DetailsModal";
 import VideoPlayerScreen from "./VideoPlayerScreen";
 import ContinueWatching from "./ContinueWatching";
@@ -13,18 +13,40 @@ export default function DjaasooScreen({ currentProfile }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [playingVideo, setPlayingVideo] = useState(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   useEffect(() => {
     const loadCatalog = async () => {
       setIsLoading(true);
       const data = await getCatalog();
       setCatalog(data);
-      
+
       setIsLoading(false);
       setIsLoading(false);
     };
     loadCatalog();
+
+    const loadFavorites = async () => {
+      const favs = await getFavorites();
+      setFavoriteIds(new Set(favs.map(f => f.id)));
+    };
+    loadFavorites();
   }, []);
+
+  const toggleFavorite = async (e, item) => {
+    e.stopPropagation();
+    const isFavorite = favoriteIds.has(item.id);
+    setFavoriteIds(prev => {
+      const next = new Set(prev);
+      if (isFavorite) next.delete(item.id); else next.add(item.id);
+      return next;
+    });
+    if (isFavorite) {
+      await removeFavorite(item.id);
+    } else {
+      await addFavorite(item.id);
+    }
+  };
 
   const filterByCategory = (category) => {
     return catalog.filter((item) => {
@@ -146,8 +168,8 @@ export default function DjaasooScreen({ currentProfile }) {
                           <button className="circle-btn play-btn" onClick={(e) => { e.stopPropagation(); playVideo(item); }}>
                             <span className="material-icons-round">play_arrow</span>
                           </button>
-                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
-                            <span className="material-icons-round">add</span>
+                          <button className="circle-btn" onClick={(e) => toggleFavorite(e, item)} title={favoriteIds.has(item.id) ? "Retirer de Ma Liste" : "Ajouter à Ma Liste"}>
+                            <span className="material-icons-round">{favoriteIds.has(item.id) ? "check" : "add"}</span>
                           </button>
                           <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
                             <span className="material-icons-round">thumb_up</span>
@@ -217,8 +239,8 @@ export default function DjaasooScreen({ currentProfile }) {
                           <button className="circle-btn play-btn" onClick={(e) => { e.stopPropagation(); playVideo(item); }}>
                             <span className="material-icons-round">play_arrow</span>
                           </button>
-                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
-                            <span className="material-icons-round">add</span>
+                          <button className="circle-btn" onClick={(e) => toggleFavorite(e, item)} title={favoriteIds.has(item.id) ? "Retirer de Ma Liste" : "Ajouter à Ma Liste"}>
+                            <span className="material-icons-round">{favoriteIds.has(item.id) ? "check" : "add"}</span>
                           </button>
                           <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
                             <span className="material-icons-round">thumb_up</span>
@@ -288,8 +310,8 @@ export default function DjaasooScreen({ currentProfile }) {
                           <button className="circle-btn play-btn" onClick={(e) => { e.stopPropagation(); playVideo(item); }}>
                             <span className="material-icons-round">play_arrow</span>
                           </button>
-                          <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
-                            <span className="material-icons-round">add</span>
+                          <button className="circle-btn" onClick={(e) => toggleFavorite(e, item)} title={favoriteIds.has(item.id) ? "Retirer de Ma Liste" : "Ajouter à Ma Liste"}>
+                            <span className="material-icons-round">{favoriteIds.has(item.id) ? "check" : "add"}</span>
                           </button>
                           <button className="circle-btn" onClick={(e) => { e.stopPropagation(); }}>
                             <span className="material-icons-round">thumb_up</span>

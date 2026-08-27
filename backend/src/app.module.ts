@@ -9,6 +9,7 @@ import { CatalogModule } from "./catalog/catalog.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { ProfileModule } from "./profile/profile.module";
 import { AdminModule } from "./admin/admin.module";
+import { FavoritesModule } from "./favorites/favorites.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AdminModule } from "./admin/admin.module";
     PaymentsModule,
     ProfileModule,
     AdminModule,
+    FavoritesModule,
   ],
   controllers: [],
   providers: [

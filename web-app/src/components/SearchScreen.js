@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
-import { getCatalog } from "../data/catalog";
+import { useState, useEffect } from "react";
+import { getCatalog, searchCatalog } from "../data/catalog";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
   const [allData, setAllData] = useState([]);
+  const [results, setResults] = useState([]);
   const isSearching = query.trim().length > 0;
 
   useEffect(() => {
@@ -14,14 +15,32 @@ export default function SearchScreen() {
     loadData();
   }, []);
 
-  const results = useMemo(() => {
-    if (query.trim().length > 0) {
-      return allData.filter(item => 
-        item.title.toLowerCase().includes(query.toLowerCase()) || 
-        item.synopsis?.toLowerCase().includes(query.toLowerCase())
-      );
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length === 0) {
+      setResults([]);
+      return;
     }
-    return [];
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const apiResults = await searchCatalog(trimmed);
+      if (cancelled) return;
+      if (apiResults) {
+        setResults(apiResults);
+      } else {
+        // Backend indisponible: repli sur un filtrage local du catalogue déjà chargé.
+        setResults(allData.filter(item =>
+          item.title.toLowerCase().includes(trimmed.toLowerCase()) ||
+          item.synopsis?.toLowerCase().includes(trimmed.toLowerCase())
+        ));
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [query, allData]);
 
   return (
