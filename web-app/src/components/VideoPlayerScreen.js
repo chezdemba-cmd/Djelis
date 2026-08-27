@@ -8,7 +8,8 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
-  
+  const hlsRef = useRef(null);
+
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState("00:00");
@@ -16,6 +17,9 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDataSaver, setIsDataSaver] = useState(
+    typeof window !== "undefined" && localStorage.getItem("djelis_data_saver") === "1"
+  );
 
   useMediaProgress(videoRef, contentId);
 
@@ -32,14 +36,30 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
       hls = new Hls();
       hls.loadSource(videoUrl);
       hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (isDataSaver) hls.autoLevelCapping = 0; // niveau de qualité le plus bas disponible
+      });
     } else {
       video.src = videoUrl;
     }
+    hlsRef.current = hls || null;
 
     return () => {
       if (hls) hls.destroy();
+      hlsRef.current = null;
     };
   }, [videoUrl]);
+
+  const toggleDataSaver = (e) => {
+    e?.stopPropagation();
+    const next = !isDataSaver;
+    setIsDataSaver(next);
+    localStorage.setItem("djelis_data_saver", next ? "1" : "0");
+    if (hlsRef.current) {
+      // -1 = pas de plafond (adaptatif automatique), 0 = plus basse qualité disponible.
+      hlsRef.current.autoLevelCapping = next ? 0 : -1;
+    }
+  };
 
   const resetControlsTimeout = () => {
     setShowControls(true);
@@ -220,6 +240,14 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
           </div>
 
           <div className="controls-right">
+            <button
+              className="control-icon-btn"
+              onClick={toggleDataSaver}
+              title={isDataSaver ? "Désactiver l'économie de données" : "Activer l'économie de données"}
+              style={isDataSaver ? { color: "#FFB300" } : undefined}
+            >
+              <span className="material-icons-round">{isDataSaver ? 'data_saver_on' : 'data_saver_off'}</span>
+            </button>
             <button className="control-icon-btn" onClick={toggleFullscreen}>
               <span className="material-icons-round">{isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
             </button>
