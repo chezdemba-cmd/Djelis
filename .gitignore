@@ -28,6 +28,7 @@ Thumbs.db
 .env.test.local
 .env.production.local
 *.env
+.env.vercel*
 
 # NestJS specific
 npm-debug.log
