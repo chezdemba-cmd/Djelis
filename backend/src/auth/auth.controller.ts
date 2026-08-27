@@ -82,9 +82,30 @@ export class AuthController {
     return { success: true };
   }
 
+  @Post("otp/request")
+  @HttpCode(HttpStatus.OK)
+  async requestOtp(@Body("phone") phone: string) {
+    return this.authService.requestOtp(phone);
+  }
+
   @Post("verify/otp")
   @HttpCode(HttpStatus.OK)
   async verifyOtp(@Body("phone") phone: string, @Body("otp") otp: string) {
-    return { success: true, message: "Vérification réussie" };
+    return this.authService.verifyOtp(phone, otp);
+  }
+
+  @Post("forgot-password")
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body("email") email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post("reset-password")
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body("token") token: string,
+    @Body("new_password") newPassword: string
+  ) {
+    return this.authService.resetPassword(token, newPassword);
   }
 }

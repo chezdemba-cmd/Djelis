@@ -92,17 +92,19 @@ export class PaymentsService {
       if (!waveSignature)
         throw new UnauthorizedException("Signature Wave manquante");
 
-      const waveSecret = process.env.WAVE_WEBHOOK_SECRET || "test_secret";
+      const waveSecret = process.env.WAVE_WEBHOOK_SECRET;
+      if (!waveSecret) {
+        throw new UnauthorizedException(
+          "WAVE_WEBHOOK_SECRET non configuré : impossible de vérifier ce webhook."
+        );
+      }
       const payloadString = JSON.stringify(body);
       const expectedSignature = crypto
         .createHmac("sha256", waveSecret)
         .update(payloadString)
         .digest("hex");
 
-      if (
-        waveSignature !== expectedSignature &&
-        process.env.NODE_ENV === "production"
-      ) {
+      if (waveSignature !== expectedSignature) {
         throw new UnauthorizedException(
           "Signature Wave invalide (Tentative de fraude détectée)"
         );
@@ -117,17 +119,19 @@ export class PaymentsService {
       if (!cinetpaySignature)
         throw new UnauthorizedException("Signature CinetPay manquante");
 
-      const cinetpaySecret = process.env.CINETPAY_SECRET || "test_secret";
+      const cinetpaySecret = process.env.CINETPAY_SECRET;
+      if (!cinetpaySecret) {
+        throw new UnauthorizedException(
+          "CINETPAY_SECRET non configuré : impossible de vérifier ce webhook."
+        );
+      }
       const payloadString = JSON.stringify(body);
       const expectedSignature = crypto
         .createHmac("sha256", cinetpaySecret)
         .update(payloadString)
         .digest("hex");
 
-      if (
-        cinetpaySignature !== expectedSignature &&
-        process.env.NODE_ENV === "production"
-      ) {
+      if (cinetpaySignature !== expectedSignature) {
         throw new UnauthorizedException(
           "Signature CinetPay invalide (Tentative de fraude détectée)"
         );

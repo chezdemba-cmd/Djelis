@@ -144,6 +144,108 @@ export class AuthService {
     }
   }
 
+  async requestOtp(phone: string) {
+    const user = await this.prisma.user.findUnique({ where: { phone } });
+    // Réponse générique dans tous les cas pour éviter l'énumération de comptes.
+    if (!user) return { success: true };
+
+    const code = crypto.randomInt(100000, 999999).toString();
+    const otpCodeHash = crypto.createHash("sha256").update(code).digest("hex");
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { otpCodeHash, otpExpiresAt },
+    });
+
+    // Aucun fournisseur SMS n'est configuré dans ce projet : on journalise le
+    // code au lieu de l'envoyer, à la manière des paiements déjà simulés.
+    console.log(`[OTP] Code de vérification pour ${phone}: ${code} (expire dans 5 min)`);
+
+    return { success: true };
+  }
+
+  async verifyOtp(phone: string, otp: string) {
+    const user = await this.prisma.user.findUnique({ where: { phone } });
+    if (!user || !user.otpCodeHash || !user.otpExpiresAt) {
+      throw new UnauthorizedException("Code invalide ou expiré.");
+    }
+    if (user.otpExpiresAt.getTime() < Date.now()) {
+      throw new UnauthorizedException("Code invalide ou expiré.");
+    }
+
+    const otpHash = crypto.createHash("sha256").update(otp || "").digest("hex");
+    if (otpHash !== user.otpCodeHash) {
+      throw new UnauthorizedException("Code invalide ou expiré.");
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { otpCodeHash: null, otpExpiresAt: null },
+    });
+
+    return { success: true, message: "Vérification réussie" };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (user) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const passwordResetTokenHash = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+      const passwordResetExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordResetTokenHash, passwordResetExpiresAt },
+      });
+
+      // Aucun fournisseur d'e-mail n'est configuré dans ce projet : on
+      // journalise le lien au lieu de l'envoyer.
+      console.log(
+        `[PASSWORD RESET] Lien de réinitialisation pour ${email}: /reset-password?token=${token} (expire dans 1h)`
+      );
+    }
+
+    // Réponse générique dans tous les cas pour éviter l'énumération de comptes.
+    return {
+      success: true,
+      message: "Si ce compte existe, un lien de réinitialisation a été envoyé.",
+    };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const tokenHash = crypto.createHash("sha256").update(token || "").digest("hex");
+    const user = await this.prisma.user.findFirst({
+      where: { passwordResetTokenHash: tokenHash },
+    });
+
+    if (
+      !user ||
+      !user.passwordResetExpiresAt ||
+      user.passwordResetExpiresAt.getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException("Lien de réinitialisation invalide ou expiré.");
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetTokenHash: null,
+        passwordResetExpiresAt: null,
+      },
+    });
+
+    // Invalide toutes les sessions actives par sécurité après un changement de mot de passe.
+    await this.prisma.session.deleteMany({ where: { userId: user.id } });
+
+    return { success: true };
+  }
+
   async logout(refreshToken: string) {
     const tokenHash = crypto
       .createHash("sha256")
@@ -240,7 +342,7 @@ export class AuthService {
 
     const activeSub = user.subscriptions.some(
       (sub) => sub.status === "ACTIVE" && sub.endsAt.getTime() > Date.now()
-    ) || user.email === "rainer@rainer.com";
+    );
 
     return {
       access_token: accessToken,
