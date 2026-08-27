@@ -3,11 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/content_model.dart';
+import '../../data/repositories/catalog_repository.dart';
 import '../../../downloads/presentation/bloc/download_bloc.dart';
 import '../../../downloads/presentation/bloc/download_event.dart';
 import '../../../downloads/presentation/bloc/download_state.dart';
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final String contentId;
   final String title;
   final String synopsis;
@@ -20,13 +21,78 @@ class DetailScreen extends StatelessWidget {
   });
 
   @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  ContentModel? _content;
+  bool _isLoading = true;
+  bool _hasError = false;
+  bool _isFetchingStream = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    try {
+      final content =
+          await context.read<CatalogRepository>().getContentDetail(widget.contentId);
+      if (!mounted) return;
+      setState(() {
+        _content = content;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _playEpisode(EpisodeModel? episode) async {
+    if (_isFetchingStream) return;
+    setState(() => _isFetchingStream = true);
+    try {
+      final signedUrl = await context.read<CatalogRepository>().getStreamToken(
+            contentId: widget.contentId,
+            episodeId: episode?.id,
+          );
+      if (!mounted) return;
+      final displayTitle = _content?.title ?? widget.title;
+      context.push('/player', extra: {
+        'contentId': widget.contentId,
+        'episodeId': episode?.id,
+        'title': episode != null
+            ? '$displayTitle — S${episode.season}:E${episode.episodeNumber}'
+            : displayTitle,
+        'videoUrl': signedUrl,
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible de charger le flux vidéo. Vérifiez votre connexion.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isFetchingStream = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Simulated episode lists
-    final episodes = [
-      {"number": "1", "title": "L'éveil des anciens", "duration": "42 min"},
-      {"number": "2", "title": "La trahison du conseiller", "duration": "38 min"},
-      {"number": "3", "title": "La Kora sacrée", "duration": "45 min"},
-    ];
+    final displayTitle = _content?.title ?? widget.title;
+    final displaySynopsis = _content?.synopsis ?? widget.synopsis;
+    final episodes = _content?.episodes ?? const <EpisodeModel>[];
+    final firstEpisode = episodes.isNotEmpty ? episodes.first : null;
+    final playLabel = firstEpisode != null
+        ? 'Lecture S${firstEpisode.season}:E${firstEpisode.episodeNumber}'
+        : 'Lecture';
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -46,12 +112,20 @@ class DetailScreen extends StatelessWidget {
             Container(
               height: 250,
               width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
                   colors: [AppTheme.darkSurface, AppTheme.primaryGold],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
+                image: _content?.posterUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(_content!.posterUrl!),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(
+                            Colors.black.withOpacity(0.35), BlendMode.darken),
+                      )
+                    : null,
               ),
               child: Stack(
                 children: [
@@ -63,7 +137,7 @@ class DetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          title,
+                          displayTitle,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 26,
@@ -79,15 +153,23 @@ class DetailScreen extends StatelessWidget {
                                 border: Border.all(color: Colors.white30),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
-                                "16+",
-                                style: TextStyle(color: Colors.white70, fontSize: 10),
+                              child: Text(
+                                _content?.ageRating ?? '—',
+                                style: const TextStyle(color: Colors.white70, fontSize: 10),
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Text("3 Épisodes", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                            const SizedBox(width: 12),
-                            const Text("2026", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            Text(
+                              '${episodes.length} Épisode${episodes.length > 1 ? 's' : ''}',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                            if (_content?.releaseYear != null) ...[
+                              const SizedBox(width: 12),
+                              Text(
+                                _content!.releaseYear.toString(),
+                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -104,16 +186,19 @@ class DetailScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        context.push('/player', extra: {
-                          'contentId': contentId,
-                          'episodeId': 'ep-1',
-                          'title': '$title — S1:E1',
-                          'videoUrl': 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-                        });
-                      },
-                      icon: const Icon(Icons.play_arrow, color: Colors.black),
-                      label: const Text("Lecture S1:E1", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                      onPressed: _isLoading || _isFetchingStream
+                          ? null
+                          : () => _playEpisode(firstEpisode),
+                      icon: _isFetchingStream
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.black),
+                            )
+                          : const Icon(Icons.play_arrow, color: Colors.black),
+                      label: Text(playLabel,
+                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryGold,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -145,7 +230,7 @@ class DetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    synopsis,
+                    displaySynopsis,
                     style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                   ),
                 ],
@@ -164,53 +249,69 @@ class DetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Episode Items
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: episodes.length,
-              itemBuilder: (context, index) {
-                final ep = episodes[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkSurface,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Center(
-                      child: Text(
-                        ep["number"]!,
-                        style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.0),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.primaryGold),
+                ),
+              )
+            else if (_hasError)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Text(
+                  "Impossible de charger les épisodes pour l'instant.",
+                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                ),
+              )
+            else if (episodes.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Text(
+                  "Aucun épisode disponible.",
+                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                ),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: episodes.length,
+                itemBuilder: (context, index) {
+                  final ep = episodes[index];
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkSurface,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${ep.episodeNumber}',
+                          style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
-                  title: Text(
-                    ep["title"]!,
-                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    ep["duration"]!,
-                    style: const TextStyle(color: Colors.grey, fontSize: 11),
-                  ),
-                  trailing: DownloadButton(
-                    contentId: contentId,
-                    episodeNumber: ep["number"]!,
-                    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4',
-                  ),
-                  onTap: () {
-                    context.push('/player', extra: {
-                      'contentId': contentId,
-                      'episodeId': 'ep-${ep["number"]}',
-                      'title': '$title — E${ep["number"]} · ${ep["title"]}',
-                      'videoUrl': 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-                    });
-                  },
-                );
-              },
-            ),
+                    title: Text(
+                      ep.title ?? 'Épisode ${ep.episodeNumber}',
+                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      ep.durationMin != null ? '${ep.durationMin} min' : '',
+                      style: const TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
+                    trailing: DownloadButton(
+                      contentId: widget.contentId,
+                      episodeId: ep.id,
+                      episodeNumber: '${ep.episodeNumber}',
+                    ),
+                    onTap: _isFetchingStream ? null : () => _playEpisode(ep),
+                  );
+                },
+              ),
             const SizedBox(height: 40),
           ],
         ),
@@ -221,14 +322,14 @@ class DetailScreen extends StatelessWidget {
 
 class DownloadButton extends StatefulWidget {
   final String contentId;
+  final String episodeId;
   final String episodeNumber;
-  final String videoUrl;
 
   const DownloadButton({
     super.key,
     required this.contentId,
+    required this.episodeId,
     required this.episodeNumber,
-    required this.videoUrl,
   });
 
   @override
@@ -236,6 +337,8 @@ class DownloadButton extends StatefulWidget {
 }
 
 class _DownloadButtonState extends State<DownloadButton> {
+  bool _isPreparing = false;
+
   @override
   void initState() {
     super.initState();
@@ -243,19 +346,39 @@ class _DownloadButtonState extends State<DownloadButton> {
     context.read<DownloadBloc>().add(const LoadDownloads());
   }
 
-  void _startDownload() {
-    // Construct a minimal content model for download
-    final content = ContentModel(
-      id: widget.contentId,
-      title: '${widget.contentId} - Ep ${widget.episodeNumber}',
-      type: 'video',
-      posterUrl: null, // Should pass from parent in a real app
-    );
-    
-    context.read<DownloadBloc>().add(StartDownload(
-      content: content, 
-      url: widget.videoUrl
-    ));
+  Future<void> _startDownload() async {
+    setState(() => _isPreparing = true);
+    try {
+      // Récupère une URL de streaming signée fraîche plutôt que de télécharger
+      // une URL codée en dur — cohérent avec la même logique que la lecture.
+      final signedUrl = await context.read<CatalogRepository>().getStreamToken(
+            contentId: widget.contentId,
+            episodeId: widget.episodeId,
+          );
+      if (!mounted) return;
+
+      final content = ContentModel(
+        id: widget.contentId,
+        title: '${widget.contentId} - Ep ${widget.episodeNumber}',
+        type: 'video',
+        posterUrl: null, // Should pass from parent in a real app
+      );
+
+      context.read<DownloadBloc>().add(StartDownload(
+            content: content,
+            url: signedUrl,
+          ));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible de préparer le téléchargement.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isPreparing = false);
+    }
   }
 
   @override
@@ -284,7 +407,7 @@ class _DownloadButtonState extends State<DownloadButton> {
           return const Icon(Icons.download_done, color: AppTheme.primaryGold);
         }
 
-        if (isDownloading) {
+        if (isDownloading || _isPreparing) {
           return SizedBox(
             width: 32,
             height: 32,
@@ -292,15 +415,16 @@ class _DownloadButtonState extends State<DownloadButton> {
               alignment: Alignment.center,
               children: [
                 CircularProgressIndicator(
-                  value: progress,
+                  value: isDownloading ? progress : null,
                   color: AppTheme.primaryGold,
                   backgroundColor: Colors.white24,
                   strokeWidth: 3,
                 ),
-                Text(
-                  '${(progress * 100).toInt()}',
-                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                ),
+                if (isDownloading)
+                  Text(
+                    '${(progress * 100).toInt()}',
+                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                  ),
               ],
             ),
           );

@@ -39,30 +39,33 @@ class DjelisApp extends StatelessWidget {
     final downloadService = DownloadService();
     final downloadRepo = DownloadRepository(downloadService: downloadService);
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => AuthBloc(repository: authRepo)
-            ..add(const AuthCheckSession()),
+    return RepositoryProvider<CatalogRepository>.value(
+      value: catalogRepo,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => AuthBloc(repository: authRepo)
+              ..add(const AuthCheckSession()),
+          ),
+          BlocProvider(
+            create: (_) => CatalogBloc(repository: catalogRepo)
+              ..add(const CatalogLoadFeatured()),
+          ),
+          BlocProvider(
+            create: (_) => SubscriptionBloc(repository: subscriptionRepo),
+          ),
+          BlocProvider(
+            create: (_) => DownloadBloc(repository: downloadRepo),
+          ),
+        ],
+        child: MaterialApp.router(
+          title: "Djeli'S",
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          routerConfig: AppRouter.router,
         ),
-        BlocProvider(
-          create: (_) => CatalogBloc(repository: catalogRepo)
-            ..add(const CatalogLoadFeatured()),
-        ),
-        BlocProvider(
-          create: (_) => SubscriptionBloc(repository: subscriptionRepo),
-        ),
-        BlocProvider(
-          create: (_) => DownloadBloc(repository: downloadRepo),
-        ),
-      ],
-      child: MaterialApp.router(
-        title: "Djeli'S",
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-        routerConfig: AppRouter.router,
       ),
     );
   }
