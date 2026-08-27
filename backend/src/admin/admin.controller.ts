@@ -32,6 +32,11 @@ export class AdminController {
     return this.adminService.getAllContents();
   }
 
+  @Get('contents/:id/stats')
+  async getContentStats(@Param('id') id: string) {
+    return this.adminService.getContentStats(id);
+  }
+
   @Patch('contents/:id/toggle')
   async toggleContentStatus(@Param('id') id: string) {
     const result = await this.adminService.toggleContentStatus(id);

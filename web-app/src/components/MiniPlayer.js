@@ -12,9 +12,46 @@ export default function MiniPlayer({ audioItem, onClose }) {
     if (audioRef.current) {
       if (isPlaying) audioRef.current.pause();
       else audioRef.current.play();
-      setIsPlaying(!isPlaying);
     }
   };
+
+  // Intègre le lecteur aux contrôles média du système (écran verrouillé,
+  // notification Android, Control Center) via la Media Session API.
+  useEffect(() => {
+    if (!audioItem || typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: audioItem.title,
+      artist: audioItem.artist || "DjeliSon",
+      album: "Djeli'S",
+      artwork: audioItem.image ? [{ src: audioItem.image, sizes: "512x512", type: "image/png" }] : [],
+    });
+
+    navigator.mediaSession.setActionHandler("play", () => audioRef.current?.play());
+    navigator.mediaSession.setActionHandler("pause", () => audioRef.current?.pause());
+    navigator.mediaSession.setActionHandler("seekbackward", () => {
+      if (audioRef.current) audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+    });
+    navigator.mediaSession.setActionHandler("seekforward", () => {
+      if (audioRef.current) {
+        const duration = audioRef.current.duration || Infinity;
+        audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 10);
+      }
+    });
+
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("seekbackward", null);
+      navigator.mediaSession.setActionHandler("seekforward", null);
+    };
+  }, [audioItem]);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
+  }, [isPlaying]);
 
   const handleTimeUpdate = () => {
     if (audioRef.current && audioRef.current.duration > 0) {
@@ -69,11 +106,13 @@ export default function MiniPlayer({ audioItem, onClose }) {
 
       </div>
 
-      <audio 
+      <audio
         ref={audioRef}
-        src={audioItem.audioUrl} 
+        src={audioItem.audioUrl}
         autoPlay
         onTimeUpdate={handleTimeUpdate}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
       />
 

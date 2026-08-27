@@ -3,6 +3,10 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class AdminService {
+  // Une lecture n'est comptée comme "vue" qu'au-delà de ce seuil de visionnage
+  // réel (issu de WatchHistory.progressSeconds), pas au simple clic sur Play.
+  private readonly VIEW_THRESHOLD_SECONDS = 30;
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getDashboardStats() {
@@ -16,12 +20,42 @@ export class AdminService {
     const audiosCount = await this.prisma.content.count({
       where: { type: 'AUDIO' },
     });
+    const totalQualifiedViews = await this.prisma.watchHistory.count({
+      where: { progressSeconds: { gte: this.VIEW_THRESHOLD_SECONDS } },
+    });
 
     return {
       users: usersCount,
       activeSubs: activeSubsCount,
       videos: videosCount,
       audios: audiosCount,
+      totalViews: totalQualifiedViews,
+    };
+  }
+
+  async getContentStats(contentId: string) {
+    const content = await this.prisma.content.findUnique({ where: { id: contentId } });
+    if (!content) {
+      throw new NotFoundException('Contenu non trouvé');
+    }
+
+    const qualifying = await this.prisma.watchHistory.findMany({
+      where: { contentId, progressSeconds: { gte: this.VIEW_THRESHOLD_SECONDS } },
+      select: { profileId: true, progressSeconds: true },
+    });
+
+    const uniqueViewers = new Set(qualifying.map((w) => w.profileId)).size;
+    const totalViews = qualifying.length;
+    const avgWatchDurationSec =
+      totalViews > 0
+        ? Math.round(qualifying.reduce((sum, w) => sum + w.progressSeconds, 0) / totalViews)
+        : 0;
+
+    return {
+      contentId,
+      totalViews,
+      uniqueViewers,
+      avgWatchDurationSec,
     };
   }
 
