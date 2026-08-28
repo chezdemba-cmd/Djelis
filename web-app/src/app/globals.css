@@ -2026,7 +2026,6 @@ select.form-input {
 .modal {
     position: absolute;
     inset: 0;
-    top: 44px;
     background: var(--dark-bg);
     z-index: 500;
     display: none;
