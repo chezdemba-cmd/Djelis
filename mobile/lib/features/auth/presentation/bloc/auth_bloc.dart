@@ -21,10 +21,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onCheckSession(
       AuthCheckSession event, Emitter<AuthState> emit) async {
-    // Currently no /auth/me endpoint to fetch user details.
-    // Force re-login or use stored info if implemented in future.
-    await _repository.logout();
-    emit(const AuthUnauthenticated());
+    final user = await _repository.restoreSession();
+    if (user != null) {
+      emit(AuthAuthenticated(user));
+    } else {
+      emit(const AuthUnauthenticated());
+    }
   }
 
   Future<void> _onLoginWithEmail(

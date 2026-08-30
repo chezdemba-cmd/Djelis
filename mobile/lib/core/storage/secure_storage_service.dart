@@ -5,6 +5,7 @@ class SecureStorageService {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _userIdKey = 'user_id';
+  static const _userKey = 'user';
 
   final FlutterSecureStorage _storage;
 
@@ -29,6 +30,10 @@ class SecureStorageService {
   Future<void> saveUserId(String id) =>
       _storage.write(key: _userIdKey, value: id);
   Future<String?> getUserId() => _storage.read(key: _userIdKey);
+
+  Future<void> saveUser(String userJson) =>
+      _storage.write(key: _userKey, value: userJson);
+  Future<String?> getUser() => _storage.read(key: _userKey);
 
   Future<void> clearAll() => _storage.deleteAll();
 

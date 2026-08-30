@@ -6,6 +6,7 @@ import '../../features/catalog/presentation/screens/detail_screen.dart';
 import '../../features/catalog/presentation/screens/player_screen.dart';
 import '../../features/subscription/presentation/screens/plans_screen.dart';
 import '../../features/downloads/presentation/screens/downloads_screen.dart';
+import '../../features/auth/presentation/screens/account_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -55,6 +56,10 @@ class AppRouter {
       GoRoute(
         path: '/downloads',
         builder: (context, state) => const DownloadsScreen(),
+      ),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

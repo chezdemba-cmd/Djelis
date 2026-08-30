@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../models/user_model.dart';
@@ -93,7 +95,19 @@ class AuthRepository {
     }
   }
 
-  Future<bool> restoreSession() async => _storage.hasTokens;
+  Future<UserModel?> restoreSession() async {
+    if (!await _storage.hasTokens) return null;
+    final userJson = await _storage.getUser();
+    if (userJson == null || userJson.isEmpty) return null;
+    try {
+      return UserModel.fromJson(
+        jsonDecode(userJson) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      await _storage.clearAll();
+      return null;
+    }
+  }
 
   Future<void> _persistSession(AuthTokens tokens) async {
     await _storage.saveTokens(
@@ -101,5 +115,6 @@ class AuthRepository {
       refreshToken: tokens.refreshToken,
     );
     await _storage.saveUserId(tokens.user.id);
+    await _storage.saveUser(jsonEncode(tokens.user.toJson()));
   }
 }

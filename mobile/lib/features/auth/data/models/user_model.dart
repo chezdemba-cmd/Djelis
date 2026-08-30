@@ -48,8 +48,10 @@ class UserModel extends Equatable {
         'email_verified': emailVerified,
         'status': status,
         'country_code': countryCode,
-        'display_name': displayName,
-        'avatar_url': avatarUrl,
+        'profile': {
+          'display_name': displayName,
+          'avatar_url': avatarUrl,
+        },
         'has_active_subscription': hasActiveSubscription,
       };
 
