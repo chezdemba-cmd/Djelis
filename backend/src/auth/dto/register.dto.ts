@@ -26,4 +26,11 @@ export class RegisterDto {
     message: "Le mot de passe doit contenir au moins 8 caractères",
   })
   password: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^[A-Z]{2}$/, {
+    message: "Le code pays doit contenir deux lettres majuscules (ISO 3166-1)",
+  })
+  country_code?: string;
 }
