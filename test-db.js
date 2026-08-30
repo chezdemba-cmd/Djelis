@@ -1,4 +1,5 @@
 const { Client } = require('pg');
+require('dotenv').config({ path: 'backend/.env' });
 
 async function testConn(url) {
   const client = new Client({ connectionString: url });
@@ -12,15 +13,11 @@ async function testConn(url) {
 }
 
 async function main() {
-  const urls = [
-    "postgresql://postgres.osppgcecinamqbodbvpg:Djdjigui1%40@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require",
-    "postgresql://postgres.osppgcecinamqbodbvpg:Djdjigui1@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require",
-    "postgres://postgres:Djdjigui1%40@db.osppgcecinamqbodbvpg.supabase.co:6543/postgres?pgbouncer=true&sslmode=require",
-    "postgres://postgres:Djdjigui1@db.osppgcecinamqbodbvpg.supabase.co:6543/postgres?pgbouncer=true&sslmode=require",
-  ];
-  for (let u of urls) {
-     await testConn(u);
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error('DATABASE_URL must be defined in backend/.env');
   }
+  await testConn(url);
 }
 
 main();
