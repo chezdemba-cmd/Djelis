@@ -13,6 +13,8 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
 
   useEffect(() => {
     if (isOpen) {
+      // Reset transient form state each time the dialog is opened.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLogin(initialMode === "login");
       setStep(1);
       setErrorMsg("");
@@ -44,6 +46,12 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
           const token = data.access_token || data.accessToken;
           if (token) {
              localStorage.setItem('accessToken', token);
+             const sessionResponse = await fetch('/api/auth/login', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ token }),
+             });
+             if (!sessionResponse.ok) throw new Error('Session verification failed');
              if (isLogin) {
                 if (onComplete) onComplete();
                 onClose();
@@ -56,16 +64,9 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
         }
       } catch (err) {
         console.error("Error connecting to NestJS Auth API.", err);
-        // Fallback: Mode simulation si le backend n'est pas disponible (ex: Vercel demo)
-        console.warn("Backend unreachable, activating simulated login fallback.");
-        localStorage.setItem('accessToken', 'demo_simulated_token_xyz');
-        if (isLogin) {
-            if (onComplete) onComplete();
-            onClose();
-            return;
-        } else {
-            // Passer à l'étape suivante (choix du forfait)
-        }
+        localStorage.removeItem('accessToken');
+        setErrorMsg("Service momentanément indisponible. Veuillez réessayer.");
+        return;
       }
     }
     setStep((prev) => prev + 1);

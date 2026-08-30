@@ -7,7 +7,14 @@ const SessionContext = createContext();
 
 export function SessionProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentProfile, setCurrentProfile] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return JSON.parse(localStorage.getItem('currentProfile') || 'null');
+    } catch {
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -29,14 +36,6 @@ export function SessionProvider({ children }) {
       }
     };
     
-    // Also try to restore profile from localStorage (non-sensitive)
-    const savedProfile = localStorage.getItem('currentProfile');
-    if (savedProfile) {
-      try {
-        setCurrentProfile(JSON.parse(savedProfile));
-      } catch (e) { }
-    }
-
     checkAuth();
   }, []);
 

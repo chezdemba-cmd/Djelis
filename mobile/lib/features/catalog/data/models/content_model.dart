@@ -214,25 +214,55 @@ FeaturedCatalogModel mockFeaturedCatalog() {
       ContentRow(
         title: 'Cinéma & Long-métrages',
         contents: [
-          const ContentModel(id: 'c2', title: 'Les Secrets du Baobab', type: 'film', tag: 'Exclusivité'),
-          const ContentModel(id: 'c3', title: "L'Or de Ségou", type: 'film', tag: 'Drame'),
-          const ContentModel(id: 'c4', title: 'Taxi à Bamako', type: 'film', tag: 'Comédie'),
+          const ContentModel(
+              id: 'c2',
+              title: 'Les Secrets du Baobab',
+              type: 'film',
+              tag: 'Exclusivité'),
+          const ContentModel(
+              id: 'c3', title: "L'Or de Ségou", type: 'film', tag: 'Drame'),
+          const ContentModel(
+              id: 'c4', title: 'Taxi à Bamako', type: 'film', tag: 'Comédie'),
         ],
       ),
       ContentRow(
         title: 'Théâtre & Humour',
         contents: [
-          const ContentModel(id: 'c5', title: 'Le Retour de Guignol', type: 'theatre', tag: 'Théâtre'),
-          const ContentModel(id: 'c6', title: 'Abidjan Comedy Show', type: 'humour', tag: 'Humour'),
-          const ContentModel(id: 'c7', title: 'Les Tranches de Vie', type: 'series', tag: 'Série Humour'),
+          const ContentModel(
+              id: 'c5',
+              title: 'Le Retour de Guignol',
+              type: 'theatre',
+              tag: 'Théâtre'),
+          const ContentModel(
+              id: 'c6',
+              title: 'Abidjan Comedy Show',
+              type: 'humour',
+              tag: 'Humour'),
+          const ContentModel(
+              id: 'c7',
+              title: 'Les Tranches de Vie',
+              type: 'series',
+              tag: 'Série Humour'),
         ],
       ),
       ContentRow(
         title: 'Documentaires & Récits',
         contents: [
-          const ContentModel(id: 'c8', title: "L'Empire du Mali", type: 'documentary', tag: 'Histoire'),
-          const ContentModel(id: 'c9', title: 'Les Artisans du Niger', type: 'documentary', tag: 'Société'),
-          const ContentModel(id: 'c10', title: 'Femmes du Sahel', type: 'documentary', tag: 'Culture'),
+          const ContentModel(
+              id: 'c8',
+              title: "L'Empire du Mali",
+              type: 'documentary',
+              tag: 'Histoire'),
+          const ContentModel(
+              id: 'c9',
+              title: 'Les Artisans du Niger',
+              type: 'documentary',
+              tag: 'Société'),
+          const ContentModel(
+              id: 'c10',
+              title: 'Femmes du Sahel',
+              type: 'documentary',
+              tag: 'Culture'),
         ],
       ),
     ],
@@ -240,9 +270,21 @@ FeaturedCatalogModel mockFeaturedCatalog() {
 }
 
 List<ContentModel> mockAudioContents() => [
-      const ContentModel(id: 'a1', title: 'Contes du Clair de Lune', type: 'podcast', tag: 'Sékou le Griot'),
-      const ContentModel(id: 'a2', title: "L'Histoire du Mande", type: 'podcast', tag: "Pod'Culture"),
-      const ContentModel(id: 'a3', title: 'Paroles de Sages', type: 'podcast', tag: 'Momo Koné'),
+      const ContentModel(
+          id: 'a1',
+          title: 'Contes du Clair de Lune',
+          type: 'podcast',
+          tag: 'Sékou le Griot'),
+      const ContentModel(
+          id: 'a2',
+          title: "L'Histoire du Mande",
+          type: 'podcast',
+          tag: "Pod'Culture"),
+      const ContentModel(
+          id: 'a3',
+          title: 'Paroles de Sages',
+          type: 'podcast',
+          tag: 'Momo Koné'),
     ];
 
 List<Map<String, String>> mockTracks() => [

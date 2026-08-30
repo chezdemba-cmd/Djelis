@@ -8,8 +8,7 @@ import 'package:audio_session/audio_session.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../bloc/catalog_bloc.dart';
 import '../bloc/catalog_event.dart';
-import '../data/repositories/download_repository.dart';
-import '../../../downloads/data/download_service.dart';
+import '../../data/repositories/download_repository.dart';
 
 // ─── Quality model ────────────────────────────────────────────────────────────
 
@@ -132,8 +131,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       _hasError = false;
     });
 
-    final ctrl = widget.videoUrl == 'local' && widget.contentId != null 
-        ? VideoPlayerController.file(File((await DownloadRepository().getLocalFilePath('${widget.contentId}.mp4'))!))
+    final ctrl = widget.videoUrl == 'local' && widget.contentId != null
+        ? VideoPlayerController.file(File((await DownloadRepository()
+            .getLocalFilePath('${widget.contentId}.mp4'))!))
         : VideoPlayerController.networkUrl(Uri.parse(url));
     _controller = ctrl;
     ctrl.addListener(_onUpdate);
@@ -217,7 +217,11 @@ class _PlayerScreenState extends State<PlayerScreen>
     final ctrl = _controller;
     if (ctrl == null || !ctrl.value.isInitialized) return;
     final target = ctrl.value.position + Duration(seconds: seconds);
-    ctrl.seekTo(target.clamp(Duration.zero, ctrl.value.duration));
+    final clampedMilliseconds = target.inMilliseconds.clamp(
+      0,
+      ctrl.value.duration.inMilliseconds,
+    );
+    ctrl.seekTo(Duration(milliseconds: clampedMilliseconds));
     _scheduleHide();
   }
 
@@ -288,8 +292,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         ctrl.value.buffered.isEmpty) return 0;
     final dur = ctrl.value.duration.inMilliseconds;
     if (dur == 0) return 0;
-    return (ctrl.value.buffered.last.end.inMilliseconds / dur)
-        .clamp(0.0, 1.0);
+    return (ctrl.value.buffered.last.end.inMilliseconds / dur).clamp(0.0, 1.0);
   }
 
   String _fmt(Duration d) {
@@ -345,7 +348,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         gradient: LinearGradient(
           colors: [
             AppTheme.darkBackground,
-            AppTheme.accentCrimson.withOpacity(0.55),
+            AppTheme.accentCrimson.withValues(alpha: 0.55),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -362,7 +365,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                 color: AppTheme.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: AppTheme.primaryGold.withOpacity(0.3), width: 2),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.3),
+                    width: 2),
               ),
               child: const Icon(Icons.music_note,
                   color: AppTheme.primaryGold, size: 72),
@@ -408,7 +412,8 @@ class _PlayerScreenState extends State<PlayerScreen>
             onPressed: _initPlayer,
             icon: const Icon(Icons.refresh, color: Colors.black),
             label: const Text('Réessayer',
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold)),
             style:
                 ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
           ),
@@ -429,7 +434,10 @@ class _PlayerScreenState extends State<PlayerScreen>
       children: [
         // Top gradient
         const Positioned(
-          top: 0, left: 0, right: 0, height: 130,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 130,
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -442,7 +450,10 @@ class _PlayerScreenState extends State<PlayerScreen>
         ),
         // Bottom gradient
         const Positioned(
-          bottom: 0, left: 0, right: 0, height: 200,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 200,
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -508,11 +519,13 @@ class _PlayerScreenState extends State<PlayerScreen>
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _SeekButton(icon: Icons.replay_10, onTap: () => _seekRelative(-10)),
+                    _SeekButton(
+                        icon: Icons.replay_10, onTap: () => _seekRelative(-10)),
                     const SizedBox(width: 28),
                     _PlayButton(isPlaying: isPlaying, onTap: _togglePlay),
                     const SizedBox(width: 28),
-                    _SeekButton(icon: Icons.forward_10, onTap: () => _seekRelative(10)),
+                    _SeekButton(
+                        icon: Icons.forward_10, onTap: () => _seekRelative(10)),
                   ],
                 ),
         ),
@@ -529,13 +542,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withOpacity(0.12),
+                      color: AppTheme.primaryGold.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: AppTheme.primaryGold.withOpacity(0.4)),
+                          color: AppTheme.primaryGold.withValues(alpha: 0.4)),
                     ),
                     child: const Text(
                       '⚡ Mode Économie · ~120 Mo/h',
@@ -632,7 +645,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               inactiveTrackColor: Colors.transparent,
               thumbColor: AppTheme.primaryGold,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayColor: AppTheme.primaryGold.withOpacity(0.2),
+              overlayColor: AppTheme.primaryGold.withValues(alpha: 0.2),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
             ),
             child: Slider(
@@ -683,9 +696,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   : 'Adaptatif automatique';
               return ListTile(
                 leading: Icon(
-                  selected
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
+                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
                   color: selected ? AppTheme.primaryGold : Colors.white38,
                   size: 22,
                 ),
@@ -693,13 +704,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                   q.label,
                   style: TextStyle(
                     color: selected ? AppTheme.primaryGold : Colors.white,
-                    fontWeight:
-                        selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 subtitle: Text(sub,
-                    style: const TextStyle(
-                        color: Colors.white38, fontSize: 11)),
+                    style:
+                        const TextStyle(color: Colors.white38, fontSize: 11)),
                 onTap: () {
                   Navigator.of(ctx).pop();
                   _switchQuality(q.label);

@@ -1,13 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import "dotenv/config";
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import * as request from "supertest";
+import { AppModule } from "../src/app.module";
 
-describe('AuthController (e2e)', () => {
+jest.setTimeout(30000);
+
+describe("AuthController (e2e)", () => {
   let app: INestApplication;
   const testUser = {
     email: `test-${Date.now()}@example.com`,
-    password: 'password123',
+    password: "password123",
   };
   let accessToken: string;
 
@@ -17,17 +20,17 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api/v1');
+    app.setGlobalPrefix("api/v1");
     await app.init();
   });
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
-  it('/api/v1/auth/register (POST) - Success', () => {
+  it("/api/v1/auth/register (POST) - Success", () => {
     return request(app.getHttpServer())
-      .post('/api/v1/auth/register')
+      .post("/api/v1/auth/register")
       .send(testUser)
       .expect(201)
       .expect((res) => {
@@ -37,16 +40,16 @@ describe('AuthController (e2e)', () => {
       });
   });
 
-  it('/api/v1/auth/register (POST) - Duplicate Email', () => {
+  it("/api/v1/auth/register (POST) - Duplicate Email", () => {
     return request(app.getHttpServer())
-      .post('/api/v1/auth/register')
+      .post("/api/v1/auth/register")
       .send(testUser)
       .expect(409); // Conflict
   });
 
-  it('/api/v1/auth/login (POST) - Success', () => {
+  it("/api/v1/auth/login (POST) - Success", () => {
     return request(app.getHttpServer())
-      .post('/api/v1/auth/login')
+      .post("/api/v1/auth/login")
       .send({
         email: testUser.email,
         password: testUser.password,
@@ -57,26 +60,24 @@ describe('AuthController (e2e)', () => {
       });
   });
 
-  it('/api/v1/auth/login (POST) - Bad Password', () => {
+  it("/api/v1/auth/login (POST) - Bad Password", () => {
     return request(app.getHttpServer())
-      .post('/api/v1/auth/login')
+      .post("/api/v1/auth/login")
       .send({
         email: testUser.email,
-        password: 'wrongpassword',
+        password: "wrongpassword",
       })
       .expect(401);
   });
 
-  it('/api/v1/profiles (GET) - Unauthorized without token', () => {
-    return request(app.getHttpServer())
-      .get('/api/v1/profiles')
-      .expect(401);
+  it("/api/v1/profiles (GET) - Unauthorized without token", () => {
+    return request(app.getHttpServer()).get("/api/v1/profiles").expect(401);
   });
 
-  it('/api/v1/profiles (GET) - Success with token', () => {
+  it("/api/v1/profiles (GET) - Success with token", () => {
     return request(app.getHttpServer())
-      .get('/api/v1/profiles')
-      .set('Authorization', `Bearer ${accessToken}`)
+      .get("/api/v1/profiles")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
   });
 });

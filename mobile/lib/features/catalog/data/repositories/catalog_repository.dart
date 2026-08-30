@@ -1,5 +1,4 @@
 import '../../../../core/network/api_client.dart';
-import '../../../../core/errors/app_exception.dart';
 import '../models/content_model.dart';
 
 class CatalogRepository {
@@ -8,17 +7,12 @@ class CatalogRepository {
   CatalogRepository({required ApiClient api}) : _api = api;
 
   /// Returns hero + category rows for the home page.
-  /// Falls back to mock data if the backend is unreachable.
   Future<FeaturedCatalogModel> getFeatured({String? countryCode}) async {
-    try {
-      final data = await _api.get<Map<String, dynamic>>(
-        '/catalogue/featured',
-        queryParameters: countryCode != null ? {'country': countryCode} : null,
-      );
-      return FeaturedCatalogModel.fromJson(data);
-    } on NetworkException {
-      return mockFeaturedCatalog();
-    }
+    final data = await _api.get<Map<String, dynamic>>(
+      '/catalogue/featured',
+      queryParameters: countryCode != null ? {'country': countryCode} : null,
+    );
+    return FeaturedCatalogModel.fromJson(data);
   }
 
   Future<List<ContentModel>> getContents({
@@ -28,28 +22,20 @@ class CatalogRepository {
     int page = 1,
     int limit = 20,
   }) async {
-    try {
-      final data = await _api.get<Map<String, dynamic>>(
-        '/catalogue/contents',
-        queryParameters: {
-          if (type != null) 'type': type,
-          if (categoryId != null) 'category': categoryId,
-          if (countryCode != null) 'country': countryCode,
-          'page': page,
-          'limit': limit,
-        },
-      );
-      final rawList = data['data'] as List<dynamic>;
-      return rawList
-          .map((e) => ContentModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } on NetworkException {
-      return mockFeaturedCatalog()
-          .rows
-          .expand((r) => r.contents)
-          .where((c) => type == null || c.type == type)
-          .toList();
-    }
+    final data = await _api.get<Map<String, dynamic>>(
+      '/catalogue/contents',
+      queryParameters: {
+        if (type != null) 'type': type,
+        if (categoryId != null) 'category': categoryId,
+        if (countryCode != null) 'country': countryCode,
+        'page': page,
+        'limit': limit,
+      },
+    );
+    final rawList = data['data'] as List<dynamic>;
+    return rawList
+        .map((e) => ContentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<ContentModel> getContentDetail(String contentId) async {
@@ -60,38 +46,25 @@ class CatalogRepository {
   }
 
   Future<List<ContentModel>> search(String query, {int page = 1}) async {
-    try {
-      final data = await _api.get<Map<String, dynamic>>(
-        '/catalogue/search',
-        queryParameters: {'q': query, 'page': page},
-      );
-      final rawList = data['data'] as List<dynamic>;
-      return rawList
-          .map((e) => ContentModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } on NetworkException {
-      // Local mock search
-      final all = mockFeaturedCatalog().rows.expand((r) => r.contents);
-      return all
-          .where((c) => c.title.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    }
+    final data = await _api.get<Map<String, dynamic>>(
+      '/catalogue/search',
+      queryParameters: {'q': query, 'page': page},
+    );
+    final rawList = data['data'] as List<dynamic>;
+    return rawList
+        .map((e) => ContentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<ContentModel>> getPopular({String? countryCode}) async {
-    try {
-      final data = await _api.get<Map<String, dynamic>>(
-        '/catalogue/popular',
-        queryParameters: countryCode != null ? {'country': countryCode} : null,
-      );
-      final rawList = data as List<dynamic>? ??
-          (data['data'] as List<dynamic>? ?? []);
-      return rawList
-          .map((e) => ContentModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } on NetworkException {
-      return mockFeaturedCatalog().rows.first.contents;
-    }
+    final data = await _api.get<Map<String, dynamic>>(
+      '/catalogue/popular',
+      queryParameters: countryCode != null ? {'country': countryCode} : null,
+    );
+    final rawList = data['data'] as List<dynamic>? ?? [];
+    return rawList
+        .map((e) => ContentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Sends playback progress to the backend.

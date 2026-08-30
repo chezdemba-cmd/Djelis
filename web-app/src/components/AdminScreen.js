@@ -41,6 +41,8 @@ export default function AdminScreen({ onBack }) {
   };
 
   useEffect(() => {
+    // Data fetching owns the asynchronous state updates; this is not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAdminData();
   }, []);
 

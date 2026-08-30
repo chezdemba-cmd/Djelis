@@ -41,3 +41,6 @@ yarn-error.log
 .packages
 .pub-cache/
 .pub/
+
+# Local SDKs, installers and downloaded build artifacts
+.tools/

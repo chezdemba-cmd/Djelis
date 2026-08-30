@@ -184,7 +184,7 @@ export default function DjaasooScreen({ currentProfile }) {
                       <div className="netflix-card-metadata">
                         <span className="match-score">Recommandé à 98%</span>
                         <span className="age-rating">{item.age || '16+'}</span>
-                        <span className="duration">1 h {Math.floor(Math.random() * 59)} min</span>
+                        <span className="duration">1 h {String(item.id).length % 59} min</span>
                         <span className="resolution">HD</span>
                       </div>
                       <div className="netflix-card-tags">
@@ -255,7 +255,7 @@ export default function DjaasooScreen({ currentProfile }) {
                       <div className="netflix-card-metadata">
                         <span className="match-score">Recommandé à 98%</span>
                         <span className="age-rating">{item.age || '16+'}</span>
-                        <span className="duration">1 h {Math.floor(Math.random() * 59)} min</span>
+                        <span className="duration">1 h {String(item.id).length % 59} min</span>
                         <span className="resolution">HD</span>
                       </div>
                       <div className="netflix-card-tags">

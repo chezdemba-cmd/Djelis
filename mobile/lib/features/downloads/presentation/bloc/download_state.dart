@@ -3,7 +3,7 @@ import '../../../catalog/data/models/content_model.dart';
 
 abstract class DownloadState extends Equatable {
   const DownloadState();
-  
+
   @override
   List<Object?> get props => [];
 }

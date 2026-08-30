@@ -20,16 +20,15 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       SubscriptionLoadPlans event, Emitter<SubscriptionState> emit) async {
     emit(const SubscriptionLoading());
     try {
-      final plans =
-          await _repository.getPlans(countryCode: event.countryCode);
+      final plans = await _repository.getPlans(countryCode: event.countryCode);
       emit(SubscriptionPlansLoaded(plans));
     } catch (e) {
       emit(SubscriptionError(e.toString()));
     }
   }
 
-  Future<void> _onInitiatePayment(
-      SubscriptionInitiatePayment event, Emitter<SubscriptionState> emit) async {
+  Future<void> _onInitiatePayment(SubscriptionInitiatePayment event,
+      Emitter<SubscriptionState> emit) async {
     emit(const SubscriptionLoading());
     try {
       final response = await _repository.initiatePayment(

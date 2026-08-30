@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   UnauthorizedException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { PaymentStatus, SubscriptionStatus } from "@prisma/client";
@@ -16,8 +17,22 @@ export class PaymentsService {
     userId: string,
     planId: number,
     gateway: string,
-    phoneMomo?: string
+    _phoneMomo?: string
   ) {
+    const normalizedGateway = gateway?.toLowerCase();
+    if (!["wave", "cinetpay"].includes(normalizedGateway)) {
+      throw new BadRequestException(
+        "Passerelle de paiement non prise en charge."
+      );
+    }
+    if (
+      process.env.NODE_ENV === "production" ||
+      process.env.ENABLE_PAYMENT_SIMULATION !== "true"
+    ) {
+      throw new ServiceUnavailableException(
+        "La passerelle de paiement n'est pas encore configuree. Aucun paiement n'a ete cree."
+      );
+    }
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan || !plan.isActive) {
       throw new NotFoundException(
@@ -26,7 +41,7 @@ export class PaymentsService {
     }
 
     // Determine pricing and currency based on gateway
-    const isLocalGateway = ["cinetpay", "wave"].includes(gateway.toLowerCase());
+    const isLocalGateway = ["cinetpay", "wave"].includes(normalizedGateway);
     const amount = isLocalGateway ? plan.priceFcfa : Number(plan.priceEuro);
     const currency = isLocalGateway ? "XOF" : "EUR";
 
@@ -37,13 +52,13 @@ export class PaymentsService {
         planId,
         amount,
         currency,
-        gateway: gateway.toLowerCase(),
+        gateway: normalizedGateway,
         status: PaymentStatus.PENDING,
       },
     });
 
     // 2. Prepare payload for Gateway API
-    if (gateway.toLowerCase() === "wave") {
+    if (normalizedGateway === "wave") {
       // Wave Direct API integration (Simulated payload)
       // waveClient.createPayment({ amount, currency, phone: phoneMomo })
       return {
@@ -53,7 +68,7 @@ export class PaymentsService {
         gateway: "wave",
         waveLaunchUrl: `https://api.wave.com/v1/checkout/${payment.id}`, // Custom Wave Checkout Page
       };
-    } else if (gateway.toLowerCase() === "cinetpay") {
+    } else if (normalizedGateway === "cinetpay") {
       // CinetPay API integration (Simulated payload)
       return {
         paymentId: payment.id,
@@ -62,24 +77,19 @@ export class PaymentsService {
         gateway: "cinetpay",
         checkoutUrl: `https://checkout.cinetpay.com/${payment.id}`,
       };
-    } else {
-      // Stripe/Diaspora card payment checkout
-      return {
-        paymentId: payment.id,
-        amount,
-        currency,
-        gateway: "stripe",
-        stripePublishableKey: "pk_test_...",
-        clientSecret: "pi_test_secret_...",
-      };
     }
+
+    throw new BadRequestException(
+      "Passerelle de paiement non prise en charge."
+    );
   }
 
   // Handle transaction confirmation from CinetPay / Wave Webhooks
   async handleWebhook(
     gateway: string,
     headers: Record<string, string>,
-    body: any
+    body: any,
+    rawBody: string
   ) {
     let transactionId: string;
     let gatewayStatus: string;
@@ -98,20 +108,22 @@ export class PaymentsService {
           "WAVE_WEBHOOK_SECRET non configuré : impossible de vérifier ce webhook."
         );
       }
-      const payloadString = JSON.stringify(body);
       const expectedSignature = crypto
         .createHmac("sha256", waveSecret)
-        .update(payloadString)
+        .update(rawBody)
         .digest("hex");
 
-      if (waveSignature !== expectedSignature) {
+      if (!this.signaturesMatch(waveSignature, expectedSignature)) {
         throw new UnauthorizedException(
           "Signature Wave invalide (Tentative de fraude détectée)"
         );
       }
 
       transactionId = body.id; // Wave session ID
-      clientRefId = body.client_reference_id || (body.metadata?.payment_id as string) || (body.metadata?.client_reference_id as string);
+      clientRefId =
+        body.client_reference_id ||
+        (body.metadata?.payment_id as string) ||
+        (body.metadata?.client_reference_id as string);
       gatewayStatus = body.status; // succeeded, failed
     } else if (gateway === "cinetpay") {
       // Vérification HMAC CinetPay
@@ -125,13 +137,12 @@ export class PaymentsService {
           "CINETPAY_SECRET non configuré : impossible de vérifier ce webhook."
         );
       }
-      const payloadString = JSON.stringify(body);
       const expectedSignature = crypto
         .createHmac("sha256", cinetpaySecret)
-        .update(payloadString)
+        .update(rawBody)
         .digest("hex");
 
-      if (cinetpaySignature !== expectedSignature) {
+      if (!this.signaturesMatch(cinetpaySignature, expectedSignature)) {
         throw new UnauthorizedException(
           "Signature CinetPay invalide (Tentative de fraude détectée)"
         );
@@ -174,27 +185,25 @@ export class PaymentsService {
     }
 
     // Si la passerelle nous fournit un montant, on vérifie qu'il est suffisant
-    if (webhookAmount > 0 && webhookAmount < Number(payment.amount)) {
+    if (
+      !Number.isFinite(webhookAmount) ||
+      webhookAmount !== Number(payment.amount)
+    ) {
       gatewayStatus = "failed";
       errorMessage = `ALERTE FRAUDE : Montant insuffisant (${webhookAmount} au lieu de ${payment.amount})`;
-      console.warn(`[SECURITY] Tentative de contournement de prix bloquée sur la transaction: ${payment.id}`);
+      console.warn(
+        `[SECURITY] Tentative de contournement de prix bloquée sur la transaction: ${payment.id}`
+      );
     }
 
     if (gatewayStatus === "succeeded") {
-      // 1. Update payment to successful
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.SUCCESSFUL,
-          gatewayTransactionId: transactionId,
-        },
-      });
-
       if (!payment.userId || !payment.planId) {
         throw new BadRequestException(
           "Données de transaction incomplètes (userId ou planId manquant)."
         );
       }
+      const paymentUserId = payment.userId;
+      const paymentPlanId = payment.planId;
 
       // 2. Fetch plan details to calculate dates
       const plan = await this.prisma.plan.findUnique({
@@ -202,23 +211,26 @@ export class PaymentsService {
       });
       const durationDays = plan ? plan.durationDays : 30;
 
-      // Find the associated subscription or create a new one
-      const subscription = await this.prisma.subscription.create({
-        data: {
-          userId: payment.userId,
-          planId: payment.planId,
-          startsAt: new Date(),
-          // Calculate endsAt based on duration days. For local Momo we default autoRenew to false.
-          endsAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
-          status: SubscriptionStatus.ACTIVE,
-          paymentMethod: gateway,
-        },
-      });
-
-      // Update payment record to attach subscription ID
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data: { subscriptionId: subscription.id },
+      const subscription = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.subscription.create({
+          data: {
+            userId: paymentUserId,
+            planId: paymentPlanId,
+            startsAt: new Date(),
+            endsAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+            status: SubscriptionStatus.ACTIVE,
+            paymentMethod: gateway,
+          },
+        });
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.SUCCESSFUL,
+            gatewayTransactionId: transactionId,
+            subscriptionId: created.id,
+          },
+        });
+        return created;
       });
 
       return { status: "success", subscriptionId: subscription.id };
@@ -237,13 +249,13 @@ export class PaymentsService {
     }
   }
 
-  async getPaymentStatus(id: string) {
+  async getPaymentStatus(id: string, userId: string) {
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         id
       );
     const payment = await this.prisma.payment.findFirst({
-      where: isUuid ? { id } : { gatewayTransactionId: id },
+      where: isUuid ? { id, userId } : { gatewayTransactionId: id, userId },
     });
     if (!payment) {
       throw new NotFoundException("Transaction introuvable.");
@@ -251,7 +263,17 @@ export class PaymentsService {
     return payment;
   }
 
-  async getPlans(country?: string) {
+  private signaturesMatch(received: string, expected: string): boolean {
+    if (!/^[0-9a-f]+$/i.test(received) || received.length !== expected.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(
+      Buffer.from(received, "hex"),
+      Buffer.from(expected, "hex")
+    );
+  }
+
+  async getPlans(_country?: string) {
     const plans = await this.prisma.plan.findMany({
       where: { isActive: true },
     });

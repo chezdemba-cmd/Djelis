@@ -18,7 +18,6 @@ export default function SearchScreen() {
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length === 0) {
-      setResults([]);
       return;
     }
 

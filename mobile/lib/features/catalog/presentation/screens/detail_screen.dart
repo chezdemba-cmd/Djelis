@@ -38,8 +38,9 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Future<void> _loadDetail() async {
     try {
-      final content =
-          await context.read<CatalogRepository>().getContentDetail(widget.contentId);
+      final content = await context
+          .read<CatalogRepository>()
+          .getContentDetail(widget.contentId);
       if (!mounted) return;
       setState(() {
         _content = content;
@@ -76,7 +77,8 @@ class _DetailScreenState extends State<DetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Impossible de charger le flux vidéo. Vérifiez votre connexion.'),
+          content: Text(
+              'Impossible de charger le flux vidéo. Vérifiez votre connexion.'),
         ),
       );
     } finally {
@@ -123,7 +125,8 @@ class _DetailScreenState extends State<DetailScreen> {
                         image: NetworkImage(_content!.posterUrl!),
                         fit: BoxFit.cover,
                         colorFilter: ColorFilter.mode(
-                            Colors.black.withOpacity(0.35), BlendMode.darken),
+                            Colors.black.withValues(alpha: 0.35),
+                            BlendMode.darken),
                       )
                     : null,
               ),
@@ -148,26 +151,30 @@ class _DetailScreenState extends State<DetailScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.white30),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 _content?.ageRating ?? '—',
-                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 10),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Text(
                               '${episodes.length} Épisode${episodes.length > 1 ? 's' : ''}',
-                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12),
                             ),
                             if (_content?.releaseYear != null) ...[
                               const SizedBox(width: 12),
                               Text(
                                 _content!.releaseYear.toString(),
-                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 12),
                               ),
                             ],
                           ],
@@ -198,7 +205,9 @@ class _DetailScreenState extends State<DetailScreen> {
                             )
                           : const Icon(Icons.play_arrow, color: Colors.black),
                       label: Text(playLabel,
-                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                          style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryGold,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -226,12 +235,16 @@ class _DetailScreenState extends State<DetailScreen> {
                 children: [
                   const Text(
                     "Synopsis",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     displaySynopsis,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 13, height: 1.4),
                   ),
                 ],
               ),
@@ -244,7 +257,10 @@ class _DetailScreenState extends State<DetailScreen> {
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 "Épisodes",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 12),
@@ -280,7 +296,8 @@ class _DetailScreenState extends State<DetailScreen> {
                 itemBuilder: (context, index) {
                   final ep = episodes[index];
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 4.0),
                     leading: Container(
                       width: 48,
                       height: 48,
@@ -291,13 +308,18 @@ class _DetailScreenState extends State<DetailScreen> {
                       child: Center(
                         child: Text(
                           '${ep.episodeNumber}',
-                          style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: AppTheme.primaryGold,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
                     title: Text(
                       ep.title ?? 'Épisode ${ep.episodeNumber}',
-                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       ep.durationMin != null ? '${ep.durationMin} min' : '',
@@ -398,7 +420,8 @@ class _DownloadButtonState extends State<DownloadButton> {
 
         if (state is DownloadsLoaded) {
           isDownloaded = state.downloads.any((c) => c.id == widget.contentId);
-        } else if (state is DownloadInProgress && state.contentId == widget.contentId) {
+        } else if (state is DownloadInProgress &&
+            state.contentId == widget.contentId) {
           isDownloading = true;
           progress = state.progress;
         }
@@ -423,7 +446,10 @@ class _DownloadButtonState extends State<DownloadButton> {
                 if (isDownloading)
                   Text(
                     '${(progress * 100).toInt()}',
-                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold),
                   ),
               ],
             ),
@@ -431,7 +457,8 @@ class _DownloadButtonState extends State<DownloadButton> {
         }
 
         return IconButton(
-          icon: const Icon(Icons.download_for_offline_outlined, color: Colors.white70),
+          icon: const Icon(Icons.download_for_offline_outlined,
+              color: Colors.white70),
           onPressed: _startDownload,
         );
       },

@@ -13,7 +13,9 @@ async function bootstrap() {
     process.exit(1);
   }
 
-  const app = await NestFactory.create(AppModule);
+  // Preserve the exact request bytes so payment webhook signatures can be
+  // verified against what the gateway actually sent.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Sécurisation des headers HTTP avec Helmet
   app.use(helmet());

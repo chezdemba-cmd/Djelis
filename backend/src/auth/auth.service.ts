@@ -160,7 +160,12 @@ export class AuthService {
 
     // Aucun fournisseur SMS n'est configuré dans ce projet : on journalise le
     // code au lieu de l'envoyer, à la manière des paiements déjà simulés.
-    console.log(`[OTP] Code de vérification pour ${phone}: ${code} (expire dans 5 min)`);
+    if (
+      process.env.NODE_ENV !== "production" &&
+      process.env.AUTH_DEBUG_CODES === "true"
+    ) {
+      console.warn(`[AUTH DEBUG] OTP for ${phone}: ${code}`);
+    }
 
     return { success: true };
   }
@@ -174,7 +179,10 @@ export class AuthService {
       throw new UnauthorizedException("Code invalide ou expiré.");
     }
 
-    const otpHash = crypto.createHash("sha256").update(otp || "").digest("hex");
+    const otpHash = crypto
+      .createHash("sha256")
+      .update(otp || "")
+      .digest("hex");
     if (otpHash !== user.otpCodeHash) {
       throw new UnauthorizedException("Code invalide ou expiré.");
     }
@@ -204,9 +212,14 @@ export class AuthService {
 
       // Aucun fournisseur d'e-mail n'est configuré dans ce projet : on
       // journalise le lien au lieu de l'envoyer.
-      console.log(
-        `[PASSWORD RESET] Lien de réinitialisation pour ${email}: /reset-password?token=${token} (expire dans 1h)`
-      );
+      if (
+        process.env.NODE_ENV !== "production" &&
+        process.env.AUTH_DEBUG_CODES === "true"
+      ) {
+        console.warn(
+          `[AUTH DEBUG] Password reset token for ${email}: ${token}`
+        );
+      }
     }
 
     // Réponse générique dans tous les cas pour éviter l'énumération de comptes.
@@ -217,7 +230,15 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string) {
-    const tokenHash = crypto.createHash("sha256").update(token || "").digest("hex");
+    if (!newPassword || newPassword.length < 8) {
+      throw new BadRequestException(
+        "Le mot de passe doit contenir au moins 8 caracteres."
+      );
+    }
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(token || "")
+      .digest("hex");
     const user = await this.prisma.user.findFirst({
       where: { passwordResetTokenHash: tokenHash },
     });
@@ -227,7 +248,9 @@ export class AuthService {
       !user.passwordResetExpiresAt ||
       user.passwordResetExpiresAt.getTime() < Date.now()
     ) {
-      throw new UnauthorizedException("Lien de réinitialisation invalide ou expiré.");
+      throw new UnauthorizedException(
+        "Lien de réinitialisation invalide ou expiré."
+      );
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -274,10 +297,13 @@ export class AuthService {
       expiresIn: "15m",
       secret: jwtSecret,
     });
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: "30d",
-      secret: jwtRefreshSecret,
-    });
+    const refreshToken = this.jwtService.sign(
+      { ...payload, jti: crypto.randomUUID() },
+      {
+        expiresIn: "30d",
+        secret: jwtRefreshSecret,
+      }
+    );
 
     if (deviceInfo?.uuid) {
       await this.prisma.device.upsert({

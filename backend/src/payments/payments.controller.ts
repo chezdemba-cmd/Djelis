@@ -66,8 +66,11 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   @Get("status/:id")
   @HttpCode(HttpStatus.OK)
-  async getStatus(@Param("id") id: string) {
-    const payment = await this.paymentsService.getPaymentStatus(id);
+  async getStatus(@Req() req: any, @Param("id") id: string) {
+    const payment = await this.paymentsService.getPaymentStatus(
+      id,
+      req.user.id
+    );
     return {
       status: payment.status.toLowerCase(),
     };
@@ -78,7 +81,7 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   async validatePromo(
     @Body("code") code: string,
-    @Body("plan_id") planId: string
+    @Body("plan_id") _planId: string
   ) {
     return {
       valid:
@@ -96,7 +99,16 @@ export class PaymentsController {
     @Req() req: any
   ) {
     this.verifyWebhookIp(gateway, req);
-    return this.paymentsService.handleWebhook(gateway, headers, body);
+    const rawBody = req.rawBody?.toString("utf8");
+    if (!rawBody) {
+      throw new UnauthorizedException("Corps brut du webhook indisponible");
+    }
+    return this.paymentsService.handleWebhook(
+      gateway.toLowerCase(),
+      headers,
+      body,
+      rawBody
+    );
   }
 
   private verifyWebhookIp(gateway: string, req: any) {
@@ -108,7 +120,11 @@ export class PaymentsController {
 
     // Load allowed IPs from environment variables
     const allowedIpsEnv = process.env[`ALLOWED_IPS_${gateway.toUpperCase()}`];
-    if (!allowedIpsEnv) return; // If not set, allow all by default
+    if (!allowedIpsEnv) {
+      throw new UnauthorizedException(
+        `Liste d'IP autorisees manquante pour ${gateway}`
+      );
+    }
 
     const allowedIps = allowedIpsEnv.split(",").map((item) => item.trim());
     if (!allowedIps.includes(ip)) {

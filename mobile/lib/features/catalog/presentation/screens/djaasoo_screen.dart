@@ -21,9 +21,10 @@ class DjaasooScreen extends StatelessWidget {
           return _buildError(context, state.message);
         }
 
-        final featured = state is CatalogFeaturedLoaded
-            ? state.data
-            : mockFeaturedCatalog();
+        if (state is! CatalogFeaturedLoaded) {
+          return const SizedBox.shrink();
+        }
+        final featured = state.data;
 
         return RefreshIndicator(
           color: AppTheme.primaryGold,
@@ -37,7 +38,8 @@ class DjaasooScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (featured.hero != null) _buildFeaturedHero(context, featured.hero!),
+                if (featured.hero != null)
+                  _buildFeaturedHero(context, featured.hero!),
                 const SizedBox(height: 24),
                 ...featured.rows.map(
                   (row) => Padding(
@@ -75,7 +77,7 @@ class DjaasooScreen extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGold.withOpacity(0.2),
+              color: AppTheme.primaryGold.withValues(alpha: 0.2),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -90,10 +92,11 @@ class DjaasooScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.play_arrow, color: Colors.white, size: 28),
+                child:
+                    const Icon(Icons.play_arrow, color: Colors.white, size: 28),
               ),
             ),
             // Content info
@@ -110,7 +113,7 @@ class DjaasooScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.55),
+                        color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -137,7 +140,8 @@ class DjaasooScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       hero.synopsis!,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 12),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -194,7 +198,8 @@ class DjaasooScreen extends StatelessWidget {
                   'synopsis': item.synopsis ??
                       "Plongez dans les récits riches de l'Afrique de l'Ouest.",
                 }),
-                child: _ContentCard(content: item, index: index, total: row.contents.length),
+                child: _ContentCard(
+                    content: item, index: index, total: row.contents.length),
               );
             },
           ),
@@ -210,10 +215,14 @@ class DjaasooScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       child: Column(
         children: [
-          _SkeletonBox(height: 240, margin: const EdgeInsets.symmetric(horizontal: 16)),
+          _SkeletonBox(
+              height: 240, margin: const EdgeInsets.symmetric(horizontal: 16)),
           const SizedBox(height: 24),
           for (var i = 0; i < 3; i++) ...[
-            _SkeletonBox(height: 20, width: 160, margin: const EdgeInsets.symmetric(horizontal: 16)),
+            _SkeletonBox(
+                height: 20,
+                width: 160,
+                margin: const EdgeInsets.symmetric(horizontal: 16)),
             const SizedBox(height: 12),
             SizedBox(
               height: 160,
@@ -250,14 +259,14 @@ class DjaasooScreen extends StatelessWidget {
               style: const TextStyle(color: Colors.white38, fontSize: 12)),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => context
-                .read<CatalogBloc>()
-                .add(const CatalogLoadFeatured()),
+            onPressed: () =>
+                context.read<CatalogBloc>().add(const CatalogLoadFeatured()),
             icon: const Icon(Icons.refresh, color: Colors.black),
             label: const Text('Réessayer',
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGold),
+                style: TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold)),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
           ),
         ],
       ),
@@ -333,7 +342,7 @@ class _ContentCard extends StatelessWidget {
   Widget _placeholder() => Center(
         child: Icon(
           Icons.play_circle_fill_outlined,
-          color: AppTheme.primaryGold.withOpacity(0.5),
+          color: AppTheme.primaryGold.withValues(alpha: 0.5),
           size: 40,
         ),
       );

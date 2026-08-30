@@ -48,7 +48,7 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
       if (hls) hls.destroy();
       hlsRef.current = null;
     };
-  }, [videoUrl]);
+  }, [videoUrl, isDataSaver]);
 
   const toggleDataSaver = (e) => {
     e?.stopPropagation();

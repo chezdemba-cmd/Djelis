@@ -51,7 +51,10 @@ export class FavoritesController {
   ) {
     const profile = await this.resolveProfile(req.user.id, profileId);
     if (!profile) {
-      return { success: false, message: "Aucun profil trouvé pour cet utilisateur." };
+      return {
+        success: false,
+        message: "Aucun profil trouvé pour cet utilisateur.",
+      };
     }
 
     await this.prisma.favorite.upsert({
@@ -71,7 +74,10 @@ export class FavoritesController {
   ) {
     const profile = await this.resolveProfile(req.user.id, profileId);
     if (!profile) {
-      return { success: false, message: "Aucun profil trouvé pour cet utilisateur." };
+      return {
+        success: false,
+        message: "Aucun profil trouvé pour cet utilisateur.",
+      };
     }
 
     await this.prisma.favorite.deleteMany({

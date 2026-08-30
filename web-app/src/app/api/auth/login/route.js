@@ -7,6 +7,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Token missing' }, { status: 400 });
     }
 
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const verification = await fetch(`${backendUrl}/api/v1/profiles`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!verification.ok) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const response = NextResponse.json({ success: true });
     
     // Set HttpOnly cookie

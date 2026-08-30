@@ -135,41 +135,52 @@ export class StreamController {
       where: { id: req.user.id },
       include: {
         subscriptions: {
-          where: { status: 'ACTIVE', endsAt: { gt: new Date() } }
+          where: { status: "ACTIVE", endsAt: { gt: new Date() } },
         },
         rentals: {
-          where: { contentId: contentId, expiresAt: { gt: new Date() } }
-        }
-      }
+          where: { contentId: contentId, expiresAt: { gt: new Date() } },
+        },
+      },
     });
 
     if (!user) {
-      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+      throw new HttpException("Utilisateur non trouvé", HttpStatus.NOT_FOUND);
     }
 
-    const content = await this.prisma.content.findUnique({
-      where: { id: contentId },
+    const content = await this.prisma.content.findFirst({
+      where: { id: contentId, isActive: true },
       include: { episodes: { orderBy: { episodeNumber: "asc" } } },
     });
 
+    if (!content) {
+      throw new HttpException("Contenu introuvable", HttpStatus.NOT_FOUND);
+    }
+
     if (content?.isPremium) {
-       const hasActiveSubscription = (user.subscriptions && user.subscriptions.length > 0) || user.email === "rainer@rainer.com";
-       const hasActiveRental = user.rentals && user.rentals.length > 0;
-       
-       if (!hasActiveSubscription && !hasActiveRental) {
-          throw new HttpException('Accès refusé. Abonnement ou location requise.', HttpStatus.FORBIDDEN);
-       }
+      const hasActiveSubscription = user.subscriptions.length > 0;
+      const hasActiveRental = user.rentals && user.rentals.length > 0;
+
+      if (!hasActiveSubscription && !hasActiveRental) {
+        throw new HttpException(
+          "Accès refusé. Abonnement ou location requise.",
+          HttpStatus.FORBIDDEN
+        );
+      }
     }
 
     let cfStreamId = episodeId || contentId;
 
     if (episodeId) {
-      const episode = await this.prisma.episode.findUnique({
-        where: { id: episodeId },
+      const episode = await this.prisma.episode.findFirst({
+        where: { id: episodeId, contentId },
       });
-      if (episode) {
-        cfStreamId = episode.cfStreamId;
+      if (!episode) {
+        throw new HttpException(
+          "Episode introuvable pour ce contenu",
+          HttpStatus.NOT_FOUND
+        );
       }
+      cfStreamId = episode.cfStreamId;
     } else {
       if (content) {
         if (content.episodes && content.episodes.length > 0) {
@@ -183,16 +194,26 @@ export class StreamController {
     const keyId = process.env.CLOUDFLARE_KEY_ID;
     const privateKeyB64 = process.env.CLOUDFLARE_PRIVATE_KEY;
 
-    let signedUrl = `https://videodelivery.net/${cfStreamId}/manifest/video.m3u8`;
-
-    if (keyId && privateKeyB64) {
-      try {
-        const token = this.signCloudflareToken(cfStreamId, keyId, privateKeyB64);
-        signedUrl = `${signedUrl}?token=${token}`;
-      } catch (error) {
-        console.error("Erreur de signature Cloudflare Stream:", error);
-      }
+    if (!keyId || !privateKeyB64) {
+      throw new HttpException(
+        "Service de streaming temporairement indisponible",
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
     }
+
+    let token: string;
+    try {
+      token = this.signCloudflareToken(cfStreamId, keyId, privateKeyB64);
+    } catch {
+      throw new HttpException(
+        "Service de streaming temporairement indisponible",
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
+    }
+
+    const signedUrl = `https://videodelivery.net/${encodeURIComponent(
+      cfStreamId
+    )}/manifest/video.m3u8?token=${token}`;
 
     return {
       signed_url: signedUrl,
@@ -214,7 +235,7 @@ export class StreamController {
       sub: videoId,
       kid: keyId,
       exp: now + 3600, // 1 hour expiration
-      nbf: now - 300,  // 5 minutes buffer
+      nbf: now - 300, // 5 minutes buffer
     };
 
     const base64UrlEncode = (str: string) => {

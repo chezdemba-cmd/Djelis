@@ -19,11 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _isRegistering = false;
   bool _usePhone = false;
-  
+
   String? _otpPhone; // Stores the phone number for OTP verification
 
   @override
@@ -37,9 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    
+
     final authBloc = context.read<AuthBloc>();
-    
+
     if (_otpPhone != null) {
       authBloc.add(AuthVerifyOtp(
         phone: _otpPhone!,
@@ -112,7 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
             _passwordController.clear();
           });
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Compte validé ! Vous pouvez maintenant vous connecter.'),
+            content:
+                Text('Compte validé ! Vous pouvez maintenant vous connecter.'),
             backgroundColor: Colors.green,
           ));
         }
@@ -126,7 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
           body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0, vertical: 16.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -138,7 +140,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Center(
                         child: Text(
                           "Djeli'S",
-                          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayMedium
+                              ?.copyWith(
                                 color: AppTheme.primaryGold,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -148,10 +153,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       Center(
                         child: Text(
                           'Racines. Récits. Réalité.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey,
-                                fontStyle: FontStyle.italic,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                         ),
                       ),
                       const SizedBox(height: 48),
@@ -164,13 +170,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         _buildAuthMethodToggle(),
                         const SizedBox(height: 24),
                         // Email or Phone input field
-                        if (!_usePhone) _buildEmailField() else _buildPhoneField(),
+                        if (!_usePhone)
+                          _buildEmailField()
+                        else
+                          _buildPhoneField(),
                         const SizedBox(height: 16),
                         // Password input field
                         _buildPasswordField(),
                         const SizedBox(height: 8),
                         // Forgot Password button (only in email login mode)
-                        if (!_isRegistering && !_usePhone) _buildForgotPassword(),
+                        if (!_isRegistering && !_usePhone)
+                          _buildForgotPassword(),
                       ],
                       const SizedBox(height: 24),
 
@@ -198,7 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             : Text(
                                 showOtp
                                     ? 'Valider le code'
-                                    : (_isRegistering ? "S'inscrire" : 'Se connecter'),
+                                    : (_isRegistering
+                                        ? "S'inscrire"
+                                        : 'Se connecter'),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -344,7 +356,9 @@ class _LoginScreenState extends State<LoginScreen> {
         border: const OutlineInputBorder(),
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+          icon: Icon(_obscurePassword
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
       ),
@@ -375,7 +389,8 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         const Text(
           'Vérification OTP',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -389,7 +404,8 @@ class _LoginScreenState extends State<LoginScreen> {
           controller: _otpController,
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 8),
+          style: const TextStyle(
+              fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 8),
           decoration: const InputDecoration(
             labelText: 'Code de validation',
             border: OutlineInputBorder(),
@@ -414,7 +430,10 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'ou',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white38),
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Colors.white38),
           ),
         ),
         const Expanded(child: Divider(color: Colors.white24)),

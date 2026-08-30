@@ -61,9 +61,10 @@ class _PlansScreenState extends State<PlansScreen> {
               return _buildError(context, state.message);
             }
 
-            final plans = state is SubscriptionPlansLoaded
-                ? state.plans
-                : mockPlans();
+            if (state is! SubscriptionPlansLoaded) {
+              return const SizedBox.shrink();
+            }
+            final plans = state.plans;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -150,10 +151,10 @@ class _PlansScreenState extends State<PlansScreen> {
             onPressed: () => context
                 .read<SubscriptionBloc>()
                 .add(const SubscriptionLoadPlans()),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGold),
-            child: const Text('Réessayer',
-                style: TextStyle(color: Colors.black)),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
+            child:
+                const Text('Réessayer', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -166,7 +167,7 @@ class _PlansScreenState extends State<PlansScreen> {
       decoration: BoxDecoration(
         color: AppTheme.darkSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,8 +201,7 @@ class _PlansScreenState extends State<PlansScreen> {
                   fontWeight: FontWeight.bold,
                   fontSize: 12)),
           const SizedBox(height: 3),
-          Text(a,
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+          Text(a, style: const TextStyle(color: Colors.white38, fontSize: 11)),
         ],
       ),
     );
@@ -218,7 +218,8 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isHighlighted = plan.badge == 'Populaire' || plan.badge == 'Meilleur Prix';
+    final isHighlighted =
+        plan.badge == 'Populaire' || plan.badge == 'Meilleur Prix';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -227,14 +228,14 @@ class _PlanCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isHighlighted
-              ? AppTheme.primaryGold.withOpacity(0.4)
-              : Colors.white.withOpacity(0.08),
+              ? AppTheme.primaryGold.withValues(alpha: 0.4)
+              : Colors.white.withValues(alpha: 0.08),
           width: isHighlighted ? 1.5 : 1,
         ),
         boxShadow: isHighlighted
             ? [
                 BoxShadow(
-                  color: AppTheme.primaryGold.withOpacity(0.08),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.08),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 )
@@ -258,10 +259,10 @@ class _PlanCard extends StatelessWidget {
                 ),
                 if (plan.badge != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withOpacity(0.15),
+                      color: AppTheme.primaryGold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -305,9 +306,8 @@ class _PlanCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: onSubscribe,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isHighlighted
-                        ? AppTheme.primaryGold
-                        : Colors.white,
+                    backgroundColor:
+                        isHighlighted ? AppTheme.primaryGold : Colors.white,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
@@ -398,191 +398,195 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         if (state is SubscriptionPaymentSuccess ||
             state is SubscriptionPaymentFailed) {
           if (Navigator.canPop(context)) Navigator.of(context).pop();
-        } else if (state is SubscriptionPaymentPending && state.redirectUrl != null) {
+        } else if (state is SubscriptionPaymentPending &&
+            state.redirectUrl != null) {
           _launchPaymentUrl(state.redirectUrl!);
         }
       },
       child: Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-
-          Text(
-            'Payer — ${widget.plan.name}',
-            style: const TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            widget.plan.formattedPrice,
-            style: const TextStyle(
-                color: AppTheme.primaryGold,
-                fontSize: 15,
-                fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Provider buttons ─────────────────────────────────────────────────
-          _providerTile(
-            label: 'Wave',
-            subtitle: 'Paiement en 1 clic',
-            icon: Icons.waves,
-            color: const Color(0xFF1E88E5),
-            provider: 'wave',
-            needsPhone: true,
-          ),
-          const SizedBox(height: 10),
-          _providerTile(
-            label: 'Orange Money',
-            subtitle: 'Orange Money Mali / Sénégal / CI',
-            icon: Icons.phone_android,
-            color: const Color(0xFFE65100),
-            provider: 'cinetpay',
-            needsPhone: true,
-          ),
-          const SizedBox(height: 10),
-          _providerTile(
-            label: 'Mobile Money (MTN / Moov / Airtel)',
-            subtitle: 'Autres opérateurs',
-            icon: Icons.account_balance_wallet_outlined,
-            color: AppTheme.primaryGold,
-            provider: 'flutterwave',
-            needsPhone: true,
-          ),
-          const SizedBox(height: 10),
-          _providerTile(
-            label: 'Carte bancaire (Visa / Mastercard)',
-            subtitle: 'Via Stripe — pour la diaspora',
-            icon: Icons.credit_card,
-            color: Colors.white24,
-            provider: 'stripe',
-            needsPhone: false,
-          ),
-
-          // ── Phone input ───────────────────────────────────────────────────────
-          if (_showPhoneField) ...[
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Numéro de téléphone',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
-                prefixText: '+223 ',
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2)),
               ),
             ),
-          ],
 
-          const SizedBox(height: 20),
+            Text(
+              'Payer — ${widget.plan.name}',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.plan.formattedPrice,
+              style: const TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
 
-          // ── Confirm button ────────────────────────────────────────────────────
-          if (_selectedProvider.isNotEmpty)
-            BlocBuilder<SubscriptionBloc, SubscriptionState>(
-              builder: (context, state) {
-                final isLoading = state is SubscriptionLoading;
-                return ElevatedButton(
-                  onPressed: isLoading ? null : _confirm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGold,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.black),
-                        )
-                      : const Text(
-                          'Confirmer le paiement',
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                );
-              },
+            // ── Provider buttons ─────────────────────────────────────────────────
+            _providerTile(
+              label: 'Wave',
+              subtitle: 'Paiement en 1 clic',
+              icon: Icons.waves,
+              color: const Color(0xFF1E88E5),
+              provider: 'wave',
+              needsPhone: true,
+            ),
+            const SizedBox(height: 10),
+            _providerTile(
+              label: 'Orange Money',
+              subtitle: 'Orange Money Mali / Sénégal / CI',
+              icon: Icons.phone_android,
+              color: const Color(0xFFE65100),
+              provider: 'cinetpay',
+              needsPhone: true,
+            ),
+            const SizedBox(height: 10),
+            _providerTile(
+              label: 'Mobile Money (MTN / Moov / Airtel)',
+              subtitle: 'Autres opérateurs',
+              icon: Icons.account_balance_wallet_outlined,
+              color: AppTheme.primaryGold,
+              provider: 'flutterwave',
+              needsPhone: true,
+            ),
+            const SizedBox(height: 10),
+            _providerTile(
+              label: 'Carte bancaire (Visa / Mastercard)',
+              subtitle: 'Via Stripe — pour la diaspora',
+              icon: Icons.credit_card,
+              color: Colors.white24,
+              provider: 'stripe',
+              needsPhone: false,
             ),
 
-          // ── Pending state (USSD code displayed) ───────────────────────────────
-          BlocBuilder<SubscriptionBloc, SubscriptionState>(
-            builder: (context, state) {
-              if (state is SubscriptionPaymentPending && state.ussdCode != null) {
-                return Container(
-                  margin: const EdgeInsets.only(top: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGold.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppTheme.primaryGold.withOpacity(0.3)),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Composez ce code USSD pour valider :',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.ussdCode!,
-                        style: const TextStyle(
-                          color: AppTheme.primaryGold,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 1.5,
-                                  color: AppTheme.primaryGold)),
-                          SizedBox(width: 8),
-                          Text(
-                            'En attente de confirmation…',
+            // ── Phone input ───────────────────────────────────────────────────────
+            if (_showPhoneField) ...[
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  labelText: 'Numéro de téléphone',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                  prefixText: '+223 ',
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 20),
+
+            // ── Confirm button ────────────────────────────────────────────────────
+            if (_selectedProvider.isNotEmpty)
+              BlocBuilder<SubscriptionBloc, SubscriptionState>(
+                builder: (context, state) {
+                  final isLoading = state is SubscriptionLoading;
+                  return ElevatedButton(
+                    onPressed: isLoading ? null : _confirm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGold,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.black),
+                          )
+                        : const Text(
+                            'Confirmer le paiement',
                             style: TextStyle(
-                                color: Colors.white54, fontSize: 11),
+                                fontSize: 15, fontWeight: FontWeight.bold),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      ),    // Padding
-    );      // BlocListener
+                  );
+                },
+              ),
+
+            // ── Pending state (USSD code displayed) ───────────────────────────────
+            BlocBuilder<SubscriptionBloc, SubscriptionState>(
+              builder: (context, state) {
+                if (state is SubscriptionPaymentPending &&
+                    state.ussdCode != null) {
+                  return Container(
+                    margin: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Composez ce code USSD pour valider :',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.ussdCode!,
+                          style: const TextStyle(
+                            color: AppTheme.primaryGold,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: AppTheme.primaryGold)),
+                            SizedBox(width: 8),
+                            Text(
+                              'En attente de confirmation…',
+                              style: TextStyle(
+                                  color: Colors.white54, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
+      ), // Padding
+    ); // BlocListener
   }
 
   Widget _providerTile({
@@ -600,9 +604,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withOpacity(0.15)
-              : AppTheme.darkCard,
+          color: isSelected ? color.withValues(alpha: 0.15) : AppTheme.darkCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? color : Colors.white12,
@@ -626,13 +628,12 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                     ),
                   ),
                   Text(subtitle,
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 11)),
+                      style:
+                          const TextStyle(color: Colors.white38, fontSize: 11)),
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: color, size: 20),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 20),
           ],
         ),
       ),

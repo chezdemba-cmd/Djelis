@@ -17,7 +17,8 @@ class CatalogLoadByType extends CatalogEvent {
   final String type; // 'film', 'series', 'music', etc.
   final String? countryCode;
   final int page;
-  const CatalogLoadByType({required this.type, this.countryCode, this.page = 1});
+  const CatalogLoadByType(
+      {required this.type, this.countryCode, this.page = 1});
   @override
   List<Object?> get props => [type, countryCode, page];
 }
@@ -49,5 +50,6 @@ class CatalogReportProgress extends CatalogEvent {
   });
 
   @override
-  List<Object?> get props => [contentId, episodeId, progressSec, quality, deviceType];
+  List<Object?> get props =>
+      [contentId, episodeId, progressSec, quality, deviceType];
 }

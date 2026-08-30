@@ -10,12 +10,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
     }
 
-    const secret = process.env.CINETPAY_SECRET_KEY || 'default-secret';
+    const secret = process.env.CINETPAY_SECRET;
+    if (!secret) {
+      return NextResponse.json({ error: 'Webhook secret is not configured' }, { status: 500 });
+    }
     const hmac = crypto.createHmac('sha256', secret);
     const expectedSignature = hmac.update(rawBody).digest('hex');
 
-    // In production we enforce signature check
-    if (signature !== expectedSignature && process.env.NODE_ENV === 'production') {
+    const signatureBuffer = /^[0-9a-f]+$/i.test(signature) ? Buffer.from(signature, 'hex') : Buffer.alloc(0);
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    if (signatureBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 

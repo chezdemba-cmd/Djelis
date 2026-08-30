@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  ParseIntPipe,
-  ParseUUIDPipe,
-  UseInterceptors,
-} from "@nestjs/common";
+import { Controller, Get, Param, Query, UseInterceptors } from "@nestjs/common";
 import { CacheInterceptor, CacheKey, CacheTTL } from "@nestjs/cache-manager";
 import { CatalogService } from "./catalog.service";
 

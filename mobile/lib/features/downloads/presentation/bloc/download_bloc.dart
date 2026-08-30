@@ -13,7 +13,8 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     on<UpdateDownloadProgress>(_onUpdateProgress);
   }
 
-  Future<void> _onLoadDownloads(LoadDownloads event, Emitter<DownloadState> emit) async {
+  Future<void> _onLoadDownloads(
+      LoadDownloads event, Emitter<DownloadState> emit) async {
     emit(DownloadLoading());
     try {
       final downloads = await repository.getDownloadedContents();
@@ -23,25 +24,22 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     }
   }
 
-  Future<void> _onStartDownload(StartDownload event, Emitter<DownloadState> emit) async {
+  Future<void> _onStartDownload(
+      StartDownload event, Emitter<DownloadState> emit) async {
     try {
       final filename = '${event.content.id}.mp4';
-      
+
       // Start download and pass a callback that adds events to this bloc
-      await repository.downloadContent(
-        event.url, 
-        filename, 
-        event.content,
-        onProgress: (received, total) {
-          if (total != -1) {
-            final progress = (received / total);
-            // This is asynchronous, but we can't emit from here safely since it's a callback outside of the event handler flow directly.
-            // So we add an event to the bloc.
-            add(UpdateDownloadProgress(event.content.id, progress));
-          }
+      await repository.downloadContent(event.url, filename, event.content,
+          onProgress: (received, total) {
+        if (total != -1) {
+          final progress = (received / total);
+          // This is asynchronous, but we can't emit from here safely since it's a callback outside of the event handler flow directly.
+          // So we add an event to the bloc.
+          add(UpdateDownloadProgress(event.content.id, progress));
         }
-      );
-      
+      });
+
       // Once download finishes, reload list
       add(const LoadDownloads());
     } catch (e) {
@@ -49,11 +47,13 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     }
   }
 
-  void _onUpdateProgress(UpdateDownloadProgress event, Emitter<DownloadState> emit) {
+  void _onUpdateProgress(
+      UpdateDownloadProgress event, Emitter<DownloadState> emit) {
     emit(DownloadInProgress(event.contentId, event.progress));
   }
 
-  Future<void> _onDeleteDownload(DeleteDownload event, Emitter<DownloadState> emit) async {
+  Future<void> _onDeleteDownload(
+      DeleteDownload event, Emitter<DownloadState> emit) async {
     try {
       await repository.deleteDownload(event.filename);
       add(const LoadDownloads());

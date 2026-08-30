@@ -6,7 +6,8 @@ class AuthRepository {
   final ApiClient _api;
   final SecureStorageService _storage;
 
-  AuthRepository({required ApiClient api, required SecureStorageService storage})
+  AuthRepository(
+      {required ApiClient api, required SecureStorageService storage})
       : _api = api,
         _storage = storage;
 

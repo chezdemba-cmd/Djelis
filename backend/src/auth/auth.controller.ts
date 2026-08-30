@@ -1,7 +1,15 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Headers,
+} from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
+import { Throttle } from "@nestjs/throttler";
 
 @Controller("auth")
 export class AuthController {
@@ -10,7 +18,12 @@ export class AuthController {
   @Post("register")
   @HttpCode(HttpStatus.CREATED)
   async register(
-    @Body() dto: RegisterDto & { deviceUuid?: string; deviceName?: string; os?: string },
+    @Body()
+    dto: RegisterDto & {
+      deviceUuid?: string;
+      deviceName?: string;
+      os?: string;
+    },
     @Headers("x-device-uuid") deviceUuidHeader?: string,
     @Headers("x-device-name") deviceNameHeader?: string,
     @Headers("x-device-os") deviceOsHeader?: string
@@ -25,7 +38,12 @@ export class AuthController {
   @Post("register/email")
   @HttpCode(HttpStatus.CREATED)
   async registerEmail(
-    @Body() dto: RegisterDto & { deviceUuid?: string; deviceName?: string; os?: string },
+    @Body()
+    dto: RegisterDto & {
+      deviceUuid?: string;
+      deviceName?: string;
+      os?: string;
+    },
     @Headers("x-device-uuid") deviceUuidHeader?: string,
     @Headers("x-device-name") deviceNameHeader?: string,
     @Headers("x-device-os") deviceOsHeader?: string
@@ -40,7 +58,12 @@ export class AuthController {
   @Post("register/phone")
   @HttpCode(HttpStatus.CREATED)
   async registerPhone(
-    @Body() dto: RegisterDto & { deviceUuid?: string; deviceName?: string; os?: string },
+    @Body()
+    dto: RegisterDto & {
+      deviceUuid?: string;
+      deviceName?: string;
+      os?: string;
+    },
     @Headers("x-device-uuid") deviceUuidHeader?: string,
     @Headers("x-device-name") deviceNameHeader?: string,
     @Headers("x-device-os") deviceOsHeader?: string
@@ -53,9 +76,11 @@ export class AuthController {
   }
 
   @Post("login")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async login(
-    @Body() dto: LoginDto & { deviceUuid?: string; deviceName?: string; os?: string },
+    @Body()
+    dto: LoginDto & { deviceUuid?: string; deviceName?: string; os?: string },
     @Headers("x-device-uuid") deviceUuidHeader?: string,
     @Headers("x-device-name") deviceNameHeader?: string,
     @Headers("x-device-os") deviceOsHeader?: string
@@ -83,24 +108,28 @@ export class AuthController {
   }
 
   @Post("otp/request")
+  @Throttle({ default: { limit: 3, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
   async requestOtp(@Body("phone") phone: string) {
     return this.authService.requestOtp(phone);
   }
 
   @Post("verify/otp")
+  @Throttle({ default: { limit: 5, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
   async verifyOtp(@Body("phone") phone: string, @Body("otp") otp: string) {
     return this.authService.verifyOtp(phone, otp);
   }
 
   @Post("forgot-password")
+  @Throttle({ default: { limit: 3, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body("email") email: string) {
     return this.authService.forgotPassword(email);
   }
 
   @Post("reset-password")
+  @Throttle({ default: { limit: 5, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
   async resetPassword(
     @Body("token") token: string,

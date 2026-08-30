@@ -61,7 +61,8 @@ class _DjelisonScreenState extends State<DjelisonScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Impossible de charger le flux audio. Vérifiez votre connexion.'),
+          content: Text(
+              'Impossible de charger le flux audio. Vérifiez votre connexion.'),
         ),
       );
     } finally {
@@ -276,7 +277,7 @@ class _DjelisonScreenState extends State<DjelisonScreen> {
         decoration: BoxDecoration(
           color: AppTheme.darkSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [

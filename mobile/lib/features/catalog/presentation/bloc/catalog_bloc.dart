@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/catalog_repository.dart';
-import '../../data/models/content_model.dart';
 import 'catalog_event.dart';
 import 'catalog_state.dart';
 
@@ -26,7 +25,7 @@ class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
       emit(CatalogFeaturedLoaded(featured));
     } catch (e) {
       // Fallback to mock if any error — ensures the UI always shows something.
-      emit(CatalogFeaturedLoaded(mockFeaturedCatalog()));
+      emit(CatalogError(e.toString()));
     }
   }
 

@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+function FaceSVG() {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+      <circle cx="30" cy="40" r="4" fill="white" />
+      <circle cx="70" cy="40" r="4" fill="white" />
+      <path d="M 30 65 Q 50 80 70 65" stroke="white" strokeWidth="4" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
 export default function ProfileSelector({ onSelectProfile }) {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,12 +30,7 @@ export default function ProfileSelector({ onSelectProfile }) {
       const token = localStorage.getItem('accessToken');
       if (!token) {
         setLoading(false);
-        // Fallback to static mock profiles if not authenticated
-        setProfiles([
-          { id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false },
-          { id: '2', name: 'Maman', role: 'Premium', avatar: '👩‍🦱', color: '#FF4081', isKids: false },
-          { id: '3', name: 'Enfant', role: 'Kids', avatar: '👶', color: '#00E5FF', isKids: true },
-        ]);
+        setProfiles([]);
         return;
       }
       try {
@@ -49,11 +54,7 @@ export default function ProfileSelector({ onSelectProfile }) {
         }
       } catch (err) {
         console.error("Error loading profiles from NestJS:", err);
-        setProfiles([
-          { id: '1', name: 'Papa', role: 'Premium', avatar: '😎', color: '#FFB300', isKids: false },
-          { id: '2', name: 'Maman', role: 'Premium', avatar: '👩‍🦱', color: '#FF4081', isKids: false },
-          { id: '3', name: 'Enfant', role: 'Kids', avatar: '👶', color: '#00E5FF', isKids: true },
-        ]);
+        setProfiles([]);
       } finally {
         setLoading(false);
       }
@@ -65,15 +66,6 @@ export default function ProfileSelector({ onSelectProfile }) {
   const [isManageMode, setIsManageMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProfileData, setNewProfileData] = useState({ name: '', isChild: false });
-
-  // Netflix-style generic face SVG
-  const FaceSVG = () => (
-    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-      <circle cx="30" cy="40" r="4" fill="white" />
-      <circle cx="70" cy="40" r="4" fill="white" />
-      <path d="M 30 65 Q 50 80 70 65" stroke="white" strokeWidth="4" strokeLinecap="round" fill="none" />
-    </svg>
-  );
 
   const handleAddProfile = async () => {
     const { name, isChild } = newProfileData;

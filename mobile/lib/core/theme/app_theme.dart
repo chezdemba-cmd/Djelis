@@ -1,4 +1,4 @@
-import 'package:flutter/material';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
@@ -6,7 +6,7 @@ class AppTheme {
   static const Color primaryGold = Color(0xFFFFB300); // Amber 600
   static const Color secondaryOrange = Color(0xFFE65100); // Orange 900
   static const Color accentCrimson = Color(0xFFD84315); // Deep Orange 800
-  
+
   static const Color darkBackground = Color(0xFF0F0F10); // Rich near-black
   static const Color darkSurface = Color(0xFF1B1B1D); // Smooth charcoal surface
   static const Color darkCard = Color(0xFF242427); // Card surface
@@ -20,7 +20,6 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: primaryGold,
         secondary: secondaryOrange,
-        background: Color(0xFFF9F9FB),
         surface: Colors.white,
       ),
       textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
@@ -36,12 +35,10 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: primaryGold,
         secondary: secondaryOrange,
-        background: darkBackground,
         surface: darkSurface,
-        onBackground: Colors.white,
         onSurface: Color(0xFFE3E3E6),
       ),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: darkCard,
         elevation: 0,
       ),

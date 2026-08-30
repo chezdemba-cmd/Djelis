@@ -7,17 +7,13 @@ class SubscriptionRepository {
   SubscriptionRepository({required ApiClient api}) : _api = api;
 
   Future<List<PlanModel>> getPlans({String? countryCode}) async {
-    try {
-      final data = await _api.get<List<dynamic>>(
-        '/plans',
-        queryParameters: countryCode != null ? {'country': countryCode} : null,
-      );
-      return data
-          .map((e) => PlanModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return mockPlans();
-    }
+    final data = await _api.get<List<dynamic>>(
+      '/plans',
+      queryParameters: countryCode != null ? {'country': countryCode} : null,
+    );
+    return data
+        .map((e) => PlanModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<PaymentInitResponse> initiatePayment({

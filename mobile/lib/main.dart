@@ -44,8 +44,8 @@ class DjelisApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (_) => AuthBloc(repository: authRepo)
-              ..add(const AuthCheckSession()),
+            create: (_) =>
+                AuthBloc(repository: authRepo)..add(const AuthCheckSession()),
           ),
           BlocProvider(
             create: (_) => CatalogBloc(repository: catalogRepo)

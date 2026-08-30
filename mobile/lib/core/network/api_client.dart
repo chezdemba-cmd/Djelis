@@ -4,7 +4,8 @@ import '../storage/secure_storage_service.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-final String apiBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
+final String apiBaseUrl =
+    dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
 
 class ApiClient {
   late final Dio _dio;
@@ -122,7 +123,8 @@ class _ErrorInterceptor extends Interceptor {
     final msg = (err.response?.data as Map?)?['message'] as String?;
     if (code == 401) throw UnauthorizedException(msg ?? 'Session expirée');
     if (code == 404) throw NotFoundException(msg ?? 'Introuvable');
-    if (code != null && code >= 500) throw ServerException(msg ?? 'Erreur serveur');
+    if (code != null && code >= 500)
+      throw ServerException(msg ?? 'Erreur serveur');
     handler.next(err);
   }
 }

@@ -1,14 +1,17 @@
 import '../models/content_model.dart';
-import '../../downloads/data/download_service.dart';
+import '../../../downloads/data/download_service.dart';
 
 class DownloadRepository {
   final DownloadService _downloadService;
 
-  DownloadRepository({DownloadService? downloadService}) 
+  DownloadRepository({DownloadService? downloadService})
       : _downloadService = downloadService ?? DownloadService();
 
-  Future<String?> downloadContent(String url, String filename, ContentModel content, {Function(int, int)? onProgress}) {
-    return _downloadService.downloadFile(url, filename, content, onProgress: onProgress);
+  Future<String?> downloadContent(
+      String url, String filename, ContentModel content,
+      {Function(int, int)? onProgress}) {
+    return _downloadService.downloadFile(url, filename, content,
+        onProgress: onProgress);
   }
 
   Future<bool> isDownloaded(String filename) {

@@ -57,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => context.push('/downloads'),
             ),
             IconButton(
-              icon: const Icon(Icons.account_circle_outlined, color: Colors.white),
+              icon: const Icon(Icons.account_circle_outlined,
+                  color: Colors.white),
               onPressed: () => context.push('/plans'),
             ),
           ],
