@@ -10,6 +10,27 @@ jobs:
   build-and-lint:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: djelis_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d djelis_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/djelis_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/djelis_test?schema=public
+      JWT_SECRET: ci-access-secret-at-least-32-characters
+      JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters
+
     strategy:
       matrix:
         node-version: [18.x]
@@ -36,6 +57,9 @@ jobs:
 
     - name: Build Backend
       run: npm run build --prefix backend
+
+    - name: Prepare E2E Database
+      run: npm exec --prefix backend -- prisma db push --schema backend/prisma/schema.prisma --skip-generate
 
     - name: Run E2E Tests (Backend)
       run: npm run test:e2e --prefix backend

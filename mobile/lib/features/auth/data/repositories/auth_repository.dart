@@ -37,12 +37,12 @@ class AuthRepository {
     return tokens;
   }
 
-  Future<void> registerWithEmail({
+  Future<AuthTokens> registerWithEmail({
     required String email,
     required String password,
     required String countryCode,
   }) async {
-    await _api.post<Map<String, dynamic>>(
+    final data = await _api.post<Map<String, dynamic>>(
       '/auth/register/email',
       data: {
         'email': email,
@@ -50,14 +50,17 @@ class AuthRepository {
         'country_code': countryCode,
       },
     );
+    final tokens = AuthTokens.fromJson(data);
+    await _persistSession(tokens);
+    return tokens;
   }
 
-  Future<void> registerWithPhone({
+  Future<AuthTokens> registerWithPhone({
     required String phone,
     required String password,
     required String countryCode,
   }) async {
-    await _api.post<Map<String, dynamic>>(
+    final data = await _api.post<Map<String, dynamic>>(
       '/auth/register/phone',
       data: {
         'phone': phone,
@@ -65,6 +68,9 @@ class AuthRepository {
         'country_code': countryCode,
       },
     );
+    final tokens = AuthTokens.fromJson(data);
+    await _persistSession(tokens);
+    return tokens;
   }
 
   Future<void> verifyOtp({

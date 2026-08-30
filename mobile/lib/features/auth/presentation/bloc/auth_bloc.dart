@@ -63,15 +63,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthRegisterWithEmail event, Emitter<AuthState> emit) async {
     emit(const AuthLoading());
     try {
-      await _repository.registerWithEmail(
+      final tokens = await _repository.registerWithEmail(
         email: event.email,
         password: event.password,
         countryCode: event.countryCode,
       );
-      // After registration, user must verify email → not authenticated yet
-      emit(const AuthUnauthenticated());
+      emit(AuthAuthenticated(tokens.user));
     } on AppException catch (e) {
       emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError(e.toString()));
     }
   }
 
@@ -84,12 +85,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthRegisterWithPhone event, Emitter<AuthState> emit) async {
     emit(const AuthLoading());
     try {
-      await _repository.registerWithPhone(
+      final tokens = await _repository.registerWithPhone(
         phone: event.phone,
         password: event.password,
         countryCode: event.countryCode,
       );
-      emit(AuthOtpRequired(event.phone));
+      emit(AuthAuthenticated(tokens.user));
     } on AppException catch (e) {
       emit(AuthError(e.message));
     } catch (e) {
