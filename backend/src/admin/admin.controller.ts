@@ -32,6 +32,7 @@ const ALLOWED_MEDIA_MIME_TYPES = [
 ];
 const ALLOWED_COVER_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_MEDIA_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2 Go (limite globale de l'interceptor)
+const UPLOADS_DIRECTORY = process.env.VERCEL ? "/tmp/uploads" : "./uploads";
 
 @Controller("v1/admin")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -80,7 +81,7 @@ export class AdminController {
       ],
       {
         storage: diskStorage({
-          destination: "./uploads",
+          destination: UPLOADS_DIRECTORY,
           filename: (req, file, cb) => {
             const uniqueSuffix =
               Date.now() + "-" + Math.round(Math.random() * 1e9);
