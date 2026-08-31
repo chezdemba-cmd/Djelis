@@ -34,7 +34,7 @@ const ALLOWED_COVER_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_MEDIA_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2 Go (limite globale de l'interceptor)
 const UPLOADS_DIRECTORY = process.env.VERCEL ? "/tmp/uploads" : "./uploads";
 
-@Controller("v1/admin")
+@Controller("admin")
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles("ADMIN", "SUPERADMIN")
 export class AdminController {

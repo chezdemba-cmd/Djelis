@@ -7,6 +7,11 @@ export default function AdminScreen({ onBack }) {
   const [stats, setStats] = useState({ users: 0, activeSubs: 0, videos: 0, audios: 0 });
   const [isUploading, setIsUploading] = useState(false);
 
+  const authHeaders = () => {
+    const token = localStorage.getItem('accessToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   // Formulaire d'upload
   const [uploadData, setUploadData] = useState({
     title: '',
@@ -25,13 +30,17 @@ export default function AdminScreen({ onBack }) {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       
       // Fetch Dashboard Stats
-      const statsRes = await fetch(`${baseUrl}/api/v1/admin/dashboard`);
+      const statsRes = await fetch(`${baseUrl}/api/v1/admin/dashboard`, {
+        headers: authHeaders(),
+      });
       if (statsRes.ok) {
         setStats(await statsRes.json());
       }
 
       // Fetch Contents
-      const contentsRes = await fetch(`${baseUrl}/api/v1/admin/contents`);
+      const contentsRes = await fetch(`${baseUrl}/api/v1/admin/contents`, {
+        headers: authHeaders(),
+      });
       if (contentsRes.ok) {
         setContents(await contentsRes.json());
       }
@@ -50,7 +59,8 @@ export default function AdminScreen({ onBack }) {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       const res = await fetch(`${baseUrl}/api/v1/admin/contents/${id}/toggle`, {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: authHeaders(),
       });
       if (res.ok) {
         fetchAdminData();
@@ -68,7 +78,8 @@ export default function AdminScreen({ onBack }) {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
         const res = await fetch(`${baseUrl}/api/v1/admin/contents/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: authHeaders(),
         });
         if (res.ok) {
           fetchAdminData();
@@ -106,6 +117,7 @@ export default function AdminScreen({ onBack }) {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       const res = await fetch(`${baseUrl}/api/v1/admin/contents`, {
         method: 'POST',
+        headers: authHeaders(),
         body: formData,
       });
 
