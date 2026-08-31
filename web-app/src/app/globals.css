@@ -34,10 +34,19 @@ body {
     justify-content: center;
     align-items: center;
     color: var(--text-primary);
-    overflow: hidden;
-    padding: 60px 0 20px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 24px 0 48px;
     transition: background 0.5s ease;
 }
+
+/* Production baseline: readable content width and consistent vertical rhythm. */
+main { width: min(100% - 48px, 1440px); margin: 0 auto; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; }
+button, a, input, select, textarea { font: inherit; }
+button, a { transition: color .2s ease, background-color .2s ease, border-color .2s ease, transform .2s ease; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--primary-gold); outline-offset: 3px; }
+@media (max-width: 700px) { main { width: min(100% - 28px, 1440px); } body { padding-top: 12px; } }
 
 /* ==========================================================================
    Viewport Device Selector (Top Bar)
