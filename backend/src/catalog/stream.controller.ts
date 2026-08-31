@@ -11,8 +11,11 @@ import {
   HttpException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
-import * as crypto from "crypto";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+
+const SUPABASE_BUCKET = "media";
+// Durée de validité de l'URL signée renvoyée au lecteur (assez pour un long-métrage).
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 4;
 
 @Controller("stream")
 export class StreamController {
@@ -168,7 +171,7 @@ export class StreamController {
       }
     }
 
-    let cfStreamId = episodeId || contentId;
+    let mediaRef: string | null = null;
 
     if (episodeId) {
       const episode = await this.prisma.episode.findFirst({
@@ -180,30 +183,79 @@ export class StreamController {
           HttpStatus.NOT_FOUND
         );
       }
-      cfStreamId = episode.cfStreamId;
-    } else {
-      if (content) {
-        if (content.episodes && content.episodes.length > 0) {
-          cfStreamId = content.episodes[0].cfStreamId;
-        } else if (content.trailerCfId) {
-          cfStreamId = content.trailerCfId;
-        }
+      mediaRef = episode.cfStreamId;
+    } else if (content) {
+      if (content.episodes && content.episodes.length > 0) {
+        mediaRef = content.episodes[0].cfStreamId;
+      } else if (content.trailerCfId) {
+        mediaRef = content.trailerCfId;
       }
     }
 
-    const keyId = process.env.CLOUDFLARE_KEY_ID;
-    const privateKeyB64 = process.env.CLOUDFLARE_PRIVATE_KEY;
+    if (!mediaRef) {
+      throw new HttpException(
+        "Aucun média disponible pour ce contenu",
+        HttpStatus.NOT_FOUND
+      );
+    }
 
-    if (!keyId || !privateKeyB64) {
+    return { signed_url: await this.signPlaybackUrl(mediaRef) };
+  }
+
+  /**
+   * Transforme la référence média stockée en URL de lecture à courte durée.
+   * - URL Supabase (publique ou signée) -> on ré-signe le chemin de l'objet.
+   * - Chemin d'objet nu ("media/xxx.mp4") -> on signe directement.
+   * - URL externe (échantillons de démo, autre CDN) -> renvoyée telle quelle.
+   */
+  private async signPlaybackUrl(ref: string): Promise<string> {
+    const supabaseUrl = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    let objectPath: string | null = null;
+
+    if (/^https?:\/\//i.test(ref)) {
+      if (supabaseUrl && ref.startsWith(supabaseUrl)) {
+        const m = ref.match(
+          /\/object\/(?:public\/|sign\/|authenticated\/)?[^/]+\/(.+?)(?:\?|$)/
+        );
+        objectPath = m ? decodeURIComponent(m[1]) : null;
+      } else {
+        // Média hébergé ailleurs (échantillons) : rien à signer.
+        return ref;
+      }
+    } else {
+      objectPath = ref.replace(/^\/+/, "");
+    }
+
+    if (!objectPath) {
+      throw new HttpException(
+        "Référence média illisible",
+        HttpStatus.UNPROCESSABLE_ENTITY
+      );
+    }
+
+    if (!supabaseUrl || !serviceKey) {
       throw new HttpException(
         "Service de streaming temporairement indisponible",
         HttpStatus.SERVICE_UNAVAILABLE
       );
     }
 
-    let token: string;
+    let res: Awaited<ReturnType<typeof fetch>>;
     try {
-      token = this.signCloudflareToken(cfStreamId, keyId, privateKeyB64);
+      res = await fetch(
+        `${supabaseUrl}/storage/v1/object/sign/${SUPABASE_BUCKET}/${objectPath}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${serviceKey}`,
+            apikey: serviceKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ expiresIn: SIGNED_URL_TTL_SECONDS }),
+        }
+      );
     } catch {
       throw new HttpException(
         "Service de streaming temporairement indisponible",
@@ -211,55 +263,22 @@ export class StreamController {
       );
     }
 
-    const signedUrl = `https://videodelivery.net/${encodeURIComponent(
-      cfStreamId
-    )}/manifest/video.m3u8?token=${token}`;
+    if (!res.ok) {
+      throw new HttpException(
+        "Service de streaming temporairement indisponible",
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
+    }
 
-    return {
-      signed_url: signedUrl,
-    };
-  }
+    const data = (await res.json().catch(() => ({}))) as { signedURL?: string };
+    if (!data?.signedURL) {
+      throw new HttpException(
+        "Service de streaming temporairement indisponible",
+        HttpStatus.SERVICE_UNAVAILABLE
+      );
+    }
 
-  private signCloudflareToken(
-    videoId: string,
-    keyId: string,
-    privateKeyB64: string
-  ): string {
-    const header = {
-      alg: "RS256",
-      kid: keyId,
-    };
-
-    const now = Math.floor(Date.now() / 1000);
-    const payload = {
-      sub: videoId,
-      kid: keyId,
-      exp: now + 3600, // 1 hour expiration
-      nbf: now - 300, // 5 minutes buffer
-    };
-
-    const base64UrlEncode = (str: string) => {
-      return Buffer.from(str)
-        .toString("base64")
-        .replace(/=/g, "")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_");
-    };
-
-    const headerB64 = base64UrlEncode(JSON.stringify(header));
-    const payloadB64 = base64UrlEncode(JSON.stringify(payload));
-    const signInput = `${headerB64}.${payloadB64}`;
-
-    const privateKey = Buffer.from(privateKeyB64, "base64").toString("utf8");
-
-    const sign = crypto.createSign("RSA-SHA256");
-    sign.update(signInput);
-    const signature = sign
-      .sign(privateKey, "base64")
-      .replace(/=/g, "")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
-
-    return `${signInput}.${signature}`;
+    // signedURL est relatif : /object/sign/media/<path>?token=<jwt>
+    return `${supabaseUrl}/storage/v1${data.signedURL}`;
   }
 }
