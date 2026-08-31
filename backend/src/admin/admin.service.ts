@@ -2,9 +2,37 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ServiceUnavailableException,
+  UnsupportedMediaTypeException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
-import { readFile, unlink } from "fs/promises";
+import * as crypto from "crypto";
+import { SignUploadDto } from "./dto/sign-upload.dto";
+import { CreateContentDto } from "./dto/create-content.dto";
+
+const SUPABASE_BUCKET = "media";
+
+const ALLOWED_MEDIA_MIME_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/wav",
+];
+const ALLOWED_COVER_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const EXT_BY_MIME: Record<string, string> = {
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+  "audio/wav": "wav",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 @Injectable()
 export class AdminService {
@@ -102,12 +130,113 @@ export class AdminService {
     });
   }
 
-  async createContent(
-    data: any,
-    files: { media?: Express.Multer.File[]; cover?: Express.Multer.File[] }
-  ) {
+  // ─── Upload direct navigateur -> Supabase Storage ──────────────────────────
+  // Le binaire (MP4/MP3) ne passe jamais par l'API : on renvoie une URL signée
+  // à usage unique et le client fait le PUT directement vers Supabase.
+
+  private supabaseConfig() {
+    const url = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !serviceKey) {
+      throw new ServiceUnavailableException(
+        "Stockage Supabase non configuré (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)."
+      );
+    }
+    return { baseUrl: url.replace(/\/+$/, ""), serviceKey };
+  }
+
+  private supabaseHeaders(serviceKey: string) {
+    return {
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: serviceKey,
+    };
+  }
+
+  private publicUrlFor(objectPath: string) {
+    const { baseUrl } = this.supabaseConfig();
+    return `${baseUrl}/storage/v1/object/public/${SUPABASE_BUCKET}/${objectPath}`;
+  }
+
+  async createSignedUpload(dto: SignUploadDto) {
+    const { baseUrl, serviceKey } = this.supabaseConfig();
+
+    const allowed =
+      dto.kind === "cover"
+        ? ALLOWED_COVER_MIME_TYPES
+        : ALLOWED_MEDIA_MIME_TYPES;
+    if (!allowed.includes(dto.contentType)) {
+      throw new UnsupportedMediaTypeException(
+        `Type de fichier non autorisé pour "${dto.kind}": ${dto.contentType}`
+      );
+    }
+
+    const folder = dto.kind === "cover" ? "covers" : "media";
+    const rawExt =
+      EXT_BY_MIME[dto.contentType] ||
+      (dto.fileName.split(".").pop() || "").toLowerCase();
+    const ext = rawExt.replace(/[^a-z0-9]/g, "").slice(0, 5) || "bin";
+    // Chemin généré côté serveur : le client ne choisit pas où il écrit.
+    const objectPath = `${folder}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+    const res = await fetch(
+      `${baseUrl}/storage/v1/object/upload/sign/${SUPABASE_BUCKET}/${objectPath}`,
+      {
+        method: "POST",
+        headers: {
+          ...this.supabaseHeaders(serviceKey),
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      }
+    );
+
+    if (!res.ok) {
+      throw new ServiceUnavailableException(
+        `Impossible de générer l'URL d'upload Supabase (${res.status}).`
+      );
+    }
+
+    const data = (await res.json().catch(() => ({}))) as { url?: string };
+    // Supabase renvoie un chemin relatif à /storage/v1, ex:
+    //   /object/upload/sign/media/media/169...-uuid.mp4?token=<jwt>
+    if (!data?.url || !/[?&]token=/.test(data.url)) {
+      throw new ServiceUnavailableException(
+        "Réponse de signature Supabase invalide."
+      );
+    }
+    const tokenMatch = data.url.match(/[?&]token=([^&]+)/);
+
+    return {
+      path: objectPath,
+      // URL absolue à laquelle le navigateur envoie le fichier (PUT direct).
+      signedUrl: `${baseUrl}/storage/v1${data.url}`,
+      token: tokenMatch ? decodeURIComponent(tokenMatch[1]) : null,
+      publicUrl: this.publicUrlFor(objectPath),
+    };
+  }
+
+  private async assertObjectExists(objectPath: string) {
+    const { baseUrl, serviceKey } = this.supabaseConfig();
+    const res = await fetch(
+      `${baseUrl}/storage/v1/object/info/${SUPABASE_BUCKET}/${objectPath}`,
+      { headers: this.supabaseHeaders(serviceKey) }
+    );
+    if (!res.ok) {
+      throw new BadRequestException(
+        `Fichier introuvable dans le stockage : ${objectPath}. L'upload est-il terminé ?`
+      );
+    }
+  }
+
+  async createContent(dto: CreateContentDto) {
+    // Le média doit réellement exister dans Supabase avant d'enregistrer la fiche.
+    await this.assertObjectExists(dto.mediaPath);
+    if (dto.coverPath) {
+      await this.assertObjectExists(dto.coverPath);
+    }
+
     let genre = await this.prisma.genre.findFirst({
-      where: { slug: data.category },
+      where: { slug: dto.category },
     });
     if (!genre) {
       genre = await this.prisma.genre.findFirst();
@@ -122,47 +251,28 @@ export class AdminService {
       category = await this.prisma.category.findFirst();
     }
 
-    const contentType = data.type === "Audio / Podcast" ? "AUDIO" : "VIDEO";
+    const contentType = dto.type === "Audio / Podcast" ? "AUDIO" : "VIDEO";
     const slug =
-      data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
+      dto.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
 
-    const mediaFile = files?.media?.[0];
-    const coverFile = files?.cover?.[0];
-    const supabaseUrl = process.env.SUPABASE_URL || "https://snsozwnzlpwfurutatch.supabase.co";
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const uploadToStorage = async (file: Express.Multer.File, folder: string) => {
-      if (!serviceKey) throw new BadRequestException("Stockage Supabase non configuré.");
-      const path = `${folder}/${Date.now()}-${file.filename}`;
-      const body = await readFile(file.path);
-      const response = await fetch(`${supabaseUrl}/storage/v1/object/media/${path}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey, "Content-Type": file.mimetype, "x-upsert": "true" },
-        body,
-      });
-      await unlink(file.path).catch(() => undefined);
-      if (!response.ok) throw new BadRequestException(`Échec Supabase Storage (${response.status}).`);
-      return `${supabaseUrl}/storage/v1/object/public/media/${path}`;
-    };
-    const mediaUrl = mediaFile ? await uploadToStorage(mediaFile, "media") : null;
-    const coverUrl = coverFile ? await uploadToStorage(coverFile, "covers") : "/assets/empire_mali.png";
-
-    if (!mediaUrl) {
-      throw new BadRequestException("Le fichier média est requis.");
-    }
+    const mediaUrl = this.publicUrlFor(dto.mediaPath);
+    const coverUrl = dto.coverPath
+      ? this.publicUrlFor(dto.coverPath)
+      : "/assets/empire_mali.png";
 
     const content = await this.prisma.content.create({
       data: {
-        title: data.title,
+        title: dto.title,
         slug: slug,
         type: contentType,
         format: "SINGLE",
-        synopsis: data.synopsis || "",
+        synopsis: dto.synopsis || "",
         thumbnailUrl: coverUrl,
         trailerCfId: mediaUrl, // Used by frontend for single videos
         categoryId: category?.id || 1,
         genreId: genre?.id || 1,
-        publishedAt: data.publishedAtStart
-          ? new Date(data.publishedAtStart)
+        publishedAt: dto.publishedAtStart
+          ? new Date(dto.publishedAtStart)
           : new Date(),
         isActive: true,
       },
@@ -172,7 +282,7 @@ export class AdminService {
     await this.prisma.episode.create({
       data: {
         contentId: content.id,
-        title: data.title,
+        title: dto.title,
         episodeNumber: 1,
         seasonNumber: 1,
         duration: 0,
