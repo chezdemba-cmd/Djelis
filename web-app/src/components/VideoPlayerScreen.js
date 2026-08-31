@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useMediaProgress } from "../hooks/useMediaProgress";
 import { getPlaybackUrl } from "../data/catalog";
+import { useSession } from "../context/SessionContext";
 
 export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
+  const { currentProfile } = useSession();
   const contentId = videoItem?.contentId || videoItem?.id;
   const episodeId = videoItem?.episodeId || null;
   const [videoUrl, setVideoUrl] = useState(null);
@@ -24,7 +26,7 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
     typeof window !== "undefined" && localStorage.getItem("djelis_data_saver") === "1"
   );
 
-  useMediaProgress(videoRef, contentId, episodeId);
+  useMediaProgress(videoRef, contentId, episodeId, currentProfile?.id || null);
 
   // Résout l'URL de lecture (signée, courte durée) à chaque ouverture du lecteur.
   useEffect(() => {

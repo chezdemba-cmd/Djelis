@@ -66,6 +66,60 @@ export default function ProfileSelector({ onSelectProfile }) {
   const [isManageMode, setIsManageMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProfileData, setNewProfileData] = useState({ name: '', isChild: false });
+  const [editing, setEditing] = useState(null); // { id, name, isChild }
+
+  const refreshProfiles = async () => {
+    const token = localStorage.getItem('accessToken');
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/profiles`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setProfiles(mapProfiles(await res.json()));
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!editing || !editing.name.trim()) return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/profiles/${editing.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: editing.name.trim(), is_child: editing.isChild }),
+      });
+      if (res.ok) {
+        await refreshProfiles();
+        setEditing(null);
+      }
+    } catch {
+      alert('Erreur lors de la mise à jour du profil');
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!editing) return;
+    if (profiles.length <= 1) {
+      alert('Vous devez garder au moins un profil.');
+      return;
+    }
+    if (!window.confirm(`Supprimer le profil « ${editing.name} » ? L'historique et les favoris de ce profil seront perdus.`)) return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/profiles/${editing.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        await refreshProfiles();
+        setEditing(null);
+      }
+    } catch {
+      alert('Erreur lors de la suppression du profil');
+    }
+  };
 
   const handleAddProfile = async () => {
     const { name, isChild } = newProfileData;
@@ -110,10 +164,12 @@ export default function ProfileSelector({ onSelectProfile }) {
       <h1 className="profile-selector-title">{isManageMode ? "Gestion des profils :" : "Qui est-ce ?"}</h1>
       <div className="profile-grid">
         {profiles.map((profile) => (
-          <div 
-            key={profile.id} 
-            className="profile-card tv-focusable" 
-            onClick={() => isManageMode ? null : onSelectProfile(profile)}
+          <div
+            key={profile.id}
+            className="profile-card tv-focusable"
+            onClick={() => isManageMode
+              ? setEditing({ id: profile.id, name: profile.name, isChild: !!profile.isKids })
+              : onSelectProfile(profile)}
           >
             <div 
               className="profile-avatar-wrapper"
@@ -196,6 +252,48 @@ export default function ProfileSelector({ onSelectProfile }) {
             <div className="modal-actions">
               <button className="btn-save tv-focusable" onClick={handleAddProfile} disabled={!newProfileData.name.trim()}>Enregistrer</button>
               <button className="btn-cancel tv-focusable" onClick={() => setShowAddModal(false)}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="netflix-modal-overlay">
+          <div className="netflix-modal">
+            <button className="close-btn" onClick={() => setEditing(null)}>
+              <span className="material-icons-round">close</span>
+            </button>
+            <h1 className="modal-title">Modifier le profil</h1>
+            <p className="modal-subtitle">Renommez ce profil ou changez son type.</p>
+
+            <div className="modal-body">
+              <div className="modal-avatar" style={{ background: 'linear-gradient(to bottom, #FFB300dd, #FFB300)' }}>
+                <FaceSVG />
+              </div>
+              <input
+                type="text"
+                className="netflix-input"
+                placeholder="Nom"
+                value={editing.name}
+                onChange={e => setEditing({ ...editing, name: e.target.value })}
+                autoFocus
+              />
+            </div>
+
+            <div className="kids-switch-container">
+              <div>
+                <h4 style={{ margin: 0, fontSize: '18px' }}>Profil Jeunesse</h4>
+                <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#a0a0a0' }}>N&apos;afficher que les séries et films adaptés aux enfants</p>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={editing.isChild} onChange={e => setEditing({ ...editing, isChild: e.target.checked })} />
+                <span className="slider round"></span>
+              </label>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-save tv-focusable" onClick={handleUpdateProfile} disabled={!editing.name.trim()}>Enregistrer</button>
+              <button className="btn-cancel tv-focusable" onClick={handleDeleteProfile} style={{ borderColor: '#e50914', color: '#e50914' }}>Supprimer ce profil</button>
             </div>
           </div>
         </div>
