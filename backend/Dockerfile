@@ -29,5 +29,5 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "run", "start:prod"]
+# Applique les migrations en attente puis démarre l'API.
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
