@@ -171,6 +171,7 @@ export async function getCatalog() {
           // (contrôle des droits + URL signée courte).
           videoUrl: null,
           hasMedia: item.hasMedia !== false,
+          age: item.ageRating || 'G',
           category: item.genre?.slug || 'cinema'
         }));
       }
@@ -185,6 +186,17 @@ export async function getCatalog() {
 function authHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   return token ? { Authorization: `Bearer ${token}` } : null;
+}
+
+/**
+ * Vrai si le classement d'âge convient à un profil Jeunesse.
+ * Bloque les mentions 12/13/16/18 (+ variantes -12, R, MA…).
+ */
+export function isKidsFriendly(age) {
+  if (!age) return true;
+  const a = String(age).toLowerCase().replace(/\s/g, '');
+  const blocked = ['12+', '-12', '13+', '16+', '-16', '18+', '-18', 'r', 'nc-17', 'ma', 'tv-ma'];
+  return !blocked.includes(a) && !/1[2368]/.test(a);
 }
 
 /**
@@ -215,12 +227,13 @@ export async function getPlaybackUrl(contentId, episodeId = null) {
   }
 }
 
-export async function getFavorites() {
+export async function getFavorites(profileId) {
   const headers = authHeaders();
   if (!headers) return [];
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/v1/favorites`, { headers });
+    const qs = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : '';
+    const res = await fetch(`${baseUrl}/api/v1/favorites${qs}`, { headers });
     if (res.ok) {
       const contents = await res.json();
       return contents.map(item => ({
@@ -240,12 +253,16 @@ export async function getFavorites() {
   return [];
 }
 
-export async function addFavorite(contentId) {
+export async function addFavorite(contentId, profileId) {
   const headers = authHeaders();
   if (!headers) return false;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, { method: 'POST', headers });
+    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileId ? { profile_id: profileId } : {}),
+    });
     return res.ok;
   } catch (err) {
     console.error("Error adding favorite.", err.message);
@@ -253,12 +270,13 @@ export async function addFavorite(contentId) {
   }
 }
 
-export async function removeFavorite(contentId) {
+export async function removeFavorite(contentId, profileId) {
   const headers = authHeaders();
   if (!headers) return false;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, { method: 'DELETE', headers });
+    const qs = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : '';
+    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}${qs}`, { method: 'DELETE', headers });
     return res.ok;
   } catch (err) {
     console.error("Error removing favorite.", err.message);

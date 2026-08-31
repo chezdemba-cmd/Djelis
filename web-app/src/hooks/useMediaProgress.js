@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
  * @param {string} contentId - ID du contenu en cours de lecture
  * @param {string} episodeId - (Optionnel) ID de l'épisode si c'est une série
  */
-export function useMediaProgress(mediaRef, contentId, episodeId = null) {
+export function useMediaProgress(mediaRef, contentId, episodeId = null, profileId = null) {
   const lastSyncTimeRef = useRef(0);
   const syncInterval = 10; // Synchronisation toutes les 10 secondes
 
@@ -30,7 +30,8 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null) {
           body: JSON.stringify({
             content_id: contentId,
             episode_id: episodeId,
-            progress_sec: Math.floor(currentTime)
+            progress_sec: Math.floor(currentTime),
+            ...(profileId ? { profile_id: profileId } : {})
           })
         });
       } catch (error) {
@@ -64,5 +65,5 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null) {
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [mediaRef, contentId, episodeId]);
+  }, [mediaRef, contentId, episodeId, profileId]);
 }
