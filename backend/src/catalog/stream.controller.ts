@@ -13,7 +13,7 @@ import {
 import { PrismaService } from "../prisma.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
-const SUPABASE_BUCKET = "media";
+const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "media";
 // Durée de validité de l'URL signée renvoyée au lecteur (assez pour un long-métrage).
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 4;
 

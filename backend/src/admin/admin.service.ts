@@ -10,7 +10,7 @@ import * as crypto from "crypto";
 import { SignUploadDto } from "./dto/sign-upload.dto";
 import { CreateContentDto } from "./dto/create-content.dto";
 
-const SUPABASE_BUCKET = "media";
+const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "media";
 
 const ALLOWED_MEDIA_MIME_TYPES = [
   "video/mp4",
