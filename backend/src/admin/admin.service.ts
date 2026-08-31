@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
+import { readFile, unlink } from "fs/promises";
 
 @Injectable()
 export class AdminService {
@@ -125,14 +126,25 @@ export class AdminService {
     const slug =
       data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
 
-    const mediaUrl =
-      files?.media && files.media.length > 0
-        ? `/uploads/${files.media[0].filename}`
-        : null;
-    const coverUrl =
-      files?.cover && files.cover.length > 0
-        ? `/uploads/${files.cover[0].filename}`
-        : "/assets/empire_mali.png";
+    const mediaFile = files?.media?.[0];
+    const coverFile = files?.cover?.[0];
+    const supabaseUrl = process.env.SUPABASE_URL || "https://snsozwnzlpwfurutatch.supabase.co";
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const uploadToStorage = async (file: Express.Multer.File, folder: string) => {
+      if (!serviceKey) throw new BadRequestException("Stockage Supabase non configuré.");
+      const path = `${folder}/${Date.now()}-${file.filename}`;
+      const body = await readFile(file.path);
+      const response = await fetch(`${supabaseUrl}/storage/v1/object/media/${path}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey, "Content-Type": file.mimetype, "x-upsert": "true" },
+        body,
+      });
+      await unlink(file.path).catch(() => undefined);
+      if (!response.ok) throw new BadRequestException(`Échec Supabase Storage (${response.status}).`);
+      return `${supabaseUrl}/storage/v1/object/public/media/${path}`;
+    };
+    const mediaUrl = mediaFile ? await uploadToStorage(mediaFile, "media") : null;
+    const coverUrl = coverFile ? await uploadToStorage(coverFile, "covers") : "/assets/empire_mali.png";
 
     if (!mediaUrl) {
       throw new BadRequestException("Le fichier média est requis.");
