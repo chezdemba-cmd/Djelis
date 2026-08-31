@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
-export default function ContinueWatching({ currentProfile, type }) {
+export default function ContinueWatching({ currentProfile, type, onResume }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleResume = (item) => {
+    if (!onResume) return;
+    const content = item.content;
+    onResume({
+      id: content.id,
+      contentId: content.id,
+      episodeId: item.episode?.id || null,
+      title: content.title,
+      image: content.thumbnailUrl || '/assets/baobab.png',
+      type: content.type,
+      startAt: item.progressSeconds || 0,
+    });
+  };
 
   useEffect(() => {
     async function fetchHistory() {
@@ -51,7 +65,13 @@ export default function ContinueWatching({ currentProfile, type }) {
           const progressPercent = content.type === 'VIDEO' ? Math.min(100, (item.progressSeconds / 7200) * 100) : Math.min(100, (item.progressSeconds / 300) * 100); // estimation basique
           
           return (
-            <div key={item.id} className="cw-card tv-focusable">
+            <div
+              key={item.id}
+              className="cw-card tv-focusable"
+              onClick={() => handleResume(item)}
+              role="button"
+              tabIndex={0}
+            >
               <div className="cw-img-container">
                 <img src={content.thumbnailUrl || '/assets/baobab.png'} alt={content.title} className="cw-img" />
                 <div className="cw-play-overlay">

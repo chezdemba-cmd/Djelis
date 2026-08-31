@@ -100,7 +100,7 @@ export default function DjaasooScreen({ currentProfile }) {
         onClose={closeVideo} 
       />
 
-      <ContinueWatching currentProfile={currentProfile} type="VIDEO" />
+      <ContinueWatching currentProfile={currentProfile} type="VIDEO" onResume={playVideo} />
 
       <div className="djaasoo-tabs-container">
         <div className="djaasoo-tabs">
