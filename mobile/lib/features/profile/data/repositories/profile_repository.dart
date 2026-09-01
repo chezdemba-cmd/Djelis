@@ -37,11 +37,12 @@ class ProfileRepository {
     required String name,
     required bool isChild,
   }) async {
-    final data = await _api.patch<Map<String, dynamic>>(
+    // Le backend expose PUT /profiles/:id (voir ProfileController).
+    final res = await _api.dio.put<Map<String, dynamic>>(
       '/profiles/$id',
       data: {'name': name, 'is_child': isChild},
     );
-    return ProfileModel.fromJson(data);
+    return ProfileModel.fromJson(res.data ?? const {});
   }
 
   Future<void> delete(String id) async {
