@@ -174,6 +174,30 @@ export class StreamController {
       throw new HttpException("Contenu introuvable", HttpStatus.NOT_FOUND);
     }
 
+    // Restriction géographique : le pays est déduit de l'IP par la plateforme
+    // (Vercel / Cloudflare), jamais fourni par le client. Un contenu SANS
+    // territoire défini reste disponible partout ; s'il en a, il faut une
+    // ligne "autorisé" pour le pays détecté.
+    const country = String(
+      req.headers["x-vercel-ip-country"] || req.headers["cf-ipcountry"] || ""
+    ).toUpperCase();
+    if (country && country !== "XX" && country !== "T1") {
+      const territoryCount = await this.prisma.rightsTerritory.count({
+        where: { contentId },
+      });
+      if (territoryCount > 0) {
+        const allowed = await this.prisma.rightsTerritory.findFirst({
+          where: { contentId, countryCode: country, isAllowed: true },
+        });
+        if (!allowed) {
+          throw new HttpException(
+            "Ce contenu n'est pas disponible dans votre pays.",
+            HttpStatus.FORBIDDEN
+          );
+        }
+      }
+    }
+
     if (content?.isPremium) {
       const hasActiveSubscription = user.subscriptions.length > 0;
       const hasActiveRental = user.rentals && user.rentals.length > 0;
