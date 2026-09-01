@@ -16,6 +16,9 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "media";
 // Durée de validité de l'URL signée renvoyée au lecteur (assez pour un long-métrage).
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 4;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_PROGRESS_SECONDS = 86_400; // 24 h
 
 @Controller("stream")
 export class StreamController {
@@ -31,6 +34,18 @@ export class StreamController {
     @Body("progress_sec") progressSec: number,
     @Body("profile_id") profileId?: string
   ) {
+    if (!contentId || !UUID_RE.test(contentId)) {
+      return { success: false, message: "content_id invalide." };
+    }
+    if (episodeId && !UUID_RE.test(episodeId)) {
+      return { success: false, message: "episode_id invalide." };
+    }
+    // Valeur cliente bornée : entier, entre 0 et 24 h.
+    const rawSec = Number(progressSec);
+    const safeSec = Number.isFinite(rawSec)
+      ? Math.min(Math.max(Math.floor(rawSec), 0), MAX_PROGRESS_SECONDS)
+      : 0;
+
     let profile;
     if (profileId) {
       profile = await this.prisma.profile.findFirst({
@@ -62,7 +77,7 @@ export class StreamController {
       await this.prisma.watchHistory.update({
         where: { id: existing.id },
         data: {
-          progressSeconds: progressSec,
+          progressSeconds: safeSec,
           lastWatchedAt: new Date(),
         },
       });
@@ -72,7 +87,7 @@ export class StreamController {
           profileId: profile.id,
           contentId,
           episodeId: episodeId || null,
-          progressSeconds: progressSec,
+          progressSeconds: safeSec,
         },
       });
     }
