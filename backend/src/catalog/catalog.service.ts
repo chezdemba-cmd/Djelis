@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { ContentType } from "@prisma/client";
+import { stripMediaRefs } from "./media-sanitizer";
 
 @Injectable()
 export class CatalogService {
@@ -13,9 +14,13 @@ export class CatalogService {
       title: content.title,
       synopsis: content.synopsis || "",
       poster_url: content.thumbnailUrl || "",
-      trailer_url: content.trailerCfId
-        ? `https://videodelivery.net/${content.trailerCfId}/manifest/video.m3u8`
-        : null,
+      // La lecture passe par POST /stream/token (contrôle des droits + URL signée).
+      trailer_url: null,
+      // Source YouTube (contenu gratuit/promo) : lecture directe via l'embed,
+      // sans /stream/token.
+      youtube_id: content.youtubeId || null,
+      source: content.youtubeId ? "youtube" : "storage",
+      has_media: Boolean(content.trailerCfId || content.youtubeId),
       type: content.type.toLowerCase(),
       category_id: content.categoryId?.toString(),
       category: content.category ? { name: content.category.name } : null,
@@ -80,11 +85,11 @@ export class CatalogService {
     return {
       djaasoo: {
         title: "DjaaSoo - Vidéos & Cinéma",
-        contents: djaasooVideos,
+        contents: djaasooVideos.map(stripMediaRefs),
       },
       djelison: {
         title: "DjeliSon - Musique & Podcasts",
-        contents: djelisonAudios,
+        contents: djelisonAudios.map(stripMediaRefs),
       },
     };
   }
@@ -221,7 +226,7 @@ export class CatalogService {
       throw new NotFoundException("Contenu introuvable ou indisponible.");
     }
 
-    return content;
+    return stripMediaRefs(content);
   }
 
   async getContentDetail(id: string) {

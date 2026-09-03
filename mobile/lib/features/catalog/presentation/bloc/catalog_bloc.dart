@@ -69,6 +69,7 @@ class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
       progressSec: event.progressSec,
       quality: event.quality,
       deviceType: event.deviceType,
+      profileId: event.profileId,
     );
   }
 }

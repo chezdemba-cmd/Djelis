@@ -57,6 +57,18 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Future<void> _playEpisode(EpisodeModel? episode) async {
     if (_isFetchingStream) return;
+
+    // Contenu YouTube (gratuit/promo) : lecture directe via l'embed, sans jeton.
+    final ytId = _content?.youtubeId;
+    if (ytId != null && ytId.isNotEmpty) {
+      context.push('/player', extra: {
+        'contentId': widget.contentId,
+        'title': _content?.title ?? widget.title,
+        'youtubeId': ytId,
+      });
+      return;
+    }
+
     setState(() => _isFetchingStream = true);
     try {
       final signedUrl = await context.read<CatalogRepository>().getStreamToken(

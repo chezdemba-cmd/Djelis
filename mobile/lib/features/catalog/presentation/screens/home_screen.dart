@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../data/models/content_model.dart';
 import '../bloc/catalog_bloc.dart';
 import '../bloc/catalog_event.dart';
@@ -28,12 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthUnauthenticated) {
-          context.go('/login');
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthUnauthenticated) context.go('/login');
+          },
+        ),
+        BlocListener<ProfileBloc, ProfileState>(
+          listener: (context, state) {
+            final authed = context.read<AuthBloc>().state is AuthAuthenticated;
+            if (authed && state is ProfileReady && state.selected == null) {
+              context.go('/profiles');
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
         appBar: AppBar(
@@ -48,6 +61,45 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           actions: [
+            BlocBuilder<ProfileBloc, ProfileState>(
+              builder: (context, state) {
+                final selected =
+                    state is ProfileReady ? state.selected : null;
+                if (selected == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      context.read<ProfileBloc>().add(const ProfileCleared());
+                    },
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 13,
+                          backgroundColor: AppTheme.primaryGold,
+                          child: Text(
+                            selected.name.isNotEmpty
+                                ? selected.name[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        if (selected.isChild)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 3),
+                            child: Icon(Icons.child_care,
+                                size: 16, color: AppTheme.primaryGold),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.search, color: Colors.white),
               onPressed: () => _showSearch(context),
