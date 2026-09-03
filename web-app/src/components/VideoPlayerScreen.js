@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useMediaProgress } from "../hooks/useMediaProgress";
+import { getPlaybackUrl } from "../data/catalog";
 
 export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
-  const videoUrl = videoItem?.videoUrl;
-  const contentId = videoItem?.id;
+  const contentId = videoItem?.contentId || videoItem?.id;
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [playbackError, setPlaybackError] = useState(null);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
@@ -22,6 +24,42 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
   );
 
   useMediaProgress(videoRef, contentId);
+
+  // Résout l'URL de lecture (signée, courte durée) à chaque ouverture du lecteur.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    let cancelled = false;
+
+    const resolvePlayback = async () => {
+      if (videoItem?.videoUrl) {
+        if (!cancelled) {
+          setPlaybackError(null);
+          setVideoUrl(videoItem.videoUrl);
+        }
+        return;
+      }
+      if (!contentId) {
+        if (!cancelled) setPlaybackError("Contenu indisponible.");
+        return;
+      }
+      if (!cancelled) {
+        setPlaybackError(null);
+        setVideoUrl(null);
+      }
+      const url = await getPlaybackUrl(contentId);
+      if (cancelled) return;
+      if (url) setVideoUrl(url);
+      else
+        setPlaybackError(
+          "Lecture non autorisée : un abonnement ou une location actifs sont requis."
+        );
+    };
+
+    resolvePlayback();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, videoItem, contentId]);
 
   // Charge la source vidéo : hls.js pour les manifests HLS sur les navigateurs
   // sans support natif (Chrome/Firefox/Android), lecture directe sinon (Safari, MP4).
@@ -171,6 +209,24 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
   }, []);
 
   if (!isOpen) return null;
+
+  if (playbackError) {
+    return (
+      <div
+        className="video-player-overlay custom-player-overlay"
+        style={{ display: "flex", opacity: 1, zIndex: 99999, flexDirection: "column", gap: "20px", background: "#050505", color: "white", textAlign: "center", padding: "24px" }}
+      >
+        <span className="material-icons-round" style={{ fontSize: "48px", color: "#FFB300" }}>lock</span>
+        <p style={{ maxWidth: "420px", fontSize: "16px", lineHeight: 1.5 }}>{playbackError}</p>
+        <button
+          onClick={onClose}
+          style={{ background: "#FFB300", color: "#000", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+        >
+          Retour
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div 

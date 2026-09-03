@@ -6,11 +6,58 @@ export default function AdminScreen({ onBack }) {
   const [contents, setContents] = useState([]);
   const [stats, setStats] = useState({ users: 0, activeSubs: 0, videos: 0, audios: 0 });
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadStep, setUploadStep] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const apiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
   const authHeaders = () => {
     const token = localStorage.getItem('accessToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
+
+  // Étape 1 : demander une URL signée à l'API (petite requête JSON).
+  const requestSignedUpload = async (kind, file) => {
+    const res = await fetch(`${apiBase()}/api/v1/admin/uploads/sign`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        kind,
+        fileName: file.name,
+        contentType: file.type || 'application/octet-stream',
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Signature refusée (${res.status})`);
+    }
+    return res.json(); // { path, signedUrl, token, publicUrl }
+  };
+
+  // Étape 2 : le navigateur téléverse le fichier DIRECTEMENT vers Supabase
+  // Storage (le binaire ne transite pas par l'API). XHR pour la barre de progression.
+  const putFileToSupabase = (signedUrl, file, onProgress) =>
+    new Promise((resolve, reject) => {
+      // Format multipart attendu par l'endpoint "upload/sign" de Supabase.
+      const form = new FormData();
+      form.append('cacheControl', '3600');
+      form.append('', file);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', signedUrl);
+      xhr.setRequestHeader('x-upsert', 'true');
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.onload = () =>
+        xhr.status >= 200 && xhr.status < 300
+          ? resolve()
+          : reject(new Error(`Upload Supabase échoué (${xhr.status})`));
+      xhr.onerror = () => reject(new Error("Erreur réseau pendant l'upload"));
+      xhr.send(form);
+    });
 
   // Formulaire d'upload
   const [uploadData, setUploadData] = useState({
@@ -101,40 +148,51 @@ export default function AdminScreen({ onBack }) {
     }
 
     setIsUploading(true);
-    
-    const formData = new FormData();
-    formData.append('title', uploadData.title);
-    formData.append('type', uploadData.type);
-    formData.append('category', uploadData.category === 'autre' ? uploadData.customCategory : uploadData.category);
-    formData.append('synopsis', uploadData.synopsis);
-    if (uploadData.publishedAtStart) formData.append('publishedAtStart', uploadData.publishedAtStart);
-    if (uploadData.publishedAtEnd) formData.append('publishedAtEnd', uploadData.publishedAtEnd);
-    
-    formData.append('media', uploadData.file);
-    formData.append('cover', uploadData.coverFile);
+    setUploadProgress(0);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const res = await fetch(`${baseUrl}/api/v1/admin/contents`, {
+      // 1. Couverture : signature + upload direct vers Supabase.
+      setUploadStep('Téléversement de la couverture…');
+      const coverSigned = await requestSignedUpload('cover', uploadData.coverFile);
+      await putFileToSupabase(coverSigned.signedUrl, uploadData.coverFile, null);
+
+      // 2. Média (MP4 / MP3) : upload direct vers Supabase, avec progression.
+      setUploadStep('Téléversement du média…');
+      const mediaSigned = await requestSignedUpload('media', uploadData.file);
+      await putFileToSupabase(mediaSigned.signedUrl, uploadData.file, setUploadProgress);
+
+      // 3. Création de la fiche : uniquement des métadonnées + les chemins.
+      setUploadStep('Enregistrement de la fiche…');
+      const res = await fetch(`${apiBase()}/api/v1/admin/contents`, {
         method: 'POST',
-        headers: authHeaders(),
-        body: formData,
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: uploadData.title,
+          type: uploadData.type,
+          category: uploadData.category === 'autre' ? uploadData.customCategory : uploadData.category,
+          synopsis: uploadData.synopsis,
+          publishedAtStart: uploadData.publishedAtStart || undefined,
+          publishedAtEnd: uploadData.publishedAtEnd || undefined,
+          mediaPath: mediaSigned.path,
+          coverPath: coverSigned.path,
+        }),
       });
 
       if (res.ok) {
         alert(`Upload réussi ! Le contenu "${uploadData.title}" a été ajouté.`);
-        // Reset form
         setUploadData({ ...uploadData, title: '', synopsis: '', file: null, coverFile: null });
         fetchAdminData();
         setActiveTab('content');
       } else {
-        const error = await res.json();
+        const error = await res.json().catch(() => ({}));
         alert(`Erreur d'upload : ${error.message || 'Inconnue'}`);
       }
-    } catch(err) {
-      alert("Erreur de connexion lors de l'upload.");
+    } catch (err) {
+      alert(err.message || "Erreur de connexion lors de l'upload.");
     } finally {
       setIsUploading(false);
+      setUploadStep('');
+      setUploadProgress(0);
     }
   };
 
@@ -321,8 +379,15 @@ export default function AdminScreen({ onBack }) {
             </div>
 
             <button type="submit" disabled={isUploading} style={{ background: '#ffb300', color: 'black', padding: '12px', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
-              {isUploading ? 'Upload en cours...' : 'Mettre en Ligne'}
+              {isUploading
+                ? `${uploadStep || 'Upload en cours…'}${uploadProgress ? ` ${uploadProgress}%` : ''}`
+                : 'Mettre en Ligne'}
             </button>
+            {isUploading && (
+              <div style={{ height: '6px', background: '#333', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${uploadProgress}%`, background: '#ffb300', transition: 'width 0.2s' }} />
+              </div>
+            )}
           </form>
         </div>
       )}

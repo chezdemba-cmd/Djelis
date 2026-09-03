@@ -162,13 +162,15 @@ export async function getCatalog() {
       if (data && data.djaasoo && data.djaasoo.contents && data.djaasoo.contents.length > 0) {
         return data.djaasoo.contents.map(item => ({
           id: item.id,
+          contentId: item.id,
           title: item.title,
           type: item.type === 'VIDEO' ? 'Film' : item.type,
           synopsis: item.synopsis || "",
           image: item.thumbnailUrl || '/assets/baobab.png',
-          videoUrl: item.trailerCfId 
-            ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8` 
-            : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+          // L'URL de lecture est résolue à la demande via /stream/token
+          // (contrôle des droits + URL signée courte).
+          videoUrl: null,
+          hasMedia: item.hasMedia !== false,
           category: item.genre?.slug || 'cinema'
         }));
       }
@@ -185,6 +187,34 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : null;
 }
 
+/**
+ * Récupère une URL de lecture signée à courte durée pour un contenu.
+ * Le backend vérifie l'abonnement / la location avant de la délivrer.
+ * Retourne null si non autorisé, non connecté, ou média absent.
+ */
+export async function getPlaybackUrl(contentId, episodeId = null) {
+  if (!contentId) return null;
+  const headers = authHeaders();
+  if (!headers) return null;
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/v1/stream/token`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content_id: contentId,
+        ...(episodeId ? { episode_id: episodeId } : {}),
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.signed_url || null;
+  } catch (err) {
+    console.error('Error fetching playback URL.', err.message);
+    return null;
+  }
+}
+
 export async function getFavorites() {
   const headers = authHeaders();
   if (!headers) return [];
@@ -195,13 +225,13 @@ export async function getFavorites() {
       const contents = await res.json();
       return contents.map(item => ({
         id: item.id,
+        contentId: item.id,
         title: item.title,
         type: item.type === 'VIDEO' ? 'Film' : item.type,
         synopsis: item.synopsis || "",
         image: item.thumbnailUrl || '/assets/baobab.png',
-        videoUrl: item.trailerCfId
-          ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8`
-          : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        videoUrl: null,
+        hasMedia: item.hasMedia !== false,
       }));
     }
   } catch (err) {
