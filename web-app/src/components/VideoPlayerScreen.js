@@ -2,9 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useMediaProgress } from "../hooks/useMediaProgress";
 import { getPlaybackUrl } from "../data/catalog";
+import { useSession } from "../context/SessionContext";
 
 export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
+  const { currentProfile } = useSession();
   const contentId = videoItem?.contentId || videoItem?.id;
+  const episodeId = videoItem?.episodeId || null;
   const [videoUrl, setVideoUrl] = useState(null);
   const [playbackError, setPlaybackError] = useState(null);
   const videoRef = useRef(null);
@@ -23,7 +26,7 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
     typeof window !== "undefined" && localStorage.getItem("djelis_data_saver") === "1"
   );
 
-  useMediaProgress(videoRef, contentId);
+  useMediaProgress(videoRef, contentId, episodeId, currentProfile?.id || null);
 
   // Résout l'URL de lecture (signée, courte durée) à chaque ouverture du lecteur.
   useEffect(() => {
@@ -46,7 +49,7 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
         setPlaybackError(null);
         setVideoUrl(null);
       }
-      const url = await getPlaybackUrl(contentId);
+      const url = await getPlaybackUrl(contentId, episodeId);
       if (cancelled) return;
       if (url) setVideoUrl(url);
       else
@@ -59,7 +62,7 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
     return () => {
       cancelled = true;
     };
-  }, [isOpen, videoItem, contentId]);
+  }, [isOpen, videoItem, contentId, episodeId]);
 
   // Charge la source vidéo : hls.js pour les manifests HLS sur les navigateurs
   // sans support natif (Chrome/Firefox/Android), lecture directe sinon (Safari, MP4).
@@ -131,9 +134,18 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
 
   const handleLoadedMetadata = () => {
     if (!videoRef.current || !videoItem) return;
+    const total = videoRef.current.duration;
+
+    // Position de reprise explicite (venue de "Continuer la lecture") : prioritaire.
+    const startAt = Number(videoItem.startAt) || 0;
+    if (startAt > 0 && (!total || startAt < total - 5)) {
+      videoRef.current.currentTime = startAt;
+      return;
+    }
+
     try {
       const saved = JSON.parse(localStorage.getItem('djelis_last_watched') || 'null');
-      if (saved && saved.id === videoItem.id && saved.currentTime > 0 && saved.currentTime < videoRef.current.duration - 5) {
+      if (saved && saved.id === videoItem.id && saved.currentTime > 0 && saved.currentTime < total - 5) {
         videoRef.current.currentTime = saved.currentTime;
       }
     } catch {
