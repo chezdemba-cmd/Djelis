@@ -170,6 +170,7 @@ export async function getCatalog() {
           // L'URL de lecture est résolue à la demande via /stream/token
           // (contrôle des droits + URL signée courte).
           videoUrl: null,
+          youtubeId: item.youtubeId || item.youtube_id || null,
           hasMedia: item.hasMedia !== false,
           age: item.ageRating || 'G',
           category: item.genre?.slug || 'cinema'
@@ -243,6 +244,7 @@ export async function getFavorites(profileId) {
         synopsis: item.synopsis || "",
         image: item.thumbnailUrl || '/assets/baobab.png',
         videoUrl: null,
+        youtubeId: item.youtubeId || item.youtube_id || null,
         hasMedia: item.hasMedia !== false,
       }));
     }

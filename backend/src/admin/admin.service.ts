@@ -228,9 +228,41 @@ export class AdminService {
     }
   }
 
+  /**
+   * Extrait l'ID (11 caractères) d'une URL YouTube (watch, youtu.be, embed,
+   * shorts, live). Lève une 400 si l'URL n'est pas exploitable.
+   */
+  private parseYoutubeId(url: string): string {
+    const patterns = [
+      /[?&]v=([A-Za-z0-9_-]{11})/,
+      /youtu\.be\/([A-Za-z0-9_-]{11})/,
+      /youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{11})/,
+      /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/,
+      /youtube\.com\/live\/([A-Za-z0-9_-]{11})/,
+    ];
+    for (const re of patterns) {
+      const m = url.match(re);
+      if (m) return m[1];
+    }
+    throw new BadRequestException(
+      "Impossible d'extraire l'ID de la vidéo YouTube."
+    );
+  }
+
   async createContent(dto: CreateContentDto) {
-    // Le média doit réellement exister dans Supabase avant d'enregistrer la fiche.
-    await this.assertObjectExists(dto.mediaPath);
+    const youtubeId = dto.youtubeUrl
+      ? this.parseYoutubeId(dto.youtubeUrl)
+      : null;
+    if (!youtubeId && !dto.mediaPath) {
+      throw new BadRequestException(
+        "Fournir un fichier média ou un lien YouTube."
+      );
+    }
+
+    // Le média Supabase doit réellement exister avant d'enregistrer la fiche.
+    if (dto.mediaPath && !youtubeId) {
+      await this.assertObjectExists(dto.mediaPath);
+    }
     if (dto.coverPath) {
       await this.assertObjectExists(dto.coverPath);
     }
@@ -255,9 +287,12 @@ export class AdminService {
     const slug =
       dto.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
 
-    const mediaUrl = this.publicUrlFor(dto.mediaPath);
+    const mediaUrl =
+      dto.mediaPath && !youtubeId ? this.publicUrlFor(dto.mediaPath) : null;
     const coverUrl = dto.coverPath
       ? this.publicUrlFor(dto.coverPath)
+      : youtubeId
+      ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
       : "/assets/empire_mali.png";
 
     const content = await this.prisma.content.create({
@@ -268,7 +303,10 @@ export class AdminService {
         format: "SINGLE",
         synopsis: dto.synopsis || "",
         thumbnailUrl: coverUrl,
-        trailerCfId: mediaUrl, // Used by frontend for single videos
+        trailerCfId: mediaUrl, // média stocké (Supabase) ; null pour YouTube
+        youtubeId: youtubeId,
+        // Un contenu YouTube est du gratuit/promo : jamais derrière le péage.
+        isPremium: youtubeId ? false : undefined,
         categoryId: category?.id || 1,
         genreId: genre?.id || 1,
         publishedAt: dto.publishedAtStart
@@ -278,17 +316,20 @@ export class AdminService {
       },
     });
 
-    // Pour un contenu "SINGLE", le fichier média est souvent un Episode unique
-    await this.prisma.episode.create({
-      data: {
-        contentId: content.id,
-        title: dto.title,
-        episodeNumber: 1,
-        seasonNumber: 1,
-        duration: 0,
-        cfStreamId: mediaUrl,
-      },
-    });
+    // Épisode unique uniquement pour un média stocké. Un contenu YouTube est
+    // lu directement via content.youtubeId (pas de /stream/token).
+    if (mediaUrl) {
+      await this.prisma.episode.create({
+        data: {
+          contentId: content.id,
+          title: dto.title,
+          episodeNumber: 1,
+          seasonNumber: 1,
+          duration: 0,
+          cfStreamId: mediaUrl,
+        },
+      });
+    }
 
     return content;
   }
