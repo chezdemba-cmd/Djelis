@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { storeAccessToken, clearClientAuth } from "../lib/authClient";
 
 export default function PlansModal({ isOpen, onClose, onComplete, initialMode = "register" }) {
   const [step, setStep] = useState(1);
@@ -11,7 +10,6 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [errorMsg, setErrorMsg] = useState("");
-  const [authTokens, setAuthTokens] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,18 +44,16 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
         
         if (res.ok) {
           const token = data.access_token || data.accessToken;
-          const refreshToken = data.refresh_token || data.refreshToken;
           if (token) {
-             storeAccessToken(token);
-             setAuthTokens({ access_token: token, refresh_token: refreshToken });
+             localStorage.setItem('accessToken', token);
              const sessionResponse = await fetch('/api/auth/login', {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ token, refreshToken }),
+               body: JSON.stringify({ token }),
              });
              if (!sessionResponse.ok) throw new Error('Session verification failed');
              if (isLogin) {
-                if (onComplete) onComplete({ access_token: token, refresh_token: refreshToken });
+                if (onComplete) onComplete();
                 onClose();
                 return;
              }
@@ -68,7 +64,7 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
         }
       } catch (err) {
         console.error("Error connecting to NestJS Auth API.", err);
-        clearClientAuth();
+        localStorage.removeItem('accessToken');
         setErrorMsg("Service momentanément indisponible. Veuillez réessayer.");
         return;
       }
@@ -86,7 +82,7 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
   };
 
   const finishFlow = () => {
-    if (onComplete) onComplete(authTokens);
+    if (onComplete) onComplete();
     onClose();
   };
 

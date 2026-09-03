@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../profile/data/models/profile_model.dart';
-import '../../../profile/presentation/bloc/profile_bloc.dart';
-import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../data/models/content_model.dart';
 import '../../data/repositories/catalog_repository.dart';
 
@@ -81,14 +78,7 @@ class _DjelisonScreenState extends State<DjelisonScreen> {
       );
     }
 
-    final profileState = context.watch<ProfileBloc>().state;
-    final isKids = profileState is ProfileReady &&
-        (profileState.selected?.isChild ?? false);
-    final visible = isKids
-        ? _contents.where((c) => isKidsFriendly(c.ageRating)).toList()
-        : _contents;
-
-    final horizontalItems = visible.take(6).toList();
+    final horizontalItems = _contents.take(6).toList();
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -127,7 +117,7 @@ class _DjelisonScreenState extends State<DjelisonScreen> {
           ),
           const SizedBox(height: 8),
 
-          if (visible.isEmpty)
+          if (_contents.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
               child: Text(
@@ -136,7 +126,7 @@ class _DjelisonScreenState extends State<DjelisonScreen> {
               ),
             )
           else
-            ...visible.map((content) => _buildTrackItem(context, content)),
+            ..._contents.map((content) => _buildTrackItem(context, content)),
 
           const SizedBox(height: 32),
         ],

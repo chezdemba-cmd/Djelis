@@ -1,5 +1,4 @@
 import { supabase, isSupabaseConfigured } from "../utils/supabase";
-import { authHeader } from "../lib/authClient";
 
 export const dummyCatalog = [
   {
@@ -154,7 +153,8 @@ export const dummyAudioCatalog = [
 
 export async function getCatalog() {
   try {
-    const headers = (await authHeader()) || {};
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {
@@ -162,17 +162,13 @@ export async function getCatalog() {
       if (data && data.djaasoo && data.djaasoo.contents && data.djaasoo.contents.length > 0) {
         return data.djaasoo.contents.map(item => ({
           id: item.id,
-          contentId: item.id,
           title: item.title,
           type: item.type === 'VIDEO' ? 'Film' : item.type,
           synopsis: item.synopsis || "",
           image: item.thumbnailUrl || '/assets/baobab.png',
-          // L'URL de lecture est résolue à la demande via /stream/token
-          // (contrôle des droits + URL signée courte).
-          videoUrl: null,
-          youtubeId: item.youtubeId || item.youtube_id || null,
-          hasMedia: item.hasMedia !== false,
-          age: item.ageRating || 'G',
+          videoUrl: item.trailerCfId 
+            ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8` 
+            : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
           category: item.genre?.slug || 'cinema'
         }));
       }
@@ -184,68 +180,28 @@ export async function getCatalog() {
   return dummyCatalog;
 }
 
-async function authHeaders() {
-  return (await authHeader()) || null;
+function authHeaders() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  return token ? { Authorization: `Bearer ${token}` } : null;
 }
 
-/**
- * Vrai si le classement d'âge convient à un profil Jeunesse.
- * Bloque les mentions 12/13/16/18 (+ variantes -12, R, MA…).
- */
-export function isKidsFriendly(age) {
-  if (!age) return true;
-  const a = String(age).toLowerCase().replace(/\s/g, '');
-  const blocked = ['12+', '-12', '13+', '16+', '-16', '18+', '-18', 'r', 'nc-17', 'ma', 'tv-ma'];
-  return !blocked.includes(a) && !/1[2368]/.test(a);
-}
-
-/**
- * Récupère une URL de lecture signée à courte durée pour un contenu.
- * Le backend vérifie l'abonnement / la location avant de la délivrer.
- * Retourne null si non autorisé, non connecté, ou média absent.
- */
-export async function getPlaybackUrl(contentId, episodeId = null) {
-  if (!contentId) return null;
-  const headers = await authHeaders();
-  if (!headers) return null;
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/v1/stream/token`, {
-      method: 'POST',
-      headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content_id: contentId,
-        ...(episodeId ? { episode_id: episodeId } : {}),
-      }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.signed_url || null;
-  } catch (err) {
-    console.error('Error fetching playback URL.', err.message);
-    return null;
-  }
-}
-
-export async function getFavorites(profileId) {
-  const headers = await authHeaders();
+export async function getFavorites() {
+  const headers = authHeaders();
   if (!headers) return [];
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const qs = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : '';
-    const res = await fetch(`${baseUrl}/api/v1/favorites${qs}`, { headers });
+    const res = await fetch(`${baseUrl}/api/v1/favorites`, { headers });
     if (res.ok) {
       const contents = await res.json();
       return contents.map(item => ({
         id: item.id,
-        contentId: item.id,
         title: item.title,
         type: item.type === 'VIDEO' ? 'Film' : item.type,
         synopsis: item.synopsis || "",
         image: item.thumbnailUrl || '/assets/baobab.png',
-        videoUrl: null,
-        youtubeId: item.youtubeId || item.youtube_id || null,
-        hasMedia: item.hasMedia !== false,
+        videoUrl: item.trailerCfId
+          ? `https://videodelivery.net/${item.trailerCfId}/manifest/video.m3u8`
+          : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
       }));
     }
   } catch (err) {
@@ -254,16 +210,12 @@ export async function getFavorites(profileId) {
   return [];
 }
 
-export async function addFavorite(contentId, profileId) {
-  const headers = await authHeaders();
+export async function addFavorite(contentId) {
+  const headers = authHeaders();
   if (!headers) return false;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, {
-      method: 'POST',
-      headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify(profileId ? { profile_id: profileId } : {}),
-    });
+    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, { method: 'POST', headers });
     return res.ok;
   } catch (err) {
     console.error("Error adding favorite.", err.message);
@@ -271,13 +223,12 @@ export async function addFavorite(contentId, profileId) {
   }
 }
 
-export async function removeFavorite(contentId, profileId) {
-  const headers = await authHeaders();
+export async function removeFavorite(contentId) {
+  const headers = authHeaders();
   if (!headers) return false;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const qs = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : '';
-    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}${qs}`, { method: 'DELETE', headers });
+    const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, { method: 'DELETE', headers });
     return res.ok;
   } catch (err) {
     console.error("Error removing favorite.", err.message);
@@ -287,7 +238,8 @@ export async function removeFavorite(contentId, profileId) {
 
 export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
   try {
-    const headers = (await authHeader()) || {};
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const params = new URLSearchParams({ q: query, page: String(page), limit: String(limit) });
     const res = await fetch(`${baseUrl}/api/v1/catalog/search?${params}`, { headers });
@@ -303,7 +255,8 @@ export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
 
 export async function getAudioCatalog() {
   try {
-    const headers = (await authHeader()) || {};
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {

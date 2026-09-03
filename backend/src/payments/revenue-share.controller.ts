@@ -21,8 +21,8 @@ export class RevenueShareController {
     @Query("start_date") startDate?: string,
     @Query("end_date") endDate?: string
   ) {
-    // Réservé aux rôles d'administration (cohérent avec @Roles sur /admin).
-    if (!["ADMIN", "SUPERADMIN"].includes(req.user.role)) {
+    // Restrict access to ADMIN role
+    if (req.user.role !== "ADMIN") {
       throw new ForbiddenException(
         "Seuls les administrateurs ont accès au partage de revenus."
       );

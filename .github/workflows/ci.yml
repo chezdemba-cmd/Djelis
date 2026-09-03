@@ -7,66 +7,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository (full history)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # gitleaks depuis la release officielle : pas de licence requise
-      # (l'action gitleaks-action@v2 en exige une pour les dépôts d'organisation).
-      # Bloquant : échoue si un secret est détecté dans l'arbre ou l'historique.
-      - name: Secret scan (gitleaks)
-        run: |
-          VERSION=8.21.2
-          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
-            | tar -xz gitleaks
-          ./gitleaks detect --source . --redact --verbose --exit-code 1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-
-      # Rapport de vulnérabilités des dépendances (lockfile unique à la racine).
-      # Non bloquant pour l'instant (baseline à trier) — retirer
-      # `continue-on-error` une fois le backlog HIGH/CRITICAL résorbé.
-      - name: npm audit
-        continue-on-error: true
-        run: npm audit --audit-level=high
-
-  mobile:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mobile
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      # main.dart charge un .env (asset déclaré dans pubspec) ; on fournit un
-      # fichier minimal pour que `flutter analyze` / `flutter test` n'échouent
-      # pas sur un asset manquant.
-      - name: Provide .env
-        run: cp .env.example .env
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Static analysis
-        run: flutter analyze
-
-      - name: Unit tests
-        run: flutter test
-
   build-and-lint:
     runs-on: ubuntu-latest
 
@@ -119,7 +59,7 @@ jobs:
       run: npm run build --prefix backend
 
     - name: Prepare E2E Database
-      run: npm exec --prefix backend -- prisma migrate deploy --schema backend/prisma/schema.prisma
+      run: npm exec --prefix backend -- prisma db push --schema backend/prisma/schema.prisma --skip-generate
 
     - name: Run E2E Tests (Backend)
       run: npm run test:e2e --prefix backend

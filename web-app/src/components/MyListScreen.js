@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { getFavorites, removeFavorite } from "../data/catalog";
-import { useSession } from "../context/SessionContext";
 
 export default function MyListScreen({ isAuthenticated, openAuthModal }) {
-  const { currentProfile } = useSession();
   const [activeTab, setActiveTab] = useState("fav");
   const [favorites, setFavorites] = useState([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
@@ -12,16 +10,16 @@ export default function MyListScreen({ isAuthenticated, openAuthModal }) {
     if (!isAuthenticated) return;
     const loadFavorites = async () => {
       setIsLoadingFavorites(true);
-      setFavorites(await getFavorites(currentProfile?.id));
+      setFavorites(await getFavorites());
       setIsLoadingFavorites(false);
     };
     loadFavorites();
-  }, [isAuthenticated, currentProfile?.id]);
+  }, [isAuthenticated]);
 
   const handleRemove = async (e, contentId) => {
     e.stopPropagation();
     setFavorites(prev => prev.filter(item => item.id !== contentId));
-    await removeFavorite(contentId, currentProfile?.id);
+    await removeFavorite(contentId);
   };
 
   return (

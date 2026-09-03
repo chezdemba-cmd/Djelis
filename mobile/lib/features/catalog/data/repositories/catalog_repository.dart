@@ -74,7 +74,6 @@ class CatalogRepository {
     required int progressSec,
     required String quality,
     required String deviceType,
-    String? profileId,
   }) async {
     try {
       await _api.post<void>(
@@ -82,7 +81,6 @@ class CatalogRepository {
         data: {
           'content_id': contentId,
           if (episodeId != null) 'episode_id': episodeId,
-          if (profileId != null) 'profile_id': profileId,
           'progress_sec': progressSec,
           'quality_used': quality,
           'device_type': deviceType,

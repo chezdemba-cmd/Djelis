@@ -13,7 +13,6 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
-import { stripMediaRefs } from "../catalog/media-sanitizer";
 
 @Controller("favorites")
 @UseGuards(JwtAuthGuard)
@@ -40,7 +39,7 @@ export class FavoritesController {
       include: { content: true },
       orderBy: { createdAt: "desc" },
     });
-    return favorites.map((f) => stripMediaRefs(f.content));
+    return favorites.map((f) => f.content);
   }
 
   @Post(":contentId")

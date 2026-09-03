@@ -6,8 +6,6 @@ class ContentModel extends Equatable {
   final String? synopsis;
   final String? posterUrl;
   final String? trailerUrl;
-  // ID vidéo YouTube (contenu gratuit/promo) — lu via l'embed, pas de /stream/token.
-  final String? youtubeId;
   final String type;
   final String? categoryId;
   final String? categoryName;
@@ -26,7 +24,6 @@ class ContentModel extends Equatable {
     this.synopsis,
     this.posterUrl,
     this.trailerUrl,
-    this.youtubeId,
     required this.type,
     this.categoryId,
     this.categoryName,
@@ -48,7 +45,6 @@ class ContentModel extends Equatable {
       synopsis: json['synopsis'] as String?,
       posterUrl: json['poster_url'] as String?,
       trailerUrl: json['trailer_url'] as String?,
-      youtubeId: json['youtube_id'] as String?,
       type: json['type'] as String? ?? 'film',
       categoryId: json['category_id'] as String?,
       categoryName: (json['category'] as Map?)?['name'] as String?,
@@ -72,7 +68,6 @@ class ContentModel extends Equatable {
       'synopsis': synopsis,
       'poster_url': posterUrl,
       'trailer_url': trailerUrl,
-      'youtube_id': youtubeId,
       'type': type,
       'category_id': categoryId,
       'category': categoryName != null ? {'name': categoryName} : null,

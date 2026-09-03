@@ -5,7 +5,6 @@ import Navbar from "../components/Navbar";
 import PlansModal from "../components/PlansModal";
 import MobileDrawer from "../components/MobileDrawer";
 import { useSession } from "../context/SessionContext";
-import { readAccessToken } from "../lib/authClient";
 import { useRouter } from "next/navigation";
 
 export default function LayoutClient({ children }) {
@@ -50,10 +49,10 @@ export default function LayoutClient({ children }) {
           onClose={() => setIsPlansOpen(false)} 
           onComplete={async (data) => {
             if (data && data.access_token) {
-              await login(data.access_token, data.refresh_token);
+              await login(data.access_token);
             } else {
-              // Repli : PlansModal a déjà posé les cookies, on resynchronise l'état.
-              const token = readAccessToken();
+              // fallback if PlansModal doesn't return token explicitly but sets localStorage
+              const token = localStorage.getItem('accessToken');
               if (token) await login(token);
             }
             setIsPlansOpen(false);

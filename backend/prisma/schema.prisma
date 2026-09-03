@@ -173,9 +173,6 @@ model Content {
   thumbnailUrl     String
   bannerUrl        String?
   trailerCfId      String?
-  // ID vidéo YouTube (11 caractères) pour un contenu gratuit/promo lu via
-  // l'embed YouTube. Mutuellement exclusif avec trailerCfId (stockage Supabase).
-  youtubeId        String?
   type             ContentType
   format           ContentFormat
   ageRating        String            @default("G")

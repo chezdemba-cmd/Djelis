@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCatalog, getFavorites, addFavorite, removeFavorite, isKidsFriendly } from "../data/catalog";
+import { getCatalog, getFavorites, addFavorite, removeFavorite } from "../data/catalog";
 import DetailsModal from "./DetailsModal";
 import VideoPlayerScreen from "./VideoPlayerScreen";
 import ContinueWatching from "./ContinueWatching";
@@ -20,19 +20,18 @@ export default function DjaasooScreen({ currentProfile }) {
       setIsLoading(true);
       const data = await getCatalog();
       setCatalog(data);
+
+      setIsLoading(false);
       setIsLoading(false);
     };
     loadCatalog();
-  }, []);
 
-  // Les favoris sont propres à chaque profil : on les recharge à chaque changement.
-  useEffect(() => {
     const loadFavorites = async () => {
-      const favs = await getFavorites(currentProfile?.id);
+      const favs = await getFavorites();
       setFavoriteIds(new Set(favs.map(f => f.id)));
     };
     loadFavorites();
-  }, [currentProfile?.id]);
+  }, []);
 
   const toggleFavorite = async (e, item) => {
     e.stopPropagation();
@@ -43,9 +42,9 @@ export default function DjaasooScreen({ currentProfile }) {
       return next;
     });
     if (isFavorite) {
-      await removeFavorite(item.id, currentProfile?.id);
+      await removeFavorite(item.id);
     } else {
-      await addFavorite(item.id, currentProfile?.id);
+      await addFavorite(item.id);
     }
   };
 
@@ -53,7 +52,7 @@ export default function DjaasooScreen({ currentProfile }) {
     return catalog.filter((item) => {
       const matchCat = item.category === category;
       if (currentProfile?.isKids) {
-        return matchCat && isKidsFriendly(item.age);
+        return matchCat && item.age !== "12+" && item.age !== "16+";
       }
       return matchCat;
     });
@@ -101,7 +100,7 @@ export default function DjaasooScreen({ currentProfile }) {
         onClose={closeVideo} 
       />
 
-      <ContinueWatching currentProfile={currentProfile} type="VIDEO" onResume={playVideo} />
+      <ContinueWatching currentProfile={currentProfile} type="VIDEO" />
 
       <div className="djaasoo-tabs-container">
         <div className="djaasoo-tabs">

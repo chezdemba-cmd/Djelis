@@ -26,7 +26,7 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
 
   return (
     <>
-      <ContinueWatching currentProfile={currentProfile} type="AUDIO" onResume={onPlayAudio} />
+      <ContinueWatching currentProfile={currentProfile} type="AUDIO" />
 
       <div className="djelison-tabs-container">
         <div className="djelison-tabs">

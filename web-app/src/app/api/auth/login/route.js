@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 
-const ACCESS_MAX_AGE = 60 * 15;            // 15 min (aligné sur le backend)
-const REFRESH_MAX_AGE = 60 * 60 * 24 * 30; // 30 jours
-
 export async function POST(request) {
   try {
-    const { token, refreshToken } = await request.json();
+    const { token } = await request.json();
     if (!token) {
       return NextResponse.json({ error: 'Token missing' }, { status: 400 });
     }
@@ -20,31 +17,17 @@ export async function POST(request) {
     }
 
     const response = NextResponse.json({ success: true });
-    const secure = process.env.NODE_ENV === 'production';
-
+    
+    // Set HttpOnly cookie
     response.cookies.set({
       name: 'accessToken',
       value: token,
       httpOnly: true,
-      secure,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: ACCESS_MAX_AGE,
+      maxAge: 60 * 15 // 15 minutes (match backend)
     });
-
-    // Le refresh token n'est envoyé qu'aux routes /api/auth (jamais au reste
-    // de l'app) et n'est jamais lisible par le JavaScript.
-    if (refreshToken) {
-      response.cookies.set({
-        name: 'refreshToken',
-        value: refreshToken,
-        httpOnly: true,
-        secure,
-        sameSite: 'lax',
-        path: '/api/auth',
-        maxAge: REFRESH_MAX_AGE,
-      });
-    }
 
     return response;
   } catch (error) {

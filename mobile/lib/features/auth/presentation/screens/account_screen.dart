@@ -3,9 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../profile/presentation/bloc/profile_bloc.dart';
-import '../../../profile/presentation/bloc/profile_event.dart';
-import '../../../profile/presentation/bloc/profile_state.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -64,21 +61,6 @@ class AccountScreen extends StatelessWidget {
                 style: const TextStyle(color: Colors.white60),
               ),
               const SizedBox(height: 28),
-              BlocBuilder<ProfileBloc, ProfileState>(
-                builder: (context, pstate) {
-                  final selected =
-                      pstate is ProfileReady ? pstate.selected : null;
-                  return _AccountTile(
-                    icon: Icons.switch_account_outlined,
-                    title: 'Profil : ${selected?.name ?? '—'}',
-                    subtitle: 'Changer ou gérer les profils',
-                    onTap: () {
-                      context.read<ProfileBloc>().add(const ProfileCleared());
-                      context.push('/profiles');
-                    },
-                  );
-                },
-              ),
               _AccountTile(
                 icon: Icons.workspace_premium_outlined,
                 title: 'Abonnement',

@@ -1,8 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { refreshSession, clearClientAuth, markSessionActive } from '../lib/authClient';
+import { useRouter, usePathname } from 'next/navigation';
 
 const SessionContext = createContext();
 
@@ -18,59 +17,36 @@ export function SessionProvider({ children }) {
   });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    let cancelled = false;
-
-    const isLoggedIn = async () => {
-      const res = await fetch('/api/auth/me', { cache: 'no-store' });
-      return res.ok;
-    };
-
     const checkAuth = async () => {
       try {
-        let ok = await isLoggedIn();
-        if (!ok) {
-          // L'access token a peut-être expiré : on tente un renouvellement
-          // via le cookie HttpOnly, puis on revérifie.
-          const refreshed = await refreshSession();
-          if (refreshed) ok = await isLoggedIn();
-        }
-        if (cancelled) return;
-        setIsAuthenticated(ok);
-        if (!ok) {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
           setCurrentProfile(null);
-          clearClientAuth();
         }
-      } catch {
-        if (!cancelled) setIsAuthenticated(false);
+      } catch (e) {
+        setIsAuthenticated(false);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        setIsLoading(false);
       }
     };
-
+    
     checkAuth();
-
-    // Renouvellement opportuniste quand l'onglet redevient visible.
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') refreshSession();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      cancelled = true;
-      document.removeEventListener('visibilitychange', onVisible);
-    };
   }, []);
 
-  const login = async (token, refreshToken) => {
+  const login = async (token) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, refreshToken }),
+        body: JSON.stringify({ token })
       });
       if (res.ok) {
-        markSessionActive();
         setIsAuthenticated(true);
       }
     } catch (e) {
@@ -81,28 +57,22 @@ export function SessionProvider({ children }) {
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-    } catch (e) {
-      console.error(e);
-    } finally {
       setIsAuthenticated(false);
       setCurrentProfile(null);
-      try {
-        localStorage.removeItem('currentProfile');
-      } catch {
-        /* ignore */
-      }
-      clearClientAuth();
+      localStorage.removeItem('currentProfile');
+      localStorage.removeItem('accessToken'); // Cleanup old method
       router.push('/');
+    } catch (e) {
+      console.error(e);
     }
   };
 
   const selectProfile = (profile) => {
     setCurrentProfile(profile);
-    try {
-      if (profile) localStorage.setItem('currentProfile', JSON.stringify(profile));
-      else localStorage.removeItem('currentProfile');
-    } catch {
-      /* ignore */
+    if (profile) {
+      localStorage.setItem('currentProfile', JSON.stringify(profile));
+    } else {
+      localStorage.removeItem('currentProfile');
     }
   };
 

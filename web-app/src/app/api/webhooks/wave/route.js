@@ -42,14 +42,16 @@ export async function POST(request) {
     });
 
     if (!res.ok) {
-      console.error('Wave webhook: backend forwarding failed', res.status, await res.text().catch(() => ''));
-      return NextResponse.json({ error: 'Webhook forwarding failed' }, { status: 502 });
+      const errorText = await res.text();
+      return NextResponse.json(
+        { error: 'Forwarding webhook to backend failed', details: errorText },
+        { status: res.status }
+      );
     }
 
     const responseData = await res.json();
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Wave webhook: processing error', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Webhook processing failed', message: error.message }, { status: 500 });
   }
 }

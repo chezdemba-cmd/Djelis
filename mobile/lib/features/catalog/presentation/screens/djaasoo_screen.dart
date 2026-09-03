@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../profile/data/models/profile_model.dart';
-import '../../../profile/presentation/bloc/profile_bloc.dart';
-import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../data/models/content_model.dart';
 import '../bloc/catalog_bloc.dart';
 import '../bloc/catalog_event.dart';
@@ -27,13 +24,7 @@ class DjaasooScreen extends StatelessWidget {
         if (state is! CatalogFeaturedLoaded) {
           return const SizedBox.shrink();
         }
-
-        final profileState = context.watch<ProfileBloc>().state;
-        final isKids = profileState is ProfileReady &&
-            (profileState.selected?.isChild ?? false);
-        final featured = isKids
-            ? _filterForKids(state.data)
-            : state.data;
+        final featured = state.data;
 
         return RefreshIndicator(
           color: AppTheme.primaryGold,
@@ -63,22 +54,6 @@ class DjaasooScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  FeaturedCatalogModel _filterForKids(FeaturedCatalogModel src) {
-    final rows = src.rows
-        .map((r) => ContentRow(
-              title: r.title,
-              contents: r.contents
-                  .where((c) => isKidsFriendly(c.ageRating))
-                  .toList(),
-            ))
-        .where((r) => r.contents.isNotEmpty)
-        .toList();
-    final hero = (src.hero != null && isKidsFriendly(src.hero!.ageRating))
-        ? src.hero
-        : null;
-    return FeaturedCatalogModel(hero: hero, rows: rows);
   }
 
   // ── Hero banner ─────────────────────────────────────────────────────────────
