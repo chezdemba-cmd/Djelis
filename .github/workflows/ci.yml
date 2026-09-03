@@ -37,6 +37,36 @@ jobs:
         continue-on-error: true
         run: npm audit --audit-level=high
 
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # main.dart charge un .env (asset déclaré dans pubspec) ; on fournit un
+      # fichier minimal pour que `flutter analyze` / `flutter test` n'échouent
+      # pas sur un asset manquant.
+      - name: Provide .env
+        run: cp .env.example .env
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Unit tests
+        run: flutter test
+
   build-and-lint:
     runs-on: ubuntu-latest
 
