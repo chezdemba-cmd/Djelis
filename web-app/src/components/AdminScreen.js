@@ -66,6 +66,8 @@ export default function AdminScreen({ onBack }) {
     synopsis: '',
     publishedAtStart: '',
     publishedAtEnd: '',
+    sourceMode: 'upload', // 'upload' (fichier Supabase) | 'youtube' (lien gratuit)
+    youtubeUrl: '',
     file: null,
     coverFile: null
   });
@@ -140,7 +142,14 @@ export default function AdminScreen({ onBack }) {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!uploadData.file || !uploadData.coverFile) {
+    const isYoutube = uploadData.sourceMode === 'youtube';
+
+    if (isYoutube) {
+      if (!uploadData.youtubeUrl.trim()) {
+        alert('Collez le lien de la vidéo YouTube.');
+        return;
+      }
+    } else if (!uploadData.file || !uploadData.coverFile) {
       alert("Veuillez sélectionner le fichier média et l'image de couverture.");
       return;
     }
@@ -149,17 +158,27 @@ export default function AdminScreen({ onBack }) {
     setUploadProgress(0);
 
     try {
-      // 1. Couverture : signature + upload direct vers Supabase.
-      setUploadStep('Téléversement de la couverture…');
-      const coverSigned = await requestSignedUpload('cover', uploadData.coverFile);
-      await putFileToSupabase(coverSigned.signedUrl, uploadData.coverFile, null);
+      let coverPath;
+      let mediaPath;
 
-      // 2. Média (MP4 / MP3) : upload direct vers Supabase, avec progression.
-      setUploadStep('Téléversement du média…');
-      const mediaSigned = await requestSignedUpload('media', uploadData.file);
-      await putFileToSupabase(mediaSigned.signedUrl, uploadData.file, setUploadProgress);
+      // Couverture : obligatoire pour un fichier, optionnelle pour YouTube
+      // (à défaut, la vignette YouTube est utilisée côté serveur).
+      if (uploadData.coverFile) {
+        setUploadStep('Téléversement de la couverture…');
+        const coverSigned = await requestSignedUpload('cover', uploadData.coverFile);
+        await putFileToSupabase(coverSigned.signedUrl, uploadData.coverFile, null);
+        coverPath = coverSigned.path;
+      }
 
-      // 3. Création de la fiche : uniquement des métadonnées + les chemins.
+      if (!isYoutube) {
+        // Média (MP4 / MP3) : upload direct vers Supabase, avec progression.
+        setUploadStep('Téléversement du média…');
+        const mediaSigned = await requestSignedUpload('media', uploadData.file);
+        await putFileToSupabase(mediaSigned.signedUrl, uploadData.file, setUploadProgress);
+        mediaPath = mediaSigned.path;
+      }
+
+      // Création de la fiche : uniquement des métadonnées + chemins / lien.
       setUploadStep('Enregistrement de la fiche…');
       const res = await fetch(`${apiBase()}/api/v1/admin/contents`, {
         method: 'POST',
@@ -171,14 +190,15 @@ export default function AdminScreen({ onBack }) {
           synopsis: uploadData.synopsis,
           publishedAtStart: uploadData.publishedAtStart || undefined,
           publishedAtEnd: uploadData.publishedAtEnd || undefined,
-          mediaPath: mediaSigned.path,
-          coverPath: coverSigned.path,
+          ...(mediaPath ? { mediaPath } : {}),
+          ...(coverPath ? { coverPath } : {}),
+          ...(isYoutube ? { youtubeUrl: uploadData.youtubeUrl.trim() } : {}),
         }),
       });
 
       if (res.ok) {
         alert(`Upload réussi ! Le contenu "${uploadData.title}" a été ajouté.`);
-        setUploadData({ ...uploadData, title: '', synopsis: '', file: null, coverFile: null });
+        setUploadData({ ...uploadData, title: '', synopsis: '', youtubeUrl: '', file: null, coverFile: null });
         fetchAdminData();
         setActiveTab('content');
       } else {
@@ -303,7 +323,38 @@ export default function AdminScreen({ onBack }) {
         <div className="admin-upload-form" style={{ backgroundColor: '#222', padding: '30px', borderRadius: '8px', maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ marginTop: 0, marginBottom: '20px' }}>Mettre en Ligne un Contenu</h2>
           <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label>Source du média</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" className={`pill-btn ${uploadData.sourceMode === 'upload' ? 'active' : ''}`} onClick={() => setUploadData({ ...uploadData, sourceMode: 'upload' })}>
+                  Fichier (MP4 / MP3)
+                </button>
+                <button type="button" className={`pill-btn ${uploadData.sourceMode === 'youtube' ? 'active' : ''}`} onClick={() => setUploadData({ ...uploadData, sourceMode: 'youtube' })}>
+                  Lien YouTube (gratuit)
+                </button>
+              </div>
+              {uploadData.sourceMode === 'youtube' && (
+                <small style={{ color: '#888' }}>
+                  Contenu gratuit / promo. La vidéo est lue dans l&apos;app via l&apos;embed YouTube (petit logo YouTube visible, imposé par YouTube). Ne pas mettre derrière l&apos;abonnement.
+                </small>
+              )}
+            </div>
+
+            {uploadData.sourceMode === 'youtube' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label>Lien YouTube</label>
+                <input
+                  type="url"
+                  required
+                  value={uploadData.youtubeUrl}
+                  onChange={e => setUploadData({ ...uploadData, youtubeUrl: e.target.value })}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white' }}
+                />
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label>Titre de l&apos;œuvre</label>
               <input type="text" required value={uploadData.title} onChange={e => setUploadData({...uploadData, title: e.target.value})} style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white' }} />
@@ -366,14 +417,19 @@ export default function AdminScreen({ onBack }) {
 
             <div className="admin-form-row">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: 0 }}>
-                <label>Image de Couverture (Affiche)</label>
-                <input type="file" required accept="image/*" onChange={e => setUploadData({...uploadData, coverFile: e.target.files[0]})} style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white', maxWidth: '100%', boxSizing: 'border-box' }} />
+                <label>
+                  Image de Couverture (Affiche)
+                  {uploadData.sourceMode === 'youtube' && <span style={{ color: '#888' }}> — optionnelle</span>}
+                </label>
+                <input type="file" required={uploadData.sourceMode !== 'youtube'} accept="image/*" onChange={e => setUploadData({...uploadData, coverFile: e.target.files[0]})} style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white', maxWidth: '100%', boxSizing: 'border-box' }} />
               </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: 0 }}>
-                <label>Fichier Média (MP4, MP3)</label>
-                <input type="file" required accept="video/mp4,audio/mp3,audio/mpeg" onChange={e => setUploadData({...uploadData, file: e.target.files[0]})} style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white', maxWidth: '100%', boxSizing: 'border-box' }} />
-              </div>
+
+              {uploadData.sourceMode !== 'youtube' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: 0 }}>
+                  <label>Fichier Média (MP4, MP3)</label>
+                  <input type="file" required accept="video/mp4,audio/mp3,audio/mpeg" onChange={e => setUploadData({...uploadData, file: e.target.files[0]})} style={{ padding: '10px', borderRadius: '4px', border: '1px solid #444', background: '#111', color: 'white', maxWidth: '100%', boxSizing: 'border-box' }} />
+                </div>
+              )}
             </div>
 
             <button type="submit" disabled={isUploading} style={{ background: '#ffb300', color: 'black', padding: '12px', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
