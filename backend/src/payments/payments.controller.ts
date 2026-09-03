@@ -114,17 +114,16 @@ export class PaymentsController {
   private verifyWebhookIp(gateway: string, req: any) {
     if (process.env.NODE_ENV !== "production") return;
 
-    // Get client IP
-    const rawIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-    const ip = typeof rawIp === "string" ? rawIp.split(",")[0].trim() : "";
-
-    // Load allowed IPs from environment variables
+    // Filtrage IP optionnel : activé seulement si ALLOWED_IPS_<GATEWAY> est
+    // défini. La protection principale reste la signature HMAC (obligatoire,
+    // vérifiée dans PaymentsService). Quand les webhooks transitent par un
+    // proxy (route Next.js), l'IP vue ici est celle du proxy, pas de la
+    // passerelle : dans ce cas, laisser cette variable vide.
     const allowedIpsEnv = process.env[`ALLOWED_IPS_${gateway.toUpperCase()}`];
-    if (!allowedIpsEnv) {
-      throw new UnauthorizedException(
-        `Liste d'IP autorisees manquante pour ${gateway}`
-      );
-    }
+    if (!allowedIpsEnv) return;
+
+    const rawIp = req.headers["x-forwarded-for"] || req.socket?.remoteAddress;
+    const ip = typeof rawIp === "string" ? rawIp.split(",")[0].trim() : "";
 
     const allowedIps = allowedIpsEnv.split(",").map((item) => item.trim());
     if (!allowedIps.includes(ip)) {
