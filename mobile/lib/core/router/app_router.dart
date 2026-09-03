@@ -7,6 +7,7 @@ import '../../features/catalog/presentation/screens/player_screen.dart';
 import '../../features/subscription/presentation/screens/plans_screen.dart';
 import '../../features/downloads/presentation/screens/downloads_screen.dart';
 import '../../features/auth/presentation/screens/account_screen.dart';
+import '../../features/profile/presentation/screens/profile_selection_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -19,6 +20,10 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/profiles',
+        builder: (context, state) => const ProfileSelectionScreen(),
       ),
       GoRoute(
         path: '/detail',

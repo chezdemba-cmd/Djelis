@@ -40,6 +40,7 @@ class CatalogReportProgress extends CatalogEvent {
   final int progressSec;
   final String quality;
   final String deviceType;
+  final String? profileId;
 
   const CatalogReportProgress({
     required this.contentId,
@@ -47,9 +48,10 @@ class CatalogReportProgress extends CatalogEvent {
     required this.progressSec,
     required this.quality,
     required this.deviceType,
+    this.profileId,
   });
 
   @override
   List<Object?> get props =>
-      [contentId, episodeId, progressSec, quality, deviceType];
+      [contentId, episodeId, progressSec, quality, deviceType, profileId];
 }

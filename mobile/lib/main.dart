@@ -7,9 +7,13 @@ import 'core/storage/secure_storage_service.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/catalog/data/repositories/catalog_repository.dart';
 import 'features/catalog/presentation/bloc/catalog_bloc.dart';
 import 'features/catalog/presentation/bloc/catalog_event.dart';
+import 'features/profile/data/repositories/profile_repository.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/profile/presentation/bloc/profile_event.dart';
 import 'features/subscription/data/repositories/subscription_repository.dart';
 import 'features/subscription/presentation/bloc/subscription_bloc.dart';
 import 'features/downloads/data/download_service.dart';
@@ -35,6 +39,7 @@ class DjelisApp extends StatelessWidget {
 
     final authRepo = AuthRepository(api: api, storage: storage);
     final catalogRepo = CatalogRepository(api: api);
+    final profileRepo = ProfileRepository(api: api, storage: storage);
     final subscriptionRepo = SubscriptionRepository(api: api);
     final downloadService = DownloadService();
     final downloadRepo = DownloadRepository(downloadService: downloadService);
@@ -52,19 +57,35 @@ class DjelisApp extends StatelessWidget {
               ..add(const CatalogLoadFeatured()),
           ),
           BlocProvider(
+            create: (_) =>
+                ProfileBloc(repository: profileRepo)..add(const ProfileLoad()),
+          ),
+          BlocProvider(
             create: (_) => SubscriptionBloc(repository: subscriptionRepo),
           ),
           BlocProvider(
             create: (_) => DownloadBloc(repository: downloadRepo),
           ),
         ],
-        child: MaterialApp.router(
-          title: "Djeli'S",
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.dark,
-          routerConfig: AppRouter.router,
+        child: BlocListener<AuthBloc, AuthState>(
+          listenWhen: (prev, curr) =>
+              prev.runtimeType != curr.runtimeType,
+          listener: (context, state) {
+            final profileBloc = context.read<ProfileBloc>();
+            if (state is AuthAuthenticated) {
+              profileBloc.add(const ProfileLoad());
+            } else if (state is AuthUnauthenticated) {
+              profileBloc.add(const ProfileCleared());
+            }
+          },
+          child: MaterialApp.router(
+            title: "Djeli'S",
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.dark,
+            routerConfig: AppRouter.router,
+          ),
         ),
       ),
     );

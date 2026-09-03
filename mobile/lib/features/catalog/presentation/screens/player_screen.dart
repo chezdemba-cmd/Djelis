@@ -9,6 +9,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../bloc/catalog_bloc.dart';
 import '../bloc/catalog_event.dart';
 import '../../data/repositories/download_repository.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 
 // ─── Quality model ────────────────────────────────────────────────────────────
 
@@ -165,6 +167,10 @@ class _PlayerScreenState extends State<PlayerScreen>
     _progressTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       final pos = _controller?.value.position.inSeconds ?? 0;
       if (widget.contentId != null) {
+        final profileState = context.read<ProfileBloc>().state;
+        final profileId = profileState is ProfileReady
+            ? profileState.selected?.id
+            : null;
         context.read<CatalogBloc>().add(
               CatalogReportProgress(
                 contentId: widget.contentId!,
@@ -172,6 +178,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 progressSec: pos,
                 quality: _selectedQuality,
                 deviceType: 'mobile',
+                profileId: profileId,
               ),
             );
       }
