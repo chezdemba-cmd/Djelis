@@ -174,6 +174,15 @@ export class StreamController {
       throw new HttpException("Contenu introuvable", HttpStatus.NOT_FOUND);
     }
 
+    // Contenu YouTube (gratuit/promo) : pas de jeton, le client lit l'embed
+    // directement via content.youtube_id.
+    if (content.youtubeId) {
+      throw new HttpException(
+        "Contenu YouTube : lecture directe via l'embed, aucun jeton requis.",
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
     // Restriction géographique : le pays est déduit de l'IP par la plateforme
     // (Vercel / Cloudflare), jamais fourni par le client. Un contenu SANS
     // territoire défini reste disponible partout ; s'il en a, il faut une

@@ -16,7 +16,11 @@ export class CatalogService {
       poster_url: content.thumbnailUrl || "",
       // La lecture passe par POST /stream/token (contrôle des droits + URL signée).
       trailer_url: null,
-      has_media: Boolean(content.trailerCfId),
+      // Source YouTube (contenu gratuit/promo) : lecture directe via l'embed,
+      // sans /stream/token.
+      youtube_id: content.youtubeId || null,
+      source: content.youtubeId ? "youtube" : "storage",
+      has_media: Boolean(content.trailerCfId || content.youtubeId),
       type: content.type.toLowerCase(),
       category_id: content.categoryId?.toString(),
       category: content.category ? { name: content.category.name } : null,
