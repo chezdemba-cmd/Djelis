@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../app/admin.css';
+import { authHeader } from '../lib/authClient';
 
 export default function AdminScreen({ onBack }) {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -11,16 +12,13 @@ export default function AdminScreen({ onBack }) {
 
   const apiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-  const authHeaders = () => {
-    const token = localStorage.getItem('accessToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  const authHeaders = async () => (await authHeader()) || {};
 
   // Étape 1 : demander une URL signée à l'API (petite requête JSON).
   const requestSignedUpload = async (kind, file) => {
     const res = await fetch(`${apiBase()}/api/v1/admin/uploads/sign`, {
       method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
       body: JSON.stringify({
         kind,
         fileName: file.name,
@@ -78,7 +76,7 @@ export default function AdminScreen({ onBack }) {
       
       // Fetch Dashboard Stats
       const statsRes = await fetch(`${baseUrl}/api/v1/admin/dashboard`, {
-        headers: authHeaders(),
+        headers: await authHeaders(),
       });
       if (statsRes.ok) {
         setStats(await statsRes.json());
@@ -86,7 +84,7 @@ export default function AdminScreen({ onBack }) {
 
       // Fetch Contents
       const contentsRes = await fetch(`${baseUrl}/api/v1/admin/contents`, {
-        headers: authHeaders(),
+        headers: await authHeaders(),
       });
       if (contentsRes.ok) {
         setContents(await contentsRes.json());
@@ -107,7 +105,7 @@ export default function AdminScreen({ onBack }) {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       const res = await fetch(`${baseUrl}/api/v1/admin/contents/${id}/toggle`, {
         method: 'PATCH',
-        headers: authHeaders(),
+        headers: await authHeaders(),
       });
       if (res.ok) {
         fetchAdminData();
@@ -126,7 +124,7 @@ export default function AdminScreen({ onBack }) {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
         const res = await fetch(`${baseUrl}/api/v1/admin/contents/${id}`, {
           method: 'DELETE',
-          headers: authHeaders(),
+          headers: await authHeaders(),
         });
         if (res.ok) {
           fetchAdminData();
@@ -165,7 +163,7 @@ export default function AdminScreen({ onBack }) {
       setUploadStep('Enregistrement de la fiche…');
       const res = await fetch(`${apiBase()}/api/v1/admin/contents`, {
         method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: uploadData.title,
           type: uploadData.type,

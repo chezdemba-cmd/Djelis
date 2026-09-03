@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from "../utils/supabase";
+import { authHeader } from "../lib/authClient";
 
 export const dummyCatalog = [
   {
@@ -153,8 +154,7 @@ export const dummyAudioCatalog = [
 
 export async function getCatalog() {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const headers = (await authHeader()) || {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {
@@ -183,9 +183,8 @@ export async function getCatalog() {
   return dummyCatalog;
 }
 
-function authHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  return token ? { Authorization: `Bearer ${token}` } : null;
+async function authHeaders() {
+  return (await authHeader()) || null;
 }
 
 /**
@@ -206,7 +205,7 @@ export function isKidsFriendly(age) {
  */
 export async function getPlaybackUrl(contentId, episodeId = null) {
   if (!contentId) return null;
-  const headers = authHeaders();
+  const headers = await authHeaders();
   if (!headers) return null;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -228,7 +227,7 @@ export async function getPlaybackUrl(contentId, episodeId = null) {
 }
 
 export async function getFavorites(profileId) {
-  const headers = authHeaders();
+  const headers = await authHeaders();
   if (!headers) return [];
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -254,7 +253,7 @@ export async function getFavorites(profileId) {
 }
 
 export async function addFavorite(contentId, profileId) {
-  const headers = authHeaders();
+  const headers = await authHeaders();
   if (!headers) return false;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -271,7 +270,7 @@ export async function addFavorite(contentId, profileId) {
 }
 
 export async function removeFavorite(contentId, profileId) {
-  const headers = authHeaders();
+  const headers = await authHeaders();
   if (!headers) return false;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -286,8 +285,7 @@ export async function removeFavorite(contentId, profileId) {
 
 export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const headers = (await authHeader()) || {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const params = new URLSearchParams({ q: query, page: String(page), limit: String(limit) });
     const res = await fetch(`${baseUrl}/api/v1/catalog/search?${params}`, { headers });
@@ -303,8 +301,7 @@ export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
 
 export async function getAudioCatalog() {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const headers = (await authHeader()) || {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {

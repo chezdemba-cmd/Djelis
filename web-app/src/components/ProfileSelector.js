@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAccessToken, readAccessToken } from '../lib/authClient';
 
 function FaceSVG() {
   return (
@@ -27,7 +28,7 @@ export default function ProfileSelector({ onSelectProfile }) {
 
   useEffect(() => {
     async function loadProfiles() {
-      const token = localStorage.getItem('accessToken');
+      const token = await getAccessToken();
       if (!token) {
         setLoading(false);
         setProfiles([]);
@@ -69,7 +70,7 @@ export default function ProfileSelector({ onSelectProfile }) {
   const [editing, setEditing] = useState(null); // { id, name, isChild }
 
   const refreshProfiles = async () => {
-    const token = localStorage.getItem('accessToken');
+    const token = await getAccessToken();
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/v1/profiles`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -79,7 +80,7 @@ export default function ProfileSelector({ onSelectProfile }) {
 
   const handleUpdateProfile = async () => {
     if (!editing || !editing.name.trim()) return;
-    const token = localStorage.getItem('accessToken');
+    const token = await getAccessToken();
     if (!token) return;
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -104,7 +105,7 @@ export default function ProfileSelector({ onSelectProfile }) {
       return;
     }
     if (!window.confirm(`Supprimer le profil « ${editing.name} » ? L'historique et les favoris de ce profil seront perdus.`)) return;
-    const token = localStorage.getItem('accessToken');
+    const token = await getAccessToken();
     if (!token) return;
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -125,7 +126,7 @@ export default function ProfileSelector({ onSelectProfile }) {
     const { name, isChild } = newProfileData;
     if (!name || name.trim() === "") return;
 
-    const token = localStorage.getItem('accessToken');
+    const token = await getAccessToken();
     if (!token) return;
 
     try {
@@ -196,7 +197,7 @@ export default function ProfileSelector({ onSelectProfile }) {
           </div>
         ))}
 
-        {!loading && localStorage.getItem('accessToken') && (
+        {!loading && readAccessToken() && (
           <div className="profile-card profile-add-card tv-focusable" onClick={() => setShowAddModal(true)}>
             <div className="profile-avatar-wrapper add-wrapper">
               <span className="material-icons-round add-icon">add</span>
