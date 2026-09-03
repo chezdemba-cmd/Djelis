@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { getAccessToken } from '../lib/authClient';
 
 /**
  * Hook pour suivre la progression de lecture d'un média et la synchroniser avec le backend.
@@ -16,8 +17,7 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null, profileI
 
     const syncProgress = async (currentTime) => {
       try {
-        // Récupération du token JWT (simulé ou réel selon l'implémentation de l'auth)
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('jwt_token');
+        const token = await getAccessToken();
         if (!token) return; // Si non authentifié, on ne synchronise pas
 
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';

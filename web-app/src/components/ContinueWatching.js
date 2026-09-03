@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch } from '../lib/authClient';
 
 export default function ContinueWatching({ currentProfile, type, onResume }) {
   const [history, setHistory] = useState([]);
@@ -21,17 +22,11 @@ export default function ContinueWatching({ currentProfile, type, onResume }) {
   useEffect(() => {
     async function fetchHistory() {
       if (!currentProfile) return;
-      const token = localStorage.getItem('accessToken');
-      if (!token) return;
 
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-        const res = await fetch(`${baseUrl}/api/v1/stream/history?profile_id=${currentProfile.id}&type=${type}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
+        const res = await authFetch(`${baseUrl}/api/v1/stream/history?profile_id=${currentProfile.id}&type=${type}`);
+
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
