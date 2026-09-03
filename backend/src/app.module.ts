@@ -10,6 +10,7 @@ import { PaymentsModule } from "./payments/payments.module";
 import { ProfileModule } from "./profile/profile.module";
 import { AdminModule } from "./admin/admin.module";
 import { FavoritesModule } from "./favorites/favorites.module";
+import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma.module";
 
 @Module({
@@ -32,6 +33,7 @@ import { PrismaModule } from "./prisma.module";
     ProfileModule,
     AdminModule,
     FavoritesModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [

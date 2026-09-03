@@ -7,6 +7,36 @@ on:
     branches: [ "main" ]
 
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # gitleaks depuis la release officielle : pas de licence requise
+      # (l'action gitleaks-action@v2 en exige une pour les dépôts d'organisation).
+      # Bloquant : échoue si un secret est détecté dans l'arbre ou l'historique.
+      - name: Secret scan (gitleaks)
+        run: |
+          VERSION=8.21.2
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --verbose --exit-code 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      # Rapport de vulnérabilités des dépendances (lockfile unique à la racine).
+      # Non bloquant pour l'instant (baseline à trier) — retirer
+      # `continue-on-error` une fois le backlog HIGH/CRITICAL résorbé.
+      - name: npm audit
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
   build-and-lint:
     runs-on: ubuntu-latest
 
