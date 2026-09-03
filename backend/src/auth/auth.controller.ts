@@ -16,6 +16,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post("register")
+  @Throttle({ default: { limit: 5, ttl: 300000 } })
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body()
@@ -36,6 +37,7 @@ export class AuthController {
   }
 
   @Post("register/email")
+  @Throttle({ default: { limit: 5, ttl: 300000 } })
   @HttpCode(HttpStatus.CREATED)
   async registerEmail(
     @Body()
@@ -56,6 +58,7 @@ export class AuthController {
   }
 
   @Post("register/phone")
+  @Throttle({ default: { limit: 5, ttl: 300000 } })
   @HttpCode(HttpStatus.CREATED)
   async registerPhone(
     @Body()
