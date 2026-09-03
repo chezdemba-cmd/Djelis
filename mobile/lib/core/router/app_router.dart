@@ -4,6 +4,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/catalog/presentation/screens/home_screen.dart';
 import '../../features/catalog/presentation/screens/detail_screen.dart';
 import '../../features/catalog/presentation/screens/player_screen.dart';
+import '../../features/catalog/presentation/screens/youtube_player_screen.dart';
 import '../../features/subscription/presentation/screens/plans_screen.dart';
 import '../../features/downloads/presentation/screens/downloads_screen.dart';
 import '../../features/auth/presentation/screens/account_screen.dart';
@@ -41,6 +42,14 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra;
           if (extra is Map<String, dynamic>) {
+            final youtubeId = extra['youtubeId'] as String?;
+            if (youtubeId != null && youtubeId.isNotEmpty) {
+              return YoutubePlayerScreen(
+                youtubeId: youtubeId,
+                title: (extra['title'] as String?) ?? 'Lecteur',
+                startPositionSec: extra['startPositionSec'] as int?,
+              );
+            }
             return PlayerScreen(
               contentId: extra['contentId'] as String?,
               episodeId: extra['episodeId'] as String?,
