@@ -13,7 +13,9 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null, profileI
 
   useEffect(() => {
     const mediaElement = mediaRef.current;
-    if (!mediaElement || !contentId) return;
+    // Pas de profil sélectionné => on ne synchronise pas (le backend exige
+    // désormais un profile_id valide et n'attribue plus à un profil arbitraire).
+    if (!mediaElement || !contentId || !profileId) return;
 
     const syncProgress = async (currentTime) => {
       try {
@@ -31,7 +33,7 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null, profileI
             content_id: contentId,
             episode_id: episodeId,
             progress_sec: Math.floor(currentTime),
-            ...(profileId ? { profile_id: profileId } : {})
+            profile_id: profileId
           })
         });
       } catch (error) {
