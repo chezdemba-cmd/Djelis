@@ -44,3 +44,10 @@ yarn-error.log
 
 # Local SDKs, installers and downloaded build artifacts
 .tools/
+
+# Binaires d'application (build Android) — jamais versionnés
+*.apk
+*.aab
+
+# Masters audio non compressés générés localement (on ne versionne que les .mp3)
+web-app/public/assets/audio/*.wav
