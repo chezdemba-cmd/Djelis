@@ -20,14 +20,13 @@ import { stripMediaRefs } from "../catalog/media-sanitizer";
 export class FavoritesController {
   constructor(private prisma: PrismaService) {}
 
+  // profile_id est obligatoire : pas de repli sur un profil arbitraire, sinon
+  // les favoris d'un profil fuiteraient vers les autres profils du compte.
   private async resolveProfile(userId: string, profileId?: string) {
-    if (profileId) {
-      const profile = await this.prisma.profile.findFirst({
-        where: { id: profileId, userId },
-      });
-      if (profile) return profile;
-    }
-    return this.prisma.profile.findFirst({ where: { userId } });
+    if (!profileId) return null;
+    return this.prisma.profile.findFirst({
+      where: { id: profileId, userId },
+    });
   }
 
   @Get()
@@ -54,7 +53,7 @@ export class FavoritesController {
     if (!profile) {
       return {
         success: false,
-        message: "Aucun profil trouvé pour cet utilisateur.",
+        message: "profile_id requis ou invalide.",
       };
     }
 
@@ -77,7 +76,7 @@ export class FavoritesController {
     if (!profile) {
       return {
         success: false,
-        message: "Aucun profil trouvé pour cet utilisateur.",
+        message: "profile_id requis ou invalide.",
       };
     }
 

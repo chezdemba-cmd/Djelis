@@ -46,23 +46,17 @@ export class StreamController {
       ? Math.min(Math.max(Math.floor(rawSec), 0), MAX_PROGRESS_SECONDS)
       : 0;
 
-    let profile;
-    if (profileId) {
-      profile = await this.prisma.profile.findFirst({
-        where: { id: profileId, userId: req.user.id },
-      });
+    // profile_id est obligatoire : sans lui, la progression serait attribuée à
+    // un profil arbitraire (ex. le premier), faussant "Reprendre la lecture"
+    // pour tous les profils du compte.
+    if (!profileId || !UUID_RE.test(profileId)) {
+      return { success: false, message: "profile_id requis." };
     }
+    const profile = await this.prisma.profile.findFirst({
+      where: { id: profileId, userId: req.user.id },
+    });
     if (!profile) {
-      profile = await this.prisma.profile.findFirst({
-        where: { userId: req.user.id },
-      });
-    }
-
-    if (!profile) {
-      return {
-        success: false,
-        message: "Aucun profil trouvé pour cet utilisateur.",
-      };
+      return { success: false, message: "Profil invalide." };
     }
 
     const existing = await this.prisma.watchHistory.findFirst({
