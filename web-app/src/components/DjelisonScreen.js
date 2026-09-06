@@ -1,28 +1,40 @@
 import { useState, useEffect } from "react";
 import { getAudioCatalog } from "../data/catalog";
 import ContinueWatching from "./ContinueWatching";
+import HeroCarousel from "./HeroCarousel";
 
 export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
-  const [activeTab, setActiveTab] = useState("podcasts");
+  const [activeTab, setActiveTab] = useState("music");
   const [audioCatalog, setAudioCatalog] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastWatched, setLastWatched] = useState(null);
 
   useEffect(() => {
     const loadAudio = async () => {
       setIsLoading(true);
       const data = await getAudioCatalog();
       setAudioCatalog(data);
-
-      setIsLoading(false);
       setIsLoading(false);
     };
     loadAudio();
   }, []);
 
   if (isLoading) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Chargement de l&apos;audio...</div>;
+    return <div style={{ padding: "40px", textAlign: "center", color: "#ccc" }}>Chargement des morceaux & récits...</div>;
   }
+
+  const musicList = audioCatalog.filter(
+    (item) =>
+      item.category === "music" ||
+      item.isClip ||
+      (item.genre && item.genre.toLowerCase().includes("musique"))
+  );
+
+  const podcastList = audioCatalog.filter(
+    (item) =>
+      item.category === "podcasts" &&
+      !item.isClip &&
+      !(item.genre && item.genre.toLowerCase().includes("musique"))
+  );
 
   return (
     <>
@@ -30,50 +42,107 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
 
       <div className="djelison-tabs-container">
         <div className="djelison-tabs">
-          <button 
+          <button
+            className={`djelison-tab-btn tv-focusable ${activeTab === "music" ? "active" : ""}`}
+            onClick={() => setActiveTab("music")}
+          >
+            <span className="material-icons-round">music_note</span>
+            <span>Musique & Clips</span>
+          </button>
+          <button
             className={`djelison-tab-btn tv-focusable ${activeTab === "podcasts" ? "active" : ""}`}
             onClick={() => setActiveTab("podcasts")}
           >
             <span className="material-icons-round">mic</span>
             <span>Podcasts & Récits</span>
           </button>
-          <button 
-            className={`djelison-tab-btn tv-focusable ${activeTab === "music" ? "active" : ""}`}
-            onClick={() => setActiveTab("music")}
-          >
-            <span className="material-icons-round">music_note</span>
-            <span>Musique</span>
-          </button>
         </div>
       </div>
 
-      {activeTab === "podcasts" && (
+      {activeTab === "music" && (
         <div className="djelison-sub-tab-content active">
-          <div className="netflix-hero-banner tv-focusable" style={{ backgroundImage: "url('/assets/griot.png')", minHeight: '400px' }}>
-             <div className="netflix-hero-vignette"></div>
-             <div className="netflix-hero-content">
-              <div className="netflix-hero-badge">Podcasts & Contes</div>
-              <h2 className="netflix-hero-title" style={{ fontSize: 'clamp(30px, 4vw, 50px)' }}>Écoutez la sagesse de nos ancêtres contée par les plus grands griots.</h2>
-              <div className="netflix-hero-actions">
-                <button className="btn-netflix-play tv-focusable">
-                  <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> ÉCOUTER MAINTENANT
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Grand écran carrousel animé avec les 10 dernières publications Musique & Clips */}
+          <HeroCarousel
+            items={musicList.length > 0 ? musicList : audioCatalog}
+            onPlay={onPlayAudio}
+            mediaType="video"
+          />
 
-          <div className="netflix-content-row">
-            <h2 className="netflix-row-title">Les Plus Populaires</h2>
-            <div className="netflix-slider">
-              {audioCatalog.map((item) => (
-                <div key={item.id} className="audio-card tv-focusable" onClick={() => onPlayAudio && onPlayAudio(item)} style={{ flex: '0 0 200px', marginRight: '15px' }}>
-                  <div className="audio-card-image" style={{ backgroundImage: `url(${item.image})` }}>
-                    <button className="audio-card-download tv-focusable">
-                      <span className="material-icons-round icon">download</span>
-                    </button>
+          <div className="netflix-content-row" style={{ marginTop: "24px" }}>
+            <h2 className="netflix-row-title">Morceaux & Clips Vidéos</h2>
+            <div className="netflix-slider" style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+              {(musicList.length > 0 ? musicList : audioCatalog).map((item) => (
+                <div
+                  key={item.id}
+                  className="audio-card tv-focusable"
+                  onClick={() => onPlayAudio && onPlayAudio(item)}
+                  style={{
+                    flex: "0 0 220px",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "transform 0.25s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                >
+                  <div
+                    className="audio-card-image"
+                    style={{
+                      backgroundImage: `url(${item.image})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      borderRadius: "12px",
+                      height: "140px",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {item.isClip && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: "8px",
+                          right: "8px",
+                          background: "rgba(229, 9, 20, 0.9)",
+                          color: "white",
+                          padding: "3px 8px",
+                          borderRadius: "10px",
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "3px",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+                        }}
+                      >
+                        <span className="material-icons-round" style={{ fontSize: "14px" }}>smart_display</span>
+                        Clip
+                      </span>
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "rgba(0,0,0,0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span
+                        className="material-icons-round"
+                        style={{ fontSize: "40px", color: "rgba(255,255,255,0.9)", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))" }}
+                      >
+                        {item.isClip ? "play_circle_filled" : "play_circle"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="audio-card-title">{item.title}</div>
-                  <div className="audio-card-subtitle">{item.artist}</div>
+                  <div className="audio-card-title" style={{ marginTop: "10px", fontWeight: "700", fontSize: "15px" }}>
+                    {item.title}
+                  </div>
+                  <div className="audio-card-subtitle" style={{ color: "#aaa", fontSize: "13px" }}>
+                    {item.artist}
+                  </div>
                 </div>
               ))}
             </div>
@@ -81,23 +150,71 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
         </div>
       )}
 
-      {activeTab === "music" && (
+      {activeTab === "podcasts" && (
         <div className="djelison-sub-tab-content active">
-           <div className="netflix-hero-banner tv-focusable" style={{ backgroundImage: "url('/assets/kora.png')", minHeight: '400px' }}>
-            <div className="netflix-hero-vignette"></div>
-            <div className="netflix-hero-content">
-              <div className="netflix-hero-badge">Festival Acoustique</div>
-              <h2 className="netflix-hero-title" style={{ fontSize: 'clamp(30px, 4vw, 50px)' }}>Célébration des rythmes traditionnels.</h2>
-              <div className="netflix-hero-actions">
-                <button className="btn-netflix-play tv-focusable">
-                  <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> ÉCOUTER MAINTENANT
-                </button>
-              </div>
+          {/* Grand écran carrousel animé avec les 10 dernières publications Podcasts & Récits */}
+          <HeroCarousel
+            items={podcastList.length > 0 ? podcastList : audioCatalog}
+            onPlay={onPlayAudio}
+            mediaType="audio"
+          />
+
+          <div className="netflix-content-row" style={{ marginTop: "24px" }}>
+            <h2 className="netflix-row-title">Podcasts & Récits</h2>
+            <div className="netflix-slider" style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+              {(podcastList.length > 0 ? podcastList : audioCatalog).map((item) => (
+                <div
+                  key={item.id}
+                  className="audio-card tv-focusable"
+                  onClick={() => onPlayAudio && onPlayAudio(item)}
+                  style={{
+                    flex: "0 0 220px",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "transform 0.25s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                >
+                  <div
+                    className="audio-card-image"
+                    style={{
+                      backgroundImage: `url(${item.image})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      borderRadius: "12px",
+                      height: "140px",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "rgba(0,0,0,0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span
+                        className="material-icons-round"
+                        style={{ fontSize: "40px", color: "rgba(255,255,255,0.9)", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))" }}
+                      >
+                        play_circle
+                      </span>
+                    </div>
+                  </div>
+                  <div className="audio-card-title" style={{ marginTop: "10px", fontWeight: "700", fontSize: "15px" }}>
+                    {item.title}
+                  </div>
+                  <div className="audio-card-subtitle" style={{ color: "#aaa", fontSize: "13px" }}>
+                    {item.artist}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="netflix-content-row">
-            <h2 className="netflix-row-title">Musique</h2>
-            <p style={{ color: 'var(--text-dim)' }}>Le catalogue musical sera bientôt disponible.</p>
           </div>
         </div>
       )}

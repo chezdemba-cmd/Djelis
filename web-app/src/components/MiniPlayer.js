@@ -7,11 +7,34 @@ export default function MiniPlayer({ audioItem, onClose }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
 
+  // Démarre la lecture de manière robuste en gérant la politique d'autoplay du navigateur
+  useEffect(() => {
+    if (audioRef.current && audioItem?.audioUrl) {
+      audioRef.current.load();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn("Autoplay audio en attente d'interaction utilisateur:", err);
+            setIsPlaying(false);
+          });
+      }
+    }
+  }, [audioItem?.audioUrl]);
 
   const togglePlay = () => {
     if (audioRef.current) {
-      if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => setIsPlaying(true))
+            .catch((e) => console.error("Erreur de reprise audio:", e));
+        }
+      }
     }
   };
 
@@ -109,11 +132,21 @@ export default function MiniPlayer({ audioItem, onClose }) {
       <audio
         ref={audioRef}
         src={audioItem.audioUrl}
-        autoPlay
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
+        onError={(e) => {
+          console.warn("Audio element error on src:", audioItem.audioUrl, e);
+          if (audioRef.current && !audioRef.current.src.includes('/assets/audio/')) {
+            const fallback = '/assets/audio/diarabi.mp3';
+            console.log("MiniPlayer: basculement automatique sur le fallback audio local:", fallback);
+            audioRef.current.src = fallback;
+            audioRef.current.load();
+            audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+          }
+        }}
       />
 
       <style dangerouslySetInnerHTML={{__html: `

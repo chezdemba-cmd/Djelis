@@ -128,7 +128,7 @@ export const dummyAudioCatalog = [
     tag: "Podcast",
     year: "2025",
     image: "/assets/griot.png",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+    audioUrl: "/assets/audio/paroles_sages.mp3"
   },
   {
     id: "a2",
@@ -138,7 +138,7 @@ export const dummyAudioCatalog = [
     tag: "Récit",
     year: "2026",
     image: "/assets/kora.png",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    audioUrl: "/assets/audio/kora_masters.mp3"
   },
   {
     id: "a3",
@@ -148,14 +148,22 @@ export const dummyAudioCatalog = [
     tag: "Conte",
     year: "2024",
     image: "/assets/anansi.png",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    audioUrl: "/assets/audio/anansi.mp3"
   }
 ];
+
+export function resolveFallbackAudio(title = '', slug = '') {
+  const s = `${title} ${slug}`.toLowerCase();
+  if (s.includes('diarabi') || s.includes('sidiki') || s.includes('kora')) return '/assets/audio/diarabi.mp3';
+  if (s.includes('sage') || s.includes('griot') || s.includes('conte')) return '/assets/audio/paroles_sages.mp3';
+  if (s.includes('anansi') || s.includes('recit')) return '/assets/audio/anansi.mp3';
+  return '/assets/audio/kora_masters.mp3';
+}
 
 export async function getCatalog() {
   try {
     const headers = (await authHeader()) || {};
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {
       const data = await res.json();
@@ -173,7 +181,21 @@ export async function getCatalog() {
           youtubeId: item.youtubeId || item.youtube_id || null,
           hasMedia: item.hasMedia !== false,
           age: item.ageRating || 'G',
-          category: item.genre?.slug || 'cinema'
+          category: (() => {
+            const catStr = [
+              item.genre?.slug,
+              item.genre?.name,
+              item.category?.slug,
+              item.category?.name
+            ].filter(Boolean).join(' ').toLowerCase();
+            if (catStr.includes('theatre') || catStr.includes('théâtre') || catStr.includes('humour') || catStr.includes('comedy')) {
+              return 'theatre';
+            }
+            if (catStr.includes('doc') || catStr.includes('culture') || catStr.includes('histoire') || catStr.includes('decouverte')) {
+              return 'docs';
+            }
+            return 'cinema';
+          })()
         }));
       }
     }
@@ -209,7 +231,7 @@ export async function getPlaybackUrl(contentId, episodeId = null) {
   const headers = await authHeaders();
   if (!headers) return null;
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${baseUrl}/api/v1/stream/token`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
@@ -231,7 +253,7 @@ export async function getFavorites(profileId) {
   const headers = await authHeaders();
   if (!headers) return [];
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const qs = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : '';
     const res = await fetch(`${baseUrl}/api/v1/favorites${qs}`, { headers });
     if (res.ok) {
@@ -258,7 +280,7 @@ export async function addFavorite(contentId, profileId) {
   const headers = await authHeaders();
   if (!headers) return false;
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
@@ -275,7 +297,7 @@ export async function removeFavorite(contentId, profileId) {
   const headers = await authHeaders();
   if (!headers) return false;
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const qs = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : '';
     const res = await fetch(`${baseUrl}/api/v1/favorites/${contentId}${qs}`, { method: 'DELETE', headers });
     return res.ok;
@@ -288,7 +310,7 @@ export async function removeFavorite(contentId, profileId) {
 export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
   try {
     const headers = (await authHeader()) || {};
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const params = new URLSearchParams({ q: query, page: String(page), limit: String(limit) });
     const res = await fetch(`${baseUrl}/api/v1/catalog/search?${params}`, { headers });
     if (res.ok) {
@@ -304,20 +326,24 @@ export async function searchCatalog(query, { page = 1, limit = 20 } = {}) {
 export async function getAudioCatalog() {
   try {
     const headers = (await authHeader()) || {};
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${baseUrl}/api/v1/catalog/home`, { headers });
     if (res.ok) {
       const data = await res.json();
       if (data && data.djelison && data.djelison.contents && data.djelison.contents.length > 0) {
         return data.djelison.contents.map(item => ({
           id: item.id,
+          contentId: item.id,
           title: item.title,
           artist: item.creator?.displayName || "Artiste Djeli'S",
-          category: 'podcasts',
+          category: (item.genre?.slug === 'musique' || item.genre?.name?.toLowerCase().includes('musique')) ? 'music' : 'podcasts',
+          genre: item.genre?.name || "Musique",
           tag: item.category?.name || "Audio",
           year: item.publishedAt ? new Date(item.publishedAt).getFullYear().toString() : "2026",
           image: item.thumbnailUrl || '/assets/anansi.png',
-          audioUrl: item.audioUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+          audioUrl: item.audioUrl || resolveFallbackAudio(item.title, item.slug),
+          youtubeId: item.youtubeId || item.youtube_id || null,
+          isClip: Boolean(item.youtubeId || item.youtube_id),
         }));
       }
     }

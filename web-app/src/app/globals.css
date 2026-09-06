@@ -652,6 +652,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     flex: 1;
     overflow-y: auto;
     scrollbar-width: none;
+    padding-top: 84px;
     padding-bottom: 110px;
     position: relative;
 }
@@ -1168,8 +1169,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    ========================================================================== */
 
 .mylist-container {
-    padding: 16px;
-    padding-top: 100px;
+    padding: 24px 46px;
+}
+
+@media (max-width: 900px) {
+    .mylist-container {
+        padding: 16px 20px;
+    }
 }
 
 .page-title {
@@ -2458,8 +2464,6 @@ select.form-input {
         padding: 0;
     }
     
-    body:not(.mode-mobile):not(.mode-tv) 
-    
     body:not(.mode-mobile):not(.mode-tv) .desktop-sidebar {
         display: flex;
     }
@@ -2481,7 +2485,7 @@ select.form-input {
     }
     
     body:not(.mode-mobile):not(.mode-tv) .app-content {
-        padding: 30px 40px 140px 40px;
+        padding: 88px 0 140px 0;
     }
     
     body:not(.mode-mobile):not(.mode-tv) .hero-banner {
@@ -2629,48 +2633,69 @@ select.form-input {
    DJELISON SUB-TABS SELECTOR
    ========================================================================== */
 .djelison-tabs-container {
-    padding: 0 16px;
-    margin-bottom: 20px;
-    margin-top: 10px;
+    padding: 0 46px;
+    margin-top: 24px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .djelison-tabs-container {
+        padding: 0 20px;
+        margin-top: 14px;
+        margin-bottom: 22px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .djelison-tabs-container::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .djelison-tabs {
-    display: flex;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    padding: 4px;
-    position: relative;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+    display: inline-flex;
+    background: rgba(26, 26, 30, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 6px;
+    gap: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    max-width: 100%;
 }
 
 .djelison-tab-btn {
-    flex: 1;
+    flex: initial;
+    white-space: nowrap;
     background: transparent;
     border: none;
     outline: none;
     color: var(--text-secondary);
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 700;
+    padding: 11px 24px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .djelison-tab-btn:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .djelison-tab-btn.active {
     color: #000000;
     background: var(--primary-gold);
-    box-shadow: 0 4px 15px rgba(255, 179, 0, 0.3);
+    box-shadow: 0 2px 14px rgba(255, 179, 0, 0.4);
+    font-weight: 700;
 }
 
 .djelison-tab-btn.active .material-icons-round {
@@ -2678,7 +2703,7 @@ select.form-input {
 }
 
 .djelison-tab-btn .material-icons-round {
-    font-size: 18px;
+    font-size: 19px;
     color: var(--text-secondary);
     transition: color 0.25s ease;
 }
@@ -2710,48 +2735,69 @@ select.form-input {
    DJAASOO SUB-TABS SELECTOR
    ========================================================================== */
 .djaasoo-tabs-container {
-    padding: 0 16px;
-    margin-bottom: 20px;
-    margin-top: 10px;
+    padding: 0 46px;
+    margin-top: 24px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .djaasoo-tabs-container {
+        padding: 0 20px;
+        margin-top: 14px;
+        margin-bottom: 22px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .djaasoo-tabs-container::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .djaasoo-tabs {
-    display: flex;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    padding: 4px;
-    position: relative;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+    display: inline-flex;
+    background: rgba(26, 26, 30, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 6px;
+    gap: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    max-width: 100%;
 }
 
 .djaasoo-tab-btn {
-    flex: 1;
+    flex: initial;
+    white-space: nowrap;
     background: transparent;
     border: none;
     outline: none;
     color: var(--text-secondary);
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 700;
+    padding: 11px 24px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .djaasoo-tab-btn:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .djaasoo-tab-btn.active {
     color: #000000;
     background: var(--primary-gold);
-    box-shadow: 0 4px 15px rgba(255, 179, 0, 0.3);
+    box-shadow: 0 2px 14px rgba(255, 179, 0, 0.4);
+    font-weight: 700;
 }
 
 .djaasoo-tab-btn.active .material-icons-round {
@@ -2759,7 +2805,7 @@ select.form-input {
 }
 
 .djaasoo-tab-btn .material-icons-round {
-    font-size: 18px;
+    font-size: 19px;
     color: var(--text-secondary);
     transition: color 0.25s ease;
 }
@@ -2904,41 +2950,50 @@ select.form-input {
 
 /* My List layout sub-tabs and storage gauges */
 .mylist-tabs-container {
-    display: flex;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    padding: 4px;
-    margin-bottom: 20px;
-    margin-top: 10px;
+    display: inline-flex;
+    background: rgba(26, 26, 30, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 6px;
+    gap: 8px;
+    margin-top: 14px;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    max-width: 100%;
 }
 
 .mylist-tab-btn {
-    flex: 1;
+    flex: initial;
+    white-space: nowrap;
     background: transparent;
     border: none;
+    outline: none;
     color: var(--text-secondary);
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
+    padding: 11px 24px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
+    gap: 9px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mylist-tab-btn:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .mylist-tab-btn.active {
     color: #000000;
     background: var(--primary-gold);
-    box-shadow: 0 4px 12px rgba(255, 179, 0, 0.25);
+    box-shadow: 0 2px 14px rgba(255, 179, 0, 0.4);
+    font-weight: 700;
 }
 
 .mylist-tab-btn.active .material-icons-round {
