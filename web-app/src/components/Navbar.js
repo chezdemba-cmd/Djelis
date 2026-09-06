@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "../context/SessionContext";
 
-export default function Navbar({ onOpenLogin }) {
+export default function Navbar({ onOpenLogin, onOpenMobileMenu }) {
   const { isAuthenticated, currentProfile, logout, selectProfile } = useSession();
   const pathname = usePathname();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -23,8 +23,19 @@ export default function Navbar({ onOpenLogin }) {
   return (
     <header className="netflix-navbar">
       <div className="navbar-left">
+        {onOpenMobileMenu && (
+          <button 
+            type="button"
+            className="mobile-hamburger-btn" 
+            onClick={onOpenMobileMenu}
+            aria-label="Ouvrir le menu de navigation"
+          >
+            <span className="material-icons-round">menu</span>
+          </button>
+        )}
+
         <Link href={isAuthenticated && currentProfile ? "/browse" : "/"} style={{ textDecoration: 'none' }}>
-          <h1 className="netflix-logo" style={{ color: '#E50914', margin: 0, fontSize: '24px', cursor: 'pointer', fontFamily: 'Arial, sans-serif', fontWeight: '900', letterSpacing: '1px' }}>
+          <h1 className="netflix-logo" style={{ color: '#E50914', margin: 0, fontSize: 'clamp(20px, 4vw, 24px)', cursor: 'pointer', fontFamily: 'Arial, sans-serif', fontWeight: '900', letterSpacing: '1px' }}>
             DJELI'S
           </h1>
         </Link>
@@ -32,10 +43,8 @@ export default function Navbar({ onOpenLogin }) {
         {isAuthenticated && currentProfile !== null && (
           <nav className="navbar-links">
             <Link href="/browse" className={pathname === '/browse' ? 'active' : ''}>Accueil</Link>
-            <a href="#" onClick={(e) => { e.preventDefault(); alert("Séries: Fonctionnalité à venir !"); }}>Séries</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); alert("Films: Fonctionnalité à venir !"); }}>Films</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); alert("Jeux: Fonctionnalité à venir !"); }}>Jeux</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); alert("Nouveautés: Fonctionnalité à venir !"); }}>Nouveautés</a>
+            <Link href="/djaasoo" className={pathname.startsWith('/djaasoo') ? 'active' : ''}>DjaaSoo</Link>
+            <Link href="/djelison" className={pathname.startsWith('/djelison') ? 'active' : ''}>DjeliSon</Link>
             <Link href="/mylist" className={pathname === '/mylist' ? 'active' : ''}>Ma Liste</Link>
           </nav>
         )}

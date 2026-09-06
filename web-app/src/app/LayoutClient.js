@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import PlansModal from "../components/PlansModal";
 import MobileDrawer from "../components/MobileDrawer";
+import BottomNav from "../components/BottomNav";
 import { useSession } from "../context/SessionContext";
 import { readAccessToken } from "../lib/authClient";
 import { useRouter } from "next/navigation";
@@ -43,6 +44,8 @@ export default function LayoutClient({ children }) {
         <main className="app-content">
           {children}
         </main>
+
+        <BottomNav />
         
         <PlansModal 
           isOpen={isPlansOpen} 

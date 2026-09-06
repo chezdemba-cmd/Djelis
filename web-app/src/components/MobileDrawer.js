@@ -23,6 +23,12 @@ export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
           <Link href="/browse" className={`drawer-nav-item ${pathname === '/browse' ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
             <span className="material-icons-round">home</span> Accueil
           </Link>
+          <Link href="/djaasoo" className={`drawer-nav-item ${pathname.startsWith('/djaasoo') ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
+            <span className="material-icons-round">movie</span> DjaaSoo (Cinéma & Séries)
+          </Link>
+          <Link href="/djelison" className={`drawer-nav-item ${pathname.startsWith('/djelison') ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
+            <span className="material-icons-round">headphones</span> DjeliSon (Audio & Clips)
+          </Link>
           <Link href="/search" className={`drawer-nav-item ${pathname === '/search' ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
             <span className="material-icons-round">search</span> Recherche
           </Link>

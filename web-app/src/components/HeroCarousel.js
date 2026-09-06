@@ -455,19 +455,101 @@ export default function HeroCarousel({
 
         @media (max-width: 768px) {
           .hero-carousel-container {
-            height: 65vh;
-            min-height: 420px;
+            height: 56vh;
+            min-height: 380px;
             padding: 0 20px;
+            align-items: flex-end;
+            padding-bottom: 36px;
           }
           .hero-carousel-content {
             max-width: 100%;
+          }
+          .hero-carousel-title {
+            font-size: clamp(22px, 5.5vw, 34px);
+            margin-bottom: 8px;
           }
           .carousel-nav-btn {
             display: none;
           }
           .hero-carousel-indicators {
-            bottom: 16px;
-            right: 20px;
+            bottom: 12px;
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+            gap: 5px;
+          }
+          .carousel-indicator-bar {
+            width: 14px;
+            height: 3px;
+          }
+          .carousel-indicator-bar.active {
+            width: 26px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .hero-carousel-container {
+            height: 50vh;
+            min-height: 340px;
+            padding: 0 16px;
+            padding-bottom: 32px;
+          }
+          .hero-carousel-badge-row {
+            margin-bottom: 8px;
+            gap: 8px;
+          }
+          .hero-carousel-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+          }
+          .hero-carousel-counter {
+            font-size: 10px;
+            padding: 2px 6px;
+          }
+          .hero-carousel-title {
+            font-size: clamp(18px, 5.5vw, 26px);
+            line-height: 1.15;
+            margin-bottom: 6px;
+          }
+          .hero-carousel-artist {
+            font-size: 13px;
+            margin-bottom: 6px;
+          }
+          .hero-carousel-synopsis {
+            font-size: 12px;
+            line-height: 1.35;
+            -webkit-line-clamp: 2;
+            margin-bottom: 12px;
+          }
+          .hero-carousel-actions {
+            gap: 8px;
+          }
+          .btn-carousel-play {
+            padding: 8px 16px;
+            font-size: 13px;
+            gap: 6px;
+          }
+          .btn-carousel-play :global(.material-icons-round) {
+            font-size: 20px !important;
+          }
+          .btn-carousel-info {
+            padding: 8px 14px;
+            font-size: 13px;
+            gap: 6px;
+          }
+          .btn-carousel-info :global(.material-icons-round) {
+            font-size: 18px !important;
+          }
+          .hero-carousel-indicators {
+            bottom: 10px;
+            gap: 4px;
+          }
+          .carousel-indicator-bar {
+            width: 10px;
+            height: 3px;
+          }
+          .carousel-indicator-bar.active {
+            width: 20px;
           }
         }
       `}</style>

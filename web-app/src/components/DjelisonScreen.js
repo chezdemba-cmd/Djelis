@@ -77,7 +77,6 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
                   className="audio-card tv-focusable"
                   onClick={() => onPlayAudio && onPlayAudio(item)}
                   style={{
-                    flex: "0 0 220px",
                     cursor: "pointer",
                     position: "relative",
                     transition: "transform 0.25s ease",
@@ -168,7 +167,6 @@ export default function DjelisonScreen({ currentProfile, onPlayAudio }) {
                   className="audio-card tv-focusable"
                   onClick={() => onPlayAudio && onPlayAudio(item)}
                   style={{
-                    flex: "0 0 220px",
                     cursor: "pointer",
                     position: "relative",
                     transition: "transform 0.25s ease",

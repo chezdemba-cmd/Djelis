@@ -4420,8 +4420,229 @@ body:not(.mode-mobile):not(.mode-tv) .profile-container {
 @media (max-width: 1024px) {
   .netflix-card { flex: 0 0 25%; }
 }
-@media (max-width: 768px) {
-  .netflix-card { flex: 0 0 33.333%; }
-  .netflix-hero-banner { min-height: 400px; margin-top: 50px; }
-  .netflix-hero-content { width: 100%; }
+
+/* ==========================================================================
+   SMARTPHONE & MOBILE RESPONSIVE OVERHAUL - DJELI'S
+   ========================================================================== */
+
+.mobile-hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
+.mobile-hamburger-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.mobile-hamburger-btn .material-icons-round {
+  font-size: 26px;
+}
+
+/* Touch screen adjustments: disable zoom popups that disrupt tap navigation */
+@media (hover: none), (max-width: 768px) {
+  .netflix-card-hover {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  .netflix-card:hover .netflix-card-hover {
+    display: none !important;
+    transform: none !important;
+  }
+  .netflix-card:hover {
+    transform: none !important;
+  }
+}
+
+/* Tablets and Smartphones (<= 768px) */
+@media (max-width: 768px) {
+  .mobile-hamburger-btn {
+    display: flex;
+  }
+
+  .netflix-navbar {
+    height: 58px !important;
+    min-height: 58px !important;
+    padding: 0 14px !important;
+    gap: 10px !important;
+  }
+
+  .navbar-left {
+    gap: 10px !important;
+  }
+
+  .navbar-right {
+    gap: 8px !important;
+  }
+
+  .navbar-right .icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .navbar-right .mini-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .app-content {
+    padding-top: 60px !important;
+    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .peppy-mini-player {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 12px !important;
+    left: 12px !important;
+  }
+
+  /* Slider & Cards */
+  .netflix-slider {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 8px 20px 16px 20px !important;
+  }
+
+  .netflix-slider::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .netflix-card {
+    flex: 0 0 155px !important;
+    min-width: 155px !important;
+    scroll-snap-align: start !important;
+    aspect-ratio: 16 / 9;
+  }
+
+  .netflix-row-title {
+    font-size: 18px !important;
+    padding: 0 20px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .explore-all {
+    font-size: 11px !important;
+  }
+
+  /* Audio Cards */
+  .audio-card {
+    flex: 0 0 160px !important;
+    min-width: 150px !important;
+    scroll-snap-align: start !important;
+  }
+
+  .audio-card .audio-card-image {
+    height: 110px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Sub-Tabs */
+  .djaasoo-tabs-container,
+  .djelison-tabs-container {
+    padding: 0 16px !important;
+    margin-top: 10px !important;
+    margin-bottom: 16px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .djaasoo-tabs,
+  .djelison-tabs {
+    padding: 4px !important;
+    gap: 6px !important;
+  }
+
+  .djaasoo-tab-btn,
+  .djelison-tab-btn {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    gap: 6px !important;
+  }
+
+  .djaasoo-tab-btn .material-icons-round,
+  .djelison-tab-btn .material-icons-round {
+    font-size: 17px !important;
+  }
+}
+
+/* Smartphones (<= 480px) */
+@media (max-width: 480px) {
+  .netflix-slider {
+    gap: 10px !important;
+    padding: 6px 14px 12px 14px !important;
+  }
+
+  .netflix-card {
+    flex: 0 0 135px !important;
+    min-width: 135px !important;
+    border-radius: 6px !important;
+  }
+
+  .netflix-row-title {
+    font-size: 16px !important;
+    padding: 0 14px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .audio-card {
+    flex: 0 0 135px !important;
+    min-width: 130px !important;
+  }
+
+  .audio-card .audio-card-image {
+    height: 95px !important;
+    border-radius: 8px !important;
+  }
+
+  .audio-card .audio-card-title {
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    margin-top: 6px !important;
+  }
+
+  .djaasoo-tabs-container,
+  .djelison-tabs-container {
+    padding: 0 12px !important;
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .djaasoo-tabs,
+  .djelison-tabs {
+    padding: 3px !important;
+    gap: 4px !important;
+  }
+
+  .djaasoo-tab-btn,
+  .djelison-tab-btn {
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    gap: 5px !important;
+  }
+
+  .djaasoo-tab-btn .material-icons-round,
+  .djelison-tab-btn .material-icons-round {
+    font-size: 15px !important;
+  }
+
+  .app-select-card {
+    width: 100% !important;
+    max-width: 320px !important;
+    padding: 24px 20px !important;
+  }
+}
+
