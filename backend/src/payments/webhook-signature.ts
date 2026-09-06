@@ -19,10 +19,7 @@ export function timingSafeEqualHex(a: string, b: string): boolean {
   ) {
     return false;
   }
-  return crypto.timingSafeEqual(
-    Buffer.from(a, "hex"),
-    Buffer.from(b, "hex")
-  );
+  return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
 }
 
 /**
@@ -75,7 +72,9 @@ export function verifyWaveSignature(
   const match = providedSignatures.some((sig) =>
     timingSafeEqualHex(sig, expected)
   );
-  return match ? { valid: true } : { valid: false, reason: "signature invalide" };
+  return match
+    ? { valid: true }
+    : { valid: false, reason: "signature invalide" };
 }
 
 /**

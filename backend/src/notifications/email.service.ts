@@ -66,7 +66,10 @@ export class EmailService {
   }
 
   /** E-mail de réinitialisation de mot de passe. */
-  async sendPasswordReset(to: string, resetUrl: string): Promise<DeliveryResult> {
+  async sendPasswordReset(
+    to: string,
+    resetUrl: string
+  ): Promise<DeliveryResult> {
     return this.send({
       to,
       subject: "Réinitialisation de votre mot de passe Djeli'S",

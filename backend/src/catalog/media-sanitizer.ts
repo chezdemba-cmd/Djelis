@@ -19,7 +19,10 @@ export function stripMediaRefs<T extends Record<string, any>>(content: T): T {
     out.episodes = out.episodes.map((ep: any) => {
       if (!ep || typeof ep !== "object") return ep;
       const { cfStreamId, ...epRest } = ep as Record<string, any>;
-      const epOut: Record<string, any> = { ...epRest, hasMedia: Boolean(cfStreamId) };
+      const epOut: Record<string, any> = {
+        ...epRest,
+        hasMedia: Boolean(cfStreamId),
+      };
       if (content.type === "AUDIO" || !content.isPremium) {
         epOut.audioUrl = cfStreamId || null;
       }

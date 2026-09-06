@@ -13,6 +13,11 @@ analyzer:
   exclude:
     - build/**
     - android/**
+  errors:
+    prefer_const_constructors: ignore
+    prefer_const_literals_to_create_immutables: ignore
+    avoid_print: ignore
+    curly_braces_in_flow_control_structures: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the

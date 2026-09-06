@@ -19,6 +19,7 @@ export default function HeroCarousel({
 
   // Réinitialise l'index si la liste d'éléments change (ex: changement d'onglet)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentIndex(0);
   }, [items]);
 

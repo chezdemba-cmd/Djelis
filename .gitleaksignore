@@ -1,0 +1,5 @@
+# Gitleaks ignore file
+# Ignore past commits containing expired Vercel OIDC preview tokens
+fd48aac303b94c017f9791872765535c61639172:.env.vercel:jwt:2
+fd48aac303b94c017f9791872765535c61639172:backend/.env.vercel:jwt:2
+fd48aac303b94c017f9791872765535c61639172:backend/.env.vercel.prod:jwt:24

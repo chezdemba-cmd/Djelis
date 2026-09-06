@@ -15,7 +15,9 @@ describe("verifyWaveSignature", () => {
   it("accepte une signature valide et récente", () => {
     const ts = Math.floor(Date.now() / 1000);
     const header = `t=${ts}, v1=${sign(ts, rawBody)}`;
-    expect(verifyWaveSignature(rawBody, header, secret)).toEqual({ valid: true });
+    expect(verifyWaveSignature(rawBody, header, secret)).toEqual({
+      valid: true,
+    });
   });
 
   it("accepte si l'une des signatures v1 correspond", () => {
@@ -91,11 +93,15 @@ describe("verifyCinetpaySignature", () => {
 
   it("rejette si un champ signé est modifié", () => {
     const tampered = { ...fields, cpm_amount: "1" };
-    expect(verifyCinetpaySignature(tampered, token(), secret).valid).toBe(false);
+    expect(verifyCinetpaySignature(tampered, token(), secret).valid).toBe(
+      false
+    );
   });
 
   it("rejette un token absent ou non hexadécimal", () => {
-    expect(verifyCinetpaySignature(fields, undefined, secret).valid).toBe(false);
+    expect(verifyCinetpaySignature(fields, undefined, secret).valid).toBe(
+      false
+    );
     expect(verifyCinetpaySignature(fields, "xyz", secret).valid).toBe(false);
   });
 

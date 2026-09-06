@@ -18,7 +18,10 @@ describe("EmailService", () => {
     delete process.env.RESEND_API_KEY;
     delete process.env.EMAIL_FROM;
     const svc = new EmailService();
-    const res = await svc.sendPasswordReset("u@x.com", "https://x/reset?token=t");
+    const res = await svc.sendPasswordReset(
+      "u@x.com",
+      "https://x/reset?token=t"
+    );
     expect(res).toEqual({ delivered: false, fallback: true });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -29,7 +32,10 @@ describe("EmailService", () => {
     fetchMock.mockResolvedValue({ ok: true });
     const svc = new EmailService();
 
-    const res = await svc.sendPasswordReset("u@x.com", "https://x/reset?token=t");
+    const res = await svc.sendPasswordReset(
+      "u@x.com",
+      "https://x/reset?token=t"
+    );
 
     expect(res).toEqual({ delivered: true });
     expect(fetchMock).toHaveBeenCalledTimes(1);
