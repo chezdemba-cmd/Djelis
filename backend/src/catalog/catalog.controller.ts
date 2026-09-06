@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query, UseInterceptors } from "@nestjs/common";
-import { CacheInterceptor, CacheKey, CacheTTL } from "@nestjs/cache-manager";
+import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
 import { CatalogService } from "./catalog.service";
 
 @Controller(["catalog", "catalogue"])
@@ -7,7 +7,6 @@ export class CatalogController {
   constructor(private catalogService: CatalogService) {}
 
   @UseInterceptors(CacheInterceptor)
-  @CacheKey("catalog_home_feed")
   @CacheTTL(300000) // 5 minutes en millisecondes
   @Get("home")
   async getHomeFeed(@Query("country") country?: string) {
@@ -15,7 +14,6 @@ export class CatalogController {
   }
 
   @UseInterceptors(CacheInterceptor)
-  @CacheKey("catalog_featured_feed")
   @CacheTTL(300000)
   @Get("featured")
   async getFeatured(@Query("country") country?: string) {

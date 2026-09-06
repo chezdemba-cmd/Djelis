@@ -42,17 +42,29 @@ export class AdminController {
     return this.adminService.getContentStats(id);
   }
 
+  private async purgeCatalogCache() {
+    try {
+      if (typeof (this.cacheManager as any).reset === "function") {
+        await (this.cacheManager as any).reset();
+      } else {
+        await this.cacheManager.del("catalog_home_feed");
+      }
+    } catch (_) {
+      // Ignorer si le cache n'a pas pu être vidé
+    }
+  }
+
   @Patch("contents/:id/toggle")
   async toggleContentStatus(@Param("id") id: string) {
     const result = await this.adminService.toggleContentStatus(id);
-    await this.cacheManager.del("catalog_home_feed");
+    await this.purgeCatalogCache();
     return result;
   }
 
   @Delete("contents/:id")
   async deleteContent(@Param("id") id: string) {
     const result = await this.adminService.deleteContent(id);
-    await this.cacheManager.del("catalog_home_feed");
+    await this.purgeCatalogCache();
     return result;
   }
 
@@ -68,7 +80,7 @@ export class AdminController {
   @Post("contents")
   async createContent(@Body() dto: CreateContentDto) {
     const result = await this.adminService.createContent(dto);
-    await this.cacheManager.del("catalog_home_feed");
+    await this.purgeCatalogCache();
     return result;
   }
 }
