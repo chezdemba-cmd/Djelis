@@ -10,12 +10,19 @@ import { LoginDto } from "./dto/login.dto";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import * as crypto from "crypto";
+import { EmailService } from "../notifications/email.service";
+import { SmsService } from "../notifications/sms.service";
 
 const BCRYPT_ROUNDS = 12;
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+    private email: EmailService,
+    private sms: SmsService
+  ) {}
 
   async register(
     dto: RegisterDto,
@@ -160,8 +167,9 @@ export class AuthService {
       data: { otpCodeHash, otpExpiresAt },
     });
 
-    // Aucun fournisseur SMS n'est configuré dans ce projet : on journalise le
-    // code au lieu de l'envoyer, à la manière des paiements déjà simulés.
+    await this.sms.sendOtp(phone, code);
+
+    // En dev, on journalise aussi le code (Twilio peut être non configuré).
     if (
       process.env.NODE_ENV !== "production" &&
       process.env.AUTH_DEBUG_CODES === "true"
@@ -212,8 +220,11 @@ export class AuthService {
         data: { passwordResetTokenHash, passwordResetExpiresAt },
       });
 
-      // Aucun fournisseur d'e-mail n'est configuré dans ce projet : on
-      // journalise le lien au lieu de l'envoyer.
+      const appUrl = process.env.APP_URL || "https://djelis.com";
+      const resetUrl = `${appUrl}/reset-password?token=${token}`;
+      await this.email.sendPasswordReset(email, resetUrl);
+
+      // En dev, on journalise aussi le lien (Resend peut être non configuré).
       if (
         process.env.NODE_ENV !== "production" &&
         process.env.AUTH_DEBUG_CODES === "true"
