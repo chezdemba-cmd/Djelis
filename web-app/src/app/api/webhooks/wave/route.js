@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 
+/**
+ * Proxy de webhook Wave.
+ *
+ * La vérification de signature (`Wave-Signature`) est faite côté backend NestJS
+ * (source unique de vérité, cf. backend/src/payments/webhook-signature.ts) :
+ * cette route se contente de relayer le corps brut et l'en-tête de signature
+ * sans le modifier.
+ */
 export async function POST(request) {
   try {
     const rawBody = await request.text();
@@ -10,28 +17,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
     }
 
-    const secret = process.env.WAVE_WEBHOOK_SECRET;
-    
-    if (!secret) {
-      return NextResponse.json({ error: 'Webhook secret is not configured' }, { status: 500 });
-    }
-
-    const hmac = crypto.createHmac('sha256', secret);
-    const expectedSignature = hmac.update(rawBody).digest('hex');
-
-    // Use constant-time comparison to prevent timing attacks
-    const signatureBuffer = Buffer.from(signature, 'hex');
-    const expectedSignatureBuffer = Buffer.from(expectedSignature, 'hex');
-
-    if (
-      signatureBuffer.length !== expectedSignatureBuffer.length ||
-      !crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer)
-    ) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    }
-
-    // Forward the verified webhook payload to NestJS backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${backendUrl}/api/v1/payments/webhooks/wave`, {
       method: 'POST',
       headers: {

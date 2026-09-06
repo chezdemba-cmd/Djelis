@@ -7,7 +7,10 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { PaymentStatus, SubscriptionStatus } from "@prisma/client";
-import * as crypto from "crypto";
+import {
+  verifyWaveSignature,
+  verifyCinetpaySignature,
+} from "./webhook-signature";
 
 @Injectable()
 export class PaymentsService {
@@ -210,25 +213,20 @@ export class PaymentsService {
     let clientRefId: string | undefined;
 
     if (gateway === "wave") {
-      // Vérification HMAC Wave
-      const waveSignature = headers["wave-signature"];
-      if (!waveSignature)
-        throw new UnauthorizedException("Signature Wave manquante");
-
       const waveSecret = process.env.WAVE_WEBHOOK_SECRET;
       if (!waveSecret) {
         throw new UnauthorizedException(
           "WAVE_WEBHOOK_SECRET non configuré : impossible de vérifier ce webhook."
         );
       }
-      const expectedSignature = crypto
-        .createHmac("sha256", waveSecret)
-        .update(rawBody)
-        .digest("hex");
-
-      if (!this.signaturesMatch(waveSignature, expectedSignature)) {
+      const check = verifyWaveSignature(
+        rawBody,
+        headers["wave-signature"],
+        waveSecret
+      );
+      if (!check.valid) {
         throw new UnauthorizedException(
-          "Signature Wave invalide (Tentative de fraude détectée)"
+          `Signature Wave invalide (${check.reason}).`
         );
       }
 
@@ -239,25 +237,22 @@ export class PaymentsService {
         (body.metadata?.client_reference_id as string);
       gatewayStatus = body.status; // succeeded, failed
     } else if (gateway === "cinetpay") {
-      // Vérification HMAC CinetPay
-      const cinetpaySignature = headers["x-token"];
-      if (!cinetpaySignature)
-        throw new UnauthorizedException("Signature CinetPay manquante");
-
       const cinetpaySecret = process.env.CINETPAY_SECRET;
       if (!cinetpaySecret) {
         throw new UnauthorizedException(
           "CINETPAY_SECRET non configuré : impossible de vérifier ce webhook."
         );
       }
-      const expectedSignature = crypto
-        .createHmac("sha256", cinetpaySecret)
-        .update(rawBody)
-        .digest("hex");
-
-      if (!this.signaturesMatch(cinetpaySignature, expectedSignature)) {
+      // CinetPay signe la concaténation de champs POST précis (cf.
+      // webhook-signature.ts), pas le corps brut.
+      const check = verifyCinetpaySignature(
+        body,
+        headers["x-token"],
+        cinetpaySecret
+      );
+      if (!check.valid) {
         throw new UnauthorizedException(
-          "Signature CinetPay invalide (Tentative de fraude détectée)"
+          `Signature CinetPay invalide (${check.reason}).`
         );
       }
 
@@ -374,16 +369,6 @@ export class PaymentsService {
       throw new NotFoundException("Transaction introuvable.");
     }
     return payment;
-  }
-
-  private signaturesMatch(received: string, expected: string): boolean {
-    if (!/^[0-9a-f]+$/i.test(received) || received.length !== expected.length) {
-      return false;
-    }
-    return crypto.timingSafeEqual(
-      Buffer.from(received, "hex"),
-      Buffer.from(expected, "hex")
-    );
   }
 
   async getPlans(_country?: string) {
