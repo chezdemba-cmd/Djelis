@@ -34,7 +34,7 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
           ? { email: e.target.querySelector('input[type="email"]')?.value, password: e.target.querySelector('input[type="password"]').value }
           : { phone: e.target.querySelector('input[type="tel"]')?.value, password: e.target.querySelector('input[type="password"]').value };
           
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const endpoint = isLogin ? `${baseUrl}/api/v1/auth/login` : `${baseUrl}/api/v1/auth/register`;
         const res = await fetch(endpoint, {
           method: 'POST',
@@ -96,16 +96,18 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
         <button className="modal-close tv-focusable" onClick={onClose}>
           <span className="material-icons-round">arrow_back</span>
         </button>
-        <span className="modal-header-title">Inscription & Abonnement</span>
+        <span className="modal-header-title">{isLogin ? "Connexion" : "Inscription & Abonnement"}</span>
       </div>
       
-      <div className="auth-flow-indicator">
-        <span className={`indicator-step ${step >= 1 ? "active" : ""}`}>1. Coordonnées</span>
-        <span className="indicator-connector"></span>
-        <span className={`indicator-step ${step >= 2 ? "active" : ""}`}>2. Forfait</span>
-        <span className="indicator-connector"></span>
-        <span className={`indicator-step ${step >= 3 ? "active" : ""}`}>3. Finalisation</span>
-      </div>
+      {!isLogin && (
+        <div className="auth-flow-indicator">
+          <span className={`indicator-step ${step >= 1 ? "active" : ""}`}>1. Coordonnées</span>
+          <span className="indicator-connector"></span>
+          <span className={`indicator-step ${step >= 2 ? "active" : ""}`}>2. Forfait</span>
+          <span className="indicator-connector"></span>
+          <span className={`indicator-step ${step >= 3 ? "active" : ""}`}>3. Finalisation</span>
+        </div>
+      )}
 
       <div className="modal-content" style={{ padding: "10px 24px" }}>
         {step === 1 && (

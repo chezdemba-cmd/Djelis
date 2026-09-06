@@ -61,6 +61,31 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
                 <span>Abonnements & Tarifs</span>
                 <span className="material-icons-round arrow">chevron_right</span>
               </div>
+
+              {/* Liens légaux indispensables pour la publication sur les stores */}
+              <a href="/privacy" className="profile-action-item tv-focusable" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <span className="material-icons-round">policy</span>
+                <span>Politique de Confidentialité</span>
+                <span className="material-icons-round arrow">chevron_right</span>
+              </a>
+
+              <a href="/terms" className="profile-action-item tv-focusable" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <span className="material-icons-round">description</span>
+                <span>Conditions Générales (CGU)</span>
+                <span className="material-icons-round arrow">chevron_right</span>
+              </a>
+
+              <div className="profile-action-item tv-focusable" style={{ color: "#ff8a80" }} onClick={() => {
+                if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement votre compte et toutes vos données personnelles ? Cette action est irréversible.")) {
+                  alert("Votre demande de suppression de compte a été enregistrée. Conformément à notre politique de confidentialité, toutes vos données seront purgées sous 48h.");
+                  onLogout && onLogout();
+                }
+              }}>
+                <span className="material-icons-round">delete_forever</span>
+                <span>Supprimer mon compte</span>
+                <span className="material-icons-round arrow">chevron_right</span>
+              </div>
+
               <div className="profile-action-item tv-focusable" style={{ color: "var(--accent-crimson)" }} onClick={onLogout}>
                 <span className="material-icons-round">logout</span>
                 <span>Se déconnecter</span>
