@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 
+/**
+ * Proxy de webhook CinetPay.
+ *
+ * La vérification de signature (`x-token` = HMAC-SHA256 d'une concaténation de
+ * champs POST précis) est faite côté backend NestJS (source unique de vérité,
+ * cf. backend/src/payments/webhook-signature.ts). Cette route relaie la requête
+ * telle quelle, en conservant le Content-Type d'origine
+ * (`application/x-www-form-urlencoded`) pour que le backend parse les champs.
+ *
+ * NB : en production, le `notify_url` transmis à CinetPay pointe directement sur
+ * le backend ; ce proxy ne sert que si CinetPay est configuré vers le domaine web.
+ */
 export async function POST(request) {
   try {
     const rawBody = await request.text();
@@ -10,25 +21,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
     }
 
-    const secret = process.env.CINETPAY_SECRET;
-    if (!secret) {
-      return NextResponse.json({ error: 'Webhook secret is not configured' }, { status: 500 });
-    }
-    const hmac = crypto.createHmac('sha256', secret);
-    const expectedSignature = hmac.update(rawBody).digest('hex');
+    const contentType =
+      request.headers.get('content-type') || 'application/x-www-form-urlencoded';
 
-    const signatureBuffer = /^[0-9a-f]+$/i.test(signature) ? Buffer.from(signature, 'hex') : Buffer.alloc(0);
-    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-    if (signatureBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    }
-
-    // Forward the verified webhook payload to NestJS backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${backendUrl}/api/v1/payments/webhooks/cinetpay`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': contentType,
         'x-token': signature,
         'x-djelis-raw-body': Buffer.from(rawBody, 'utf8').toString('base64'),
       },
