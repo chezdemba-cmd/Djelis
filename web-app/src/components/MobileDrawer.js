@@ -38,9 +38,14 @@ export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
             </Link>
           )}
           {!isAuthenticated ? (
-            <button className="drawer-nav-item" style={{ color: 'white' }} onClick={onOpenLogin}>
-              <span className="material-icons-round">vpn_key</span> S'abonner
-            </button>
+            <>
+              <Link href="/login" className="drawer-nav-item" style={{ color: '#ffb300', textDecoration: 'none' }} onClick={onClose}>
+                <span className="material-icons-round">login</span> Connexion
+              </Link>
+              <button className="drawer-nav-item" style={{ color: 'white' }} onClick={onOpenLogin}>
+                <span className="material-icons-round">card_membership</span> S'abonner
+              </button>
+            </>
           ) : (
             <button className="drawer-nav-item" style={{ color: "var(--accent-crimson)" }} onClick={() => { logout(); onClose(); }}>
               <span className="material-icons-round">logout</span> Déconnexion

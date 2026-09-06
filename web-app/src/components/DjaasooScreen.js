@@ -3,6 +3,7 @@ import { getCatalog, getFavorites, addFavorite, removeFavorite, isKidsFriendly }
 import DetailsModal from "./DetailsModal";
 import VideoPlayerScreen from "./VideoPlayerScreen";
 import ContinueWatching from "./ContinueWatching";
+import HeroCarousel from "./HeroCarousel";
 
 export default function DjaasooScreen({ currentProfile }) {
   const [activeTab, setActiveTab] = useState("cinema");
@@ -131,27 +132,12 @@ export default function DjaasooScreen({ currentProfile }) {
 
       {activeTab === "cinema" && (
         <div className="djaasoo-sub-tab-content active">
-          {cinemaItems.length > 0 && (
-            <div className={`netflix-hero-banner tv-focusable ${cinemaItems[0].bannerClass || ''}`} style={cinemaItems[0].bannerClass ? {} : { backgroundImage: `url(${cinemaItems[0].image})` }}>
-              <div className="netflix-hero-vignette"></div>
-              <div className="netflix-hero-content">
-                <div className="netflix-hero-badge">{cinemaItems[0].tag}</div>
-                <h1 className="netflix-hero-title">{cinemaItems[0].title}</h1>
-                <p className="netflix-hero-synopsis">{cinemaItems[0].synopsis}</p>
-                <div className="netflix-hero-actions">
-                  <button className="btn-netflix-play tv-focusable" onClick={() => playVideo(cinemaItems[0])}>
-                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> Lecture
-                  </button>
-                  <button className="btn-netflix-info tv-focusable" onClick={() => openDetails(cinemaItems[0])}>
-                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '8px' }}>info_outline</span> Plus d'infos
-                  </button>
-                </div>
-              </div>
-              <div className="netflix-hero-age-rating">
-                <span>{cinemaItems[0].age || '13+'}</span>
-              </div>
-            </div>
-          )}
+          <HeroCarousel 
+            items={cinemaItems} 
+            onPlay={playVideo} 
+            onOpenDetails={openDetails} 
+            mediaType="video" 
+          />
           
           <div className="netflix-content-row">
             <h2 className="netflix-row-title">Films Populaires <span className="explore-all">Tout explorer <span className="material-icons-round">chevron_right</span></span></h2>
@@ -202,27 +188,12 @@ export default function DjaasooScreen({ currentProfile }) {
 
       {activeTab === "theatre" && (
         <div className="djaasoo-sub-tab-content active">
-          {theatreItems.length > 0 && (
-            <div className={`netflix-hero-banner tv-focusable ${theatreItems[0].bannerClass || ''}`} style={theatreItems[0].bannerClass ? {} : { backgroundImage: `url(${theatreItems[0].image})` }}>
-              <div className="netflix-hero-vignette"></div>
-              <div className="netflix-hero-content">
-                <div className="netflix-hero-badge">{theatreItems[0].tag}</div>
-                <h1 className="netflix-hero-title">{theatreItems[0].title}</h1>
-                <p className="netflix-hero-synopsis">{theatreItems[0].synopsis}</p>
-                <div className="netflix-hero-actions">
-                  <button className="btn-netflix-play tv-focusable" onClick={() => playVideo(theatreItems[0])}>
-                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> Lecture
-                  </button>
-                  <button className="btn-netflix-info tv-focusable" onClick={() => openDetails(theatreItems[0])}>
-                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '8px' }}>info_outline</span> Plus d'infos
-                  </button>
-                </div>
-              </div>
-              <div className="netflix-hero-age-rating">
-                <span>{theatreItems[0].age || '13+'}</span>
-              </div>
-            </div>
-          )}
+          <HeroCarousel 
+            items={theatreItems} 
+            onPlay={playVideo} 
+            onOpenDetails={openDetails} 
+            mediaType="video" 
+          />
           
           <div className="netflix-content-row">
             <h2 className="netflix-row-title">Spectacles en vedette <span className="explore-all">Tout explorer <span className="material-icons-round">chevron_right</span></span></h2>
@@ -273,27 +244,12 @@ export default function DjaasooScreen({ currentProfile }) {
 
       {activeTab === "docs" && (
         <div className="djaasoo-sub-tab-content active">
-          {docsItems.length > 0 && (
-            <div className={`netflix-hero-banner tv-focusable ${docsItems[0].bannerClass || ''}`} style={docsItems[0].bannerClass ? {} : { backgroundImage: `url(${docsItems[0].image})` }}>
-              <div className="netflix-hero-vignette"></div>
-              <div className="netflix-hero-content">
-                <div className="netflix-hero-badge">{docsItems[0].tag}</div>
-                <h1 className="netflix-hero-title">{docsItems[0].title}</h1>
-                <p className="netflix-hero-synopsis">{docsItems[0].synopsis}</p>
-                <div className="netflix-hero-actions">
-                  <button className="btn-netflix-play tv-focusable" onClick={() => playVideo(docsItems[0])}>
-                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '5px' }}>play_arrow</span> Lecture
-                  </button>
-                  <button className="btn-netflix-info tv-focusable" onClick={() => openDetails(docsItems[0])}>
-                    <span className="material-icons-round" style={{ fontSize: '28px', marginRight: '8px' }}>info_outline</span> Plus d'infos
-                  </button>
-                </div>
-              </div>
-              <div className="netflix-hero-age-rating">
-                <span>{docsItems[0].age || '10+'}</span>
-              </div>
-            </div>
-          )}
+          <HeroCarousel 
+            items={docsItems} 
+            onPlay={playVideo} 
+            onOpenDetails={openDetails} 
+            mediaType="video" 
+          />
           
           <div className="netflix-content-row">
             <h2 className="netflix-row-title">Culture & Découverte <span className="explore-all">Tout explorer <span className="material-icons-round">chevron_right</span></span></h2>

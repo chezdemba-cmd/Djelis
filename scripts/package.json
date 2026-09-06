@@ -1,0 +1,13 @@
+{
+  "name": "djelis-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Outils de génération de contenu local (pistes audio de secours DjeliSon).",
+  "scripts": {
+    "generate:audio": "node generate_audio.js"
+  },
+  "dependencies": {
+    "@breezystack/lamejs": "^1.2.7"
+  }
+}

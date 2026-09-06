@@ -87,7 +87,9 @@ export default function Navbar({ onOpenLogin }) {
         )}
 
         {!isAuthenticated && (
-          <button className="btn-signin" onClick={onOpenLogin}>S'identifier</button>
+          <Link href="/login" className="btn-signin" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            S'identifier
+          </Link>
         )}
       </div>
     </header>
