@@ -35,18 +35,33 @@ class ApiClient {
   Dio get dio => _dio;
 
   Future<T> get<T>(String path, {Map<String, dynamic>? queryParameters}) async {
-    final res = await _dio.get<T>(path, queryParameters: queryParameters);
-    return res.data as T;
+    try {
+      final res = await _dio.get<T>(path, queryParameters: queryParameters);
+      return res.data as T;
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error as AppException;
+      rethrow;
+    }
   }
 
   Future<T> post<T>(String path, {dynamic data}) async {
-    final res = await _dio.post<T>(path, data: data);
-    return res.data as T;
+    try {
+      final res = await _dio.post<T>(path, data: data);
+      return res.data as T;
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error as AppException;
+      rethrow;
+    }
   }
 
   Future<T> patch<T>(String path, {dynamic data}) async {
-    final res = await _dio.patch<T>(path, data: data);
-    return res.data as T;
+    try {
+      final res = await _dio.patch<T>(path, data: data);
+      return res.data as T;
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error as AppException;
+      rethrow;
+    }
   }
 }
 
@@ -113,18 +128,35 @@ class _AuthInterceptor extends Interceptor {
 class _ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    AppException? appException;
     if (err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.connectionError) {
-      throw const NetworkException();
+      appException = const NetworkException();
+    } else {
+      final code = err.response?.statusCode;
+      final msg = (err.response?.data as Map?)?['message'] as String?;
+      if (code == 401) {
+        appException = UnauthorizedException(msg ?? 'Session expirée');
+      } else if (code == 404) {
+        appException = NotFoundException(msg ?? 'Introuvable');
+      } else if (code != null && code >= 500) {
+        appException = ServerException(msg ?? 'Erreur serveur');
+      }
     }
-    final code = err.response?.statusCode;
-    final msg = (err.response?.data as Map?)?['message'] as String?;
-    if (code == 401) throw UnauthorizedException(msg ?? 'Session expirée');
-    if (code == 404) throw NotFoundException(msg ?? 'Introuvable');
-    if (code != null && code >= 500)
-      throw ServerException(msg ?? 'Erreur serveur');
+
+    if (appException != null) {
+      handler.reject(
+        DioException(
+          requestOptions: err.requestOptions,
+          response: err.response,
+          type: err.type,
+          error: appException,
+        ),
+      );
+      return;
+    }
     handler.next(err);
   }
 }
