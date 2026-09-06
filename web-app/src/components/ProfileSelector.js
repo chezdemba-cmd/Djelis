@@ -35,7 +35,7 @@ export default function ProfileSelector({ onSelectProfile }) {
         return;
       }
       try {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${baseUrl}/api/v1/profiles`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -71,7 +71,7 @@ export default function ProfileSelector({ onSelectProfile }) {
 
   const refreshProfiles = async () => {
     const token = await getAccessToken();
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${baseUrl}/api/v1/profiles`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -83,7 +83,7 @@ export default function ProfileSelector({ onSelectProfile }) {
     const token = await getAccessToken();
     if (!token) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${baseUrl}/api/v1/profiles/${editing.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -108,7 +108,7 @@ export default function ProfileSelector({ onSelectProfile }) {
     const token = await getAccessToken();
     if (!token) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${baseUrl}/api/v1/profiles/${editing.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -130,7 +130,7 @@ export default function ProfileSelector({ onSelectProfile }) {
     if (!token) return;
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${baseUrl}/api/v1/profiles`, {
         method: 'POST',
         headers: {

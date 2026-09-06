@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../app/admin.css';
 import { authHeader } from '../lib/authClient';
 
@@ -10,7 +10,7 @@ export default function AdminScreen({ onBack }) {
   const [uploadStep, setUploadStep] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const apiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const apiBase = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const authHeaders = async () => (await authHeader()) || {};
 
@@ -72,9 +72,9 @@ export default function AdminScreen({ onBack }) {
     coverFile: null
   });
 
-  const fetchAdminData = async () => {
+  const fetchAdminData = useCallback(async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
       // Fetch Dashboard Stats
       const statsRes = await fetch(`${baseUrl}/api/v1/admin/dashboard`, {
@@ -94,17 +94,17 @@ export default function AdminScreen({ onBack }) {
     } catch (err) {
       console.error("Erreur de récupération des données administrateur", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Data fetching owns the asynchronous state updates; this is not derived state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAdminData();
-  }, []);
+  }, [fetchAdminData]);
 
   const handleToggleSuspend = async (id, currentStatus) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${baseUrl}/api/v1/admin/contents/${id}/toggle`, {
         method: 'PATCH',
         headers: await authHeaders(),
@@ -123,7 +123,7 @@ export default function AdminScreen({ onBack }) {
   const handleDelete = async (id) => {
     if (window.confirm('Voulez-vous vraiment supprimer ce contenu définitivement ?')) {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await fetch(`${baseUrl}/api/v1/admin/contents/${id}`, {
           method: 'DELETE',
           headers: await authHeaders(),

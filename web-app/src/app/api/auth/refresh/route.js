@@ -25,7 +25,7 @@ export async function POST() {
     return res;
   }
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   let data;
   try {
     const backendRes = await fetch(`${backendUrl}/api/v1/auth/refresh`, {
