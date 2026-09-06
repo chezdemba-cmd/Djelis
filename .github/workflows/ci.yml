@@ -118,6 +118,9 @@ jobs:
     - name: Build Backend
       run: npm run build --prefix backend
 
+    - name: Run Unit Tests (Backend)
+      run: npm test --prefix backend
+
     - name: Prepare E2E Database
       run: npm exec --prefix backend -- prisma migrate deploy --schema backend/prisma/schema.prisma
 
