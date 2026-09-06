@@ -25,14 +25,14 @@ export class PaymentsService {
         "Passerelle de paiement non prise en charge."
       );
     }
-    if (
-      process.env.NODE_ENV === "production" ||
-      process.env.ENABLE_PAYMENT_SIMULATION !== "true"
-    ) {
-      throw new ServiceUnavailableException(
-        "La passerelle de paiement n'est pas encore configuree. Aucun paiement n'a ete cree."
-      );
-    }
+    const isSimulation = process.env.ENABLE_PAYMENT_SIMULATION === "true";
+    const appUrl =
+      process.env.APP_URL || process.env.WEB_APP_URL || "https://djelis.com";
+    const apiPublicUrl =
+      process.env.PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://api.djelis.com";
+
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan || !plan.isActive) {
       throw new NotFoundException(
@@ -59,24 +59,137 @@ export class PaymentsService {
 
     // 2. Prepare payload for Gateway API
     if (normalizedGateway === "wave") {
-      // Wave Direct API integration (Simulated payload)
-      // waveClient.createPayment({ amount, currency, phone: phoneMomo })
-      return {
-        paymentId: payment.id,
-        amount,
-        currency,
-        gateway: "wave",
-        waveLaunchUrl: `https://api.wave.com/v1/checkout/${payment.id}`, // Custom Wave Checkout Page
-      };
+      if (isSimulation) {
+        return {
+          paymentId: payment.id,
+          amount,
+          currency,
+          gateway: "wave",
+          waveLaunchUrl: `https://api.wave.com/v1/checkout/${payment.id}`,
+        };
+      }
+
+      const waveApiKey = process.env.WAVE_API_KEY;
+      if (!waveApiKey) {
+        throw new ServiceUnavailableException(
+          "WAVE_API_KEY non configurée : impossible d'initier un paiement réel Wave."
+        );
+      }
+
+      try {
+        const res = await fetch("https://api.wave.com/v1/checkout/sessions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${waveApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: amount.toString(),
+            currency: currency,
+            error_url: `${appUrl}/profile?payment=error&payment_id=${payment.id}`,
+            success_url: `${appUrl}/profile?payment=success&payment_id=${payment.id}`,
+            client_reference_id: payment.id,
+          }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.text().catch(() => "");
+          console.error("Wave session creation failed:", res.status, errData);
+          throw new ServiceUnavailableException(
+            "Échec de l'initialisation du paiement avec Wave."
+          );
+        }
+
+        const waveData = await res.json();
+        return {
+          paymentId: payment.id,
+          amount,
+          currency,
+          gateway: "wave",
+          waveLaunchUrl: waveData.wave_launch_url || waveData.checkout_url,
+        };
+      } catch (err: any) {
+        if (err instanceof ServiceUnavailableException) throw err;
+        console.error("Wave API error:", err);
+        throw new ServiceUnavailableException(
+          "Erreur lors de la communication avec Wave."
+        );
+      }
     } else if (normalizedGateway === "cinetpay") {
-      // CinetPay API integration (Simulated payload)
-      return {
-        paymentId: payment.id,
-        amount,
-        currency,
-        gateway: "cinetpay",
-        checkoutUrl: `https://checkout.cinetpay.com/${payment.id}`,
-      };
+      if (isSimulation) {
+        return {
+          paymentId: payment.id,
+          amount,
+          currency,
+          gateway: "cinetpay",
+          checkoutUrl: `https://checkout.cinetpay.com/${payment.id}`,
+        };
+      }
+
+      const cinetpayApiKey = process.env.CINETPAY_API_KEY;
+      const cinetpaySiteId = process.env.CINETPAY_SITE_ID;
+      if (!cinetpayApiKey || !cinetpaySiteId) {
+        throw new ServiceUnavailableException(
+          "CINETPAY_API_KEY ou CINETPAY_SITE_ID non configurés : impossible d'initier un paiement réel CinetPay."
+        );
+      }
+
+      try {
+        const res = await fetch(
+          "https://api-checkout.cinetpay.com/v2/payment",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              apikey: cinetpayApiKey,
+              site_id: cinetpaySiteId,
+              transaction_id: payment.id,
+              amount: amount,
+              currency: currency,
+              description: `Abonnement ${plan.name} - Djeli'S`,
+              return_url: `${appUrl}/profile?payment=success&payment_id=${payment.id}`,
+              notify_url: `${apiPublicUrl}/api/v1/payments/webhooks/cinetpay`,
+              channels: "ALL",
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          const errData = await res.text().catch(() => "");
+          console.error(
+            "CinetPay payment initiation failed:",
+            res.status,
+            errData
+          );
+          throw new ServiceUnavailableException(
+            "Échec de l'initialisation du paiement avec CinetPay."
+          );
+        }
+
+        const cinetData = await res.json();
+        const paymentUrl = cinetData?.data?.payment_url;
+        if (!paymentUrl) {
+          throw new ServiceUnavailableException(
+            cinetData?.description || "Lien de paiement CinetPay indisponible."
+          );
+        }
+
+        return {
+          paymentId: payment.id,
+          amount,
+          currency,
+          gateway: "cinetpay",
+          checkoutUrl: paymentUrl,
+        };
+      } catch (err: any) {
+        if (err instanceof ServiceUnavailableException) throw err;
+        console.error("CinetPay API error:", err);
+        throw new ServiceUnavailableException(
+          "Erreur lors de la communication avec CinetPay."
+        );
+      }
     }
 
     throw new BadRequestException(

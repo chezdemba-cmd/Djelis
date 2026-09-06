@@ -28,7 +28,9 @@ function bodyFromForwardingHeader(req: express.Request): Buffer | undefined {
   if (contentType.includes("application/json")) {
     const forwardedBody = JSON.parse(rawBody.toString("utf8"));
     if (JSON.stringify(forwardedBody) !== JSON.stringify(req.body)) {
-      throw new Error("Le corps signé ne correspond pas au corps de la requête");
+      throw new Error(
+        "Le corps signé ne correspond pas au corps de la requête"
+      );
     }
   }
 

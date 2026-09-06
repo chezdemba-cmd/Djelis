@@ -59,8 +59,8 @@ export class CatalogService {
             }
           : undefined,
       },
-      take: 10,
-      orderBy: { publishedAt: "desc" },
+      take: 50,
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { creator: true, category: true, genre: true },
     });
 
@@ -77,8 +77,8 @@ export class CatalogService {
             }
           : undefined,
       },
-      take: 10,
-      orderBy: { publishedAt: "desc" },
+      take: 50,
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { creator: true, category: true, genre: true },
     });
 
