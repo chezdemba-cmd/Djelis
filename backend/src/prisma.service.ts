@@ -15,7 +15,13 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   async onModuleInit() {
-    await this.$connect();
+    // Une fonction Vercel doit pouvoir terminer son cold start même si la base
+    // est momentanément indisponible. Prisma ouvrira la connexion à la
+    // première requête réelle ; /health/live reste ainsi une vraie liveness
+    // probe, indépendante des services externes.
+    if (!process.env.VERCEL) {
+      await this.$connect();
+    }
   }
 
   async onModuleDestroy() {

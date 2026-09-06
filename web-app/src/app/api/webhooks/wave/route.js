@@ -37,6 +37,7 @@ export async function POST(request) {
       headers: {
         'Content-Type': 'application/json',
         'wave-signature': signature,
+        'x-djelis-raw-body': Buffer.from(rawBody, 'utf8').toString('base64'),
       },
       body: rawBody,
     });
