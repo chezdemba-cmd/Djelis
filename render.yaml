@@ -6,7 +6,7 @@ services:
     plan: starter
     rootDir: backend
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /
+    healthCheckPath: /api/v1/health/live
     envVars:
       - key: DATABASE_URL
         sync: false

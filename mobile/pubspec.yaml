@@ -29,6 +29,7 @@ dependencies:
   # Media Playback
   video_player: ^2.7.0
   chewie: ^1.7.0
+  youtube_player_iframe: ^5.2.0   # embed YouTube (contenu gratuit/promo)
 
   # Design & Icons
   cupertino_icons: ^1.0.5

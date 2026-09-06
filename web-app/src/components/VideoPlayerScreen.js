@@ -1,10 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useMediaProgress } from "../hooks/useMediaProgress";
+import { getPlaybackUrl } from "../data/catalog";
+import { useSession } from "../context/SessionContext";
 
 export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
-  const videoUrl = videoItem?.videoUrl;
-  const contentId = videoItem?.id;
+  const { currentProfile } = useSession();
+  const contentId = videoItem?.contentId || videoItem?.id;
+  const episodeId = videoItem?.episodeId || null;
+  const youtubeId = videoItem?.youtubeId || videoItem?.youtube_id || null;
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [playbackError, setPlaybackError] = useState(null);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
@@ -21,7 +27,45 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
     typeof window !== "undefined" && localStorage.getItem("djelis_data_saver") === "1"
   );
 
-  useMediaProgress(videoRef, contentId);
+  useMediaProgress(videoRef, contentId, episodeId, currentProfile?.id || null);
+
+  // Résout l'URL de lecture (signée, courte durée) à chaque ouverture du lecteur.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    // Contenu YouTube : lecture directe via l'embed, aucune URL à résoudre.
+    if (youtubeId) return undefined;
+    let cancelled = false;
+
+    const resolvePlayback = async () => {
+      if (videoItem?.videoUrl) {
+        if (!cancelled) {
+          setPlaybackError(null);
+          setVideoUrl(videoItem.videoUrl);
+        }
+        return;
+      }
+      if (!contentId) {
+        if (!cancelled) setPlaybackError("Contenu indisponible.");
+        return;
+      }
+      if (!cancelled) {
+        setPlaybackError(null);
+        setVideoUrl(null);
+      }
+      const url = await getPlaybackUrl(contentId, episodeId);
+      if (cancelled) return;
+      if (url) setVideoUrl(url);
+      else
+        setPlaybackError(
+          "Lecture non autorisée : un abonnement ou une location actifs sont requis."
+        );
+    };
+
+    resolvePlayback();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, videoItem, contentId, episodeId, youtubeId]);
 
   // Charge la source vidéo : hls.js pour les manifests HLS sur les navigateurs
   // sans support natif (Chrome/Firefox/Android), lecture directe sinon (Safari, MP4).
@@ -93,9 +137,18 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
 
   const handleLoadedMetadata = () => {
     if (!videoRef.current || !videoItem) return;
+    const total = videoRef.current.duration;
+
+    // Position de reprise explicite (venue de "Continuer la lecture") : prioritaire.
+    const startAt = Number(videoItem.startAt) || 0;
+    if (startAt > 0 && (!total || startAt < total - 5)) {
+      videoRef.current.currentTime = startAt;
+      return;
+    }
+
     try {
       const saved = JSON.parse(localStorage.getItem('djelis_last_watched') || 'null');
-      if (saved && saved.id === videoItem.id && saved.currentTime > 0 && saved.currentTime < videoRef.current.duration - 5) {
+      if (saved && saved.id === videoItem.id && saved.currentTime > 0 && saved.currentTime < total - 5) {
         videoRef.current.currentTime = saved.currentTime;
       }
     } catch {
@@ -171,6 +224,104 @@ export default function VideoPlayerScreen({ isOpen, onClose, videoItem }) {
   }, []);
 
   if (!isOpen) return null;
+
+  // ── Lecteur YouTube (contenu gratuit/promo) ───────────────────────────────
+  // Embed en mode "privacy-enhanced" (youtube-nocookie), sans vidéos
+  // suggérées d'autres chaînes (rel=0). Le petit logo YouTube et le lien
+  // "regarder sur YouTube" restent visibles pendant la lecture (imposé par
+  // les CGU YouTube).
+  if (youtubeId) {
+    const src =
+      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeId)}` +
+      `?rel=0&modestbranding=1&playsinline=1&autoplay=1&color=white`;
+    return (
+      <div
+        className="video-player-overlay custom-player-overlay yt-player-overlay"
+        id="video-player-screen"
+        style={{ display: "flex", opacity: 1, zIndex: 99999 }}
+        ref={containerRef}
+      >
+        <iframe
+          title={videoItem?.title || "Vidéo"}
+          className="custom-video-element yt-iframe"
+          src={src}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+        />
+        <button
+          className="custom-back-btn visible"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (document.fullscreenElement) document.exitFullscreen();
+            onClose();
+          }}
+        >
+          <span className="material-icons-round">arrow_back</span>
+        </button>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .yt-player-overlay {
+            background-color: #050505;
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.4s ease-out;
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+          }
+          .yt-iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+          }
+          .yt-player-overlay .custom-back-btn {
+            position: absolute;
+            top: 32px;
+            left: 32px;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+          }
+          .yt-player-overlay .custom-back-btn:hover {
+            background: var(--primary-gold, #FFB300);
+            color: #000;
+            transform: scale(1.1);
+          }
+        ` }} />
+      </div>
+    );
+  }
+
+  if (playbackError) {
+    return (
+      <div
+        className="video-player-overlay custom-player-overlay"
+        style={{ display: "flex", opacity: 1, zIndex: 99999, flexDirection: "column", gap: "20px", background: "#050505", color: "white", textAlign: "center", padding: "24px" }}
+      >
+        <span className="material-icons-round" style={{ fontSize: "48px", color: "#FFB300" }}>lock</span>
+        <p style={{ maxWidth: "420px", fontSize: "16px", lineHeight: 1.5 }}>{playbackError}</p>
+        <button
+          onClick={onClose}
+          style={{ background: "#FFB300", color: "#000", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+        >
+          Retour
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div 

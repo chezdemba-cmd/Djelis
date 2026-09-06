@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { getAccessToken } from '../lib/authClient';
 
 /**
  * Hook pour suivre la progression de lecture d'un média et la synchroniser avec le backend.
@@ -6,7 +7,7 @@ import { useEffect, useRef } from 'react';
  * @param {string} contentId - ID du contenu en cours de lecture
  * @param {string} episodeId - (Optionnel) ID de l'épisode si c'est une série
  */
-export function useMediaProgress(mediaRef, contentId, episodeId = null) {
+export function useMediaProgress(mediaRef, contentId, episodeId = null, profileId = null) {
   const lastSyncTimeRef = useRef(0);
   const syncInterval = 10; // Synchronisation toutes les 10 secondes
 
@@ -16,8 +17,7 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null) {
 
     const syncProgress = async (currentTime) => {
       try {
-        // Récupération du token JWT (simulé ou réel selon l'implémentation de l'auth)
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('jwt_token');
+        const token = await getAccessToken();
         if (!token) return; // Si non authentifié, on ne synchronise pas
 
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -30,7 +30,8 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null) {
           body: JSON.stringify({
             content_id: contentId,
             episode_id: episodeId,
-            progress_sec: Math.floor(currentTime)
+            progress_sec: Math.floor(currentTime),
+            ...(profileId ? { profile_id: profileId } : {})
           })
         });
       } catch (error) {
@@ -64,5 +65,5 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null) {
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [mediaRef, contentId, episodeId]);
+  }, [mediaRef, contentId, episodeId, profileId]);
 }
