@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useMediaProgress } from "../hooks/useMediaProgress";
 
-export default function MiniPlayer({ audioItem, onClose }) {
+export default function MiniPlayer({ audioItem, onClose, currentProfile }) {
   const audioRef = useRef(null);
-  useMediaProgress(audioRef, audioItem?.id);
+  useMediaProgress(audioRef, audioItem?.id, null, currentProfile?.id || null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
 

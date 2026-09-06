@@ -62,7 +62,7 @@ export default function DjelisonPage() {
         <DjelisonScreen currentProfile={currentProfile} onPlayAudio={handlePlayMedia} />
       </section>
 
-      <MiniPlayer key={currentAudio?.id} audioItem={currentAudio} onClose={() => setCurrentAudio(null)} />
+      <MiniPlayer key={currentAudio?.id} audioItem={currentAudio} currentProfile={currentProfile} onClose={() => setCurrentAudio(null)} />
       <VideoPlayerScreen isOpen={!!currentVideo} videoItem={currentVideo} onClose={() => setCurrentVideo(null)} />
     </div>
   );
