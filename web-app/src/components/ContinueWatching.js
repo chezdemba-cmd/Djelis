@@ -24,7 +24,7 @@ export default function ContinueWatching({ currentProfile, type, onResume }) {
       if (!currentProfile) return;
 
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await authFetch(`${baseUrl}/api/v1/stream/history?profile_id=${currentProfile.id}&type=${type}`);
 
         if (res.ok) {

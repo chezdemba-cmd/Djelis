@@ -24,7 +24,7 @@ export async function POST(request) {
     }
 
     // Forward the verified webhook payload to NestJS backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const res = await fetch(`${backendUrl}/api/v1/payments/webhooks/cinetpay`, {
       method: 'POST',
       headers: {

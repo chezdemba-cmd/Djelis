@@ -20,7 +20,7 @@ export function useMediaProgress(mediaRef, contentId, episodeId = null, profileI
         const token = await getAccessToken();
         if (!token) return; // Si non authentifié, on ne synchronise pas
 
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         await fetch(`${baseUrl}/api/v1/stream/progress`, {
           method: 'POST',
           headers: {

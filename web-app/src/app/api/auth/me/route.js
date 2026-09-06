@@ -6,7 +6,7 @@ export async function GET() {
   const token = cookieStore.get('accessToken');
   
   if (token?.value) {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     try {
       const response = await fetch(`${backendUrl}/api/v1/profiles`, {
         headers: { Authorization: `Bearer ${token.value}` },

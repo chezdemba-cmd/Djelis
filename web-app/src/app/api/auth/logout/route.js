@@ -8,7 +8,7 @@ export async function POST() {
   // Révoque la session côté backend (best-effort).
   if (refreshToken) {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       await fetch(`${backendUrl}/api/v1/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
