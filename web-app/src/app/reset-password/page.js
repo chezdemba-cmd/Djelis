@@ -16,6 +16,8 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    // Le jeton vient de l'URL (dispo seulement côté client).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToken(new URLSearchParams(window.location.search).get("token"));
   }, []);
 

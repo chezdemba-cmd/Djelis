@@ -14,8 +14,11 @@ export default function VerifyEmailPage() {
   const [resendDone, setResendDone] = useState(false);
 
   useEffect(() => {
+    // Le jeton vient de l'URL (dispo seulement côté client) : on synchronise
+    // l'état une fois au montage.
     const token = new URLSearchParams(window.location.search).get("token");
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState("notoken");
       return;
     }
