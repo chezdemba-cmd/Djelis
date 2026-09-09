@@ -64,6 +64,27 @@ export class PaymentsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post("rent")
+  @HttpCode(HttpStatus.OK)
+  async rent(
+    @Req() req: any,
+    @Body("content_id") contentId: string,
+    @Body("provider") provider: string,
+    @Body("gateway") gateway?: string
+  ) {
+    const result = await this.paymentsService.createRental(
+      req.user.id,
+      contentId,
+      provider || gateway
+    );
+    return {
+      payment_id: result.paymentId,
+      status: "pending",
+      redirect_url: result.checkoutUrl || result.waveLaunchUrl || null,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get("status/:id")
   @HttpCode(HttpStatus.OK)
   async getStatus(@Req() req: any, @Param("id") id: string) {

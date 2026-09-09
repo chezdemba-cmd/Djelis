@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCatalog, getFavorites, addFavorite, removeFavorite, isKidsFriendly } from "../data/catalog";
+import { getCatalog, getFavorites, addFavorite, removeFavorite, isKidsFriendly, rentContent } from "../data/catalog";
 import DetailsModal from "./DetailsModal";
 import VideoPlayerScreen from "./VideoPlayerScreen";
 import ContinueWatching from "./ContinueWatching";
@@ -78,6 +78,19 @@ export default function DjaasooScreen({ currentProfile }) {
     setPlayingVideo(item);
     setIsVideoOpen(true);
   };
+
+  const handleRent = async (item) => {
+    try {
+      const url = await rentContent(item.contentId || item.id, "cinetpay");
+      if (url) {
+        window.location.href = url;
+      } else {
+        alert("Location initiée. Suivez les instructions de paiement.");
+      }
+    } catch (err) {
+      alert(err.message || "La location n'a pas pu être initiée.");
+    }
+  };
   const closeVideo = () => {
     setIsVideoOpen(false);
     setPlayingVideo(null);
@@ -89,11 +102,12 @@ export default function DjaasooScreen({ currentProfile }) {
 
   return (
     <>
-      <DetailsModal 
-        isOpen={isDetailsOpen} 
-        item={selectedItem} 
-        onClose={closeDetails} 
-        onPlay={() => playVideo(selectedItem)} 
+      <DetailsModal
+        isOpen={isDetailsOpen}
+        item={selectedItem}
+        onClose={closeDetails}
+        onPlay={() => playVideo(selectedItem)}
+        onRent={handleRent}
       />
       
       <VideoPlayerScreen 

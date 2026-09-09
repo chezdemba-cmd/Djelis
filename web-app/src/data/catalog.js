@@ -185,6 +185,9 @@ export async function getCatalog() {
           youtubeId: item.youtubeId || item.youtube_id || null,
           hasMedia: item.hasMedia !== false,
           age: item.ageRating || 'G',
+          isPremium: item.isPremium !== false,
+          rentalPriceFcfa: item.rentalPriceFcfa ?? null,
+          rentalPriceEuro: item.rentalPriceEuro ?? null,
           category: (() => {
             const catStr = [
               item.genre?.slug,
@@ -230,6 +233,26 @@ export function isKidsFriendly(age) {
  * Le backend vérifie l'abonnement / la location avant de la délivrer.
  * Retourne null si non autorisé, non connecté, ou média absent.
  */
+/**
+ * Lance la location à l'acte (TVOD) d'un contenu : renvoie l'URL de la
+ * passerelle de paiement à ouvrir, ou lève une Error avec le message serveur.
+ */
+export async function rentContent(contentId, provider = 'cinetpay') {
+  const headers = await authHeaders();
+  if (!headers) throw new Error('Vous devez être connecté pour louer un contenu.');
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/api/v1/payments/rent`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content_id: contentId, provider }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || "La location n'a pas pu être initiée.");
+  }
+  return data.redirect_url || null;
+}
+
 export async function getPlaybackUrl(contentId, episodeId = null) {
   if (!contentId) return null;
   const headers = await authHeaders();
