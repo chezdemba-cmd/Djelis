@@ -1,5 +1,7 @@
-export default function DetailsModal({ isOpen, onClose, item, onPlay }) {
+export default function DetailsModal({ isOpen, onClose, item, onPlay, onRent }) {
   if (!isOpen || !item) return null;
+
+  const canRent = Boolean(item.isPremium && item.rentalPriceFcfa);
 
   return (
     <div className="modal" id="details-modal" style={{ display: "flex" }}>
@@ -33,16 +35,17 @@ export default function DetailsModal({ isOpen, onClose, item, onPlay }) {
               <span className="material-icons-round">play_arrow</span> Regarder
             </button>
             
-            {/* Bouton TVOD */}
-            <button 
-              className="modal-action-btn tv-focusable" 
-              style={{ flex: 1, minWidth: "130px", background: "linear-gradient(135deg, #FFB300, #F57C00)", color: "#000" }} 
-              onClick={() => {
-                alert(`Redirection vers la passerelle de paiement (Wave/Orange Money) pour la location de "${item.title}" au tarif de 500 FCFA (Valable 48h).`);
-              }}
-            >
-              <span className="material-icons-round">shopping_cart</span> Louer (500 FCFA)
-            </button>
+            {/* Location à l'acte (TVOD) */}
+            {canRent && (
+              <button
+                className="modal-action-btn tv-focusable"
+                style={{ flex: 1, minWidth: "130px", background: "linear-gradient(135deg, #FFB300, #F57C00)", color: "#000" }}
+                onClick={() => onRent && onRent(item)}
+                title={`Location valable 48 h`}
+              >
+                <span className="material-icons-round">shopping_cart</span> Louer ({item.rentalPriceFcfa} FCFA)
+              </button>
+            )}
             <button 
               className="modal-download-btn tv-focusable" 
               id="modal-download-btn" 

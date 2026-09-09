@@ -28,13 +28,6 @@ export class PaymentsService {
         "Passerelle de paiement non prise en charge."
       );
     }
-    const isSimulation = process.env.ENABLE_PAYMENT_SIMULATION === "true";
-    const appUrl =
-      process.env.APP_URL || process.env.WEB_APP_URL || "https://djelis.com";
-    const apiPublicUrl =
-      process.env.PUBLIC_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      "https://api.djelis.com";
 
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan || !plan.isActive) {
@@ -43,12 +36,11 @@ export class PaymentsService {
       );
     }
 
-    // Determine pricing and currency based on gateway
+    // Wave & CinetPay encaissent en XOF.
     const isLocalGateway = ["cinetpay", "wave"].includes(normalizedGateway);
     const amount = isLocalGateway ? plan.priceFcfa : Number(plan.priceEuro);
     const currency = isLocalGateway ? "XOF" : "EUR";
 
-    // 1. Create a pending payment log in the database
     const payment = await this.prisma.payment.create({
       data: {
         userId,
@@ -60,8 +52,115 @@ export class PaymentsService {
       },
     });
 
-    // 2. Prepare payload for Gateway API
-    if (normalizedGateway === "wave") {
+    return this.initiateGatewayCheckout({
+      payment,
+      amount,
+      currency,
+      gateway: normalizedGateway,
+      description: `Abonnement ${plan.name} - Djeli'S`,
+    });
+  }
+
+  /**
+   * Location à l'acte (TVOD). Crée une location "inactive" (expiresAt = epoch)
+   * puis un paiement en attente ; la location est activée au webhook de succès
+   * (cf. handleWebhook), pour une durée RENTAL_DURATION_HOURS (défaut 48 h).
+   */
+  async createRental(userId: string, contentId: string, gateway: string) {
+    const normalizedGateway = gateway?.toLowerCase();
+    if (!["wave", "cinetpay"].includes(normalizedGateway)) {
+      throw new BadRequestException(
+        "Passerelle de paiement non prise en charge."
+      );
+    }
+
+    const content = await this.prisma.content.findFirst({
+      where: { id: contentId, isActive: true },
+    });
+    if (!content) {
+      throw new NotFoundException("Contenu introuvable.");
+    }
+    if (!content.isPremium) {
+      throw new BadRequestException(
+        "Ce contenu est gratuit : aucune location nécessaire."
+      );
+    }
+    if (content.rentalPriceFcfa == null) {
+      throw new BadRequestException(
+        "Ce contenu n'est pas proposé à la location."
+      );
+    }
+
+    // Déjà accessible ? (abonnement actif ou location en cours)
+    const now = new Date();
+    const [activeSub, activeRental] = await Promise.all([
+      this.prisma.subscription.findFirst({
+        where: {
+          userId,
+          status: SubscriptionStatus.ACTIVE,
+          endsAt: { gt: now },
+        },
+      }),
+      this.prisma.rental.findFirst({
+        where: { userId, contentId, expiresAt: { gt: now } },
+      }),
+    ]);
+    if (activeSub) {
+      throw new BadRequestException("Vous avez déjà un abonnement actif.");
+    }
+    if (activeRental) {
+      throw new BadRequestException(
+        "Vous avez déjà une location en cours pour ce contenu."
+      );
+    }
+
+    const isLocalGateway = ["cinetpay", "wave"].includes(normalizedGateway);
+    const amount = isLocalGateway
+      ? content.rentalPriceFcfa
+      : Number(content.rentalPriceEuro ?? 0);
+    const currency = isLocalGateway ? "XOF" : "EUR";
+
+    const rental = await this.prisma.rental.create({
+      data: { userId, contentId, expiresAt: new Date(0) },
+    });
+    const payment = await this.prisma.payment.create({
+      data: {
+        userId,
+        rentalId: rental.id,
+        amount,
+        currency,
+        gateway: normalizedGateway,
+        status: PaymentStatus.PENDING,
+      },
+    });
+
+    return this.initiateGatewayCheckout({
+      payment,
+      amount,
+      currency,
+      gateway: normalizedGateway,
+      description: `Location "${content.title}" - Djeli'S`,
+    });
+  }
+
+  /** Ouvre une session de paiement chez la passerelle pour un paiement déjà créé. */
+  private async initiateGatewayCheckout(params: {
+    payment: { id: string };
+    amount: number;
+    currency: string;
+    gateway: string;
+    description: string;
+  }) {
+    const { payment, amount, currency, gateway, description } = params;
+    const isSimulation = process.env.ENABLE_PAYMENT_SIMULATION === "true";
+    const appUrl =
+      process.env.APP_URL || process.env.WEB_APP_URL || "https://djelis.com";
+    const apiPublicUrl =
+      process.env.PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://api.djelis.com";
+
+    if (gateway === "wave") {
       if (isSimulation) {
         return {
           paymentId: payment.id,
@@ -118,7 +217,7 @@ export class PaymentsService {
           "Erreur lors de la communication avec Wave."
         );
       }
-    } else if (normalizedGateway === "cinetpay") {
+    } else if (gateway === "cinetpay") {
       if (isSimulation) {
         return {
           paymentId: payment.id,
@@ -138,26 +237,23 @@ export class PaymentsService {
       }
 
       try {
-        const res = await fetch(
-          "https://api-checkout.cinetpay.com/v2/payment",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              apikey: cinetpayApiKey,
-              site_id: cinetpaySiteId,
-              transaction_id: payment.id,
-              amount: amount,
-              currency: currency,
-              description: `Abonnement ${plan.name} - Djeli'S`,
-              return_url: `${appUrl}/profile?payment=success&payment_id=${payment.id}`,
-              notify_url: `${apiPublicUrl}/api/v1/payments/webhooks/cinetpay`,
-              channels: "ALL",
-            }),
-          }
-        );
+        const res = await fetch("https://api-checkout.cinetpay.com/v2/payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apikey: cinetpayApiKey,
+            site_id: cinetpaySiteId,
+            transaction_id: payment.id,
+            amount: amount,
+            currency: currency,
+            description,
+            return_url: `${appUrl}/profile?payment=success&payment_id=${payment.id}`,
+            notify_url: `${apiPublicUrl}/api/v1/payments/webhooks/cinetpay`,
+            channels: "ALL",
+          }),
+        });
 
         if (!res.ok) {
           const errData = await res.text().catch(() => "");
@@ -195,9 +291,7 @@ export class PaymentsService {
       }
     }
 
-    throw new BadRequestException(
-      "Passerelle de paiement non prise en charge."
-    );
+    throw new BadRequestException("Passerelle de paiement non prise en charge.");
   }
 
   // Handle transaction confirmation from CinetPay / Wave Webhooks
@@ -305,9 +399,35 @@ export class PaymentsService {
     }
 
     if (gatewayStatus === "succeeded") {
-      if (!payment.userId || !payment.planId) {
+      if (!payment.userId) {
         throw new BadRequestException(
-          "Données de transaction incomplètes (userId ou planId manquant)."
+          "Données de transaction incomplètes (userId manquant)."
+        );
+      }
+
+      // Location à l'acte : on active la location (expiresAt réel).
+      if (payment.rentalId) {
+        const hours = Number(process.env.RENTAL_DURATION_HOURS) || 48;
+        const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+        await this.prisma.$transaction(async (tx) => {
+          await tx.rental.update({
+            where: { id: payment.rentalId as string },
+            data: { expiresAt },
+          });
+          await tx.payment.update({
+            where: { id: payment.id },
+            data: {
+              status: PaymentStatus.SUCCESSFUL,
+              gatewayTransactionId: transactionId,
+            },
+          });
+        });
+        return { status: "success", rentalId: payment.rentalId, expiresAt };
+      }
+
+      if (!payment.planId) {
+        throw new BadRequestException(
+          "Données de transaction incomplètes (planId manquant)."
         );
       }
       const paymentUserId = payment.userId;
