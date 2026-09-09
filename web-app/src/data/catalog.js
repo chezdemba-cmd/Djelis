@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from "../utils/supabase";
 import { authHeader } from "../lib/authClient";
+import { LAUNCH_MODE } from "../lib/launchMode";
 
 export const dummyCatalog = [
   {
@@ -161,6 +162,9 @@ export function resolveFallbackAudio(title = '', slug = '') {
 }
 
 export async function getCatalog() {
+  // Mode lancement : DjaaSoo fermé — pas de catalogue vidéo, ni de repli sur les
+  // données de démonstration (sinon des films factices s'afficheraient).
+  if (LAUNCH_MODE) return [];
   try {
     const headers = (await authHeader()) || {};
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';

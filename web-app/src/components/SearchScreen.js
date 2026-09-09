@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getCatalog, searchCatalog } from "../data/catalog";
+import { LAUNCH_MODE } from "../lib/launchMode";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
@@ -49,7 +50,7 @@ export default function SearchScreen() {
           <span className="material-icons-round">search</span>
           <input 
             type="text" 
-            placeholder="Rechercher des films, séries, musiques..." 
+            placeholder={LAUNCH_MODE ? "Rechercher musiques, clips, podcasts, contes..." : "Rechercher des films, séries, musiques..."}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
