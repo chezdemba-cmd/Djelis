@@ -94,7 +94,9 @@ export class AuthService {
       .createHash("sha256")
       .update(token)
       .digest("hex");
-    const emailVerificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const emailVerificationExpiresAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000
+    );
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -111,7 +113,9 @@ export class AuthService {
       process.env.NODE_ENV !== "production" &&
       process.env.AUTH_DEBUG_CODES === "true"
     ) {
-      console.warn(`[AUTH DEBUG] Email verification token for ${email}: ${token}`);
+      console.warn(
+        `[AUTH DEBUG] Email verification token for ${email}: ${token}`
+      );
     }
   }
 
@@ -151,7 +155,9 @@ export class AuthService {
       !user.emailVerificationExpiresAt ||
       user.emailVerificationExpiresAt.getTime() < Date.now()
     ) {
-      throw new UnauthorizedException("Lien de vérification invalide ou expiré.");
+      throw new UnauthorizedException(
+        "Lien de vérification invalide ou expiré."
+      );
     }
 
     await this.prisma.user.update({
@@ -174,7 +180,8 @@ export class AuthService {
     }
     return {
       success: true,
-      message: "Si ce compte existe et n'est pas vérifié, un e-mail a été envoyé.",
+      message:
+        "Si ce compte existe et n'est pas vérifié, un e-mail a été envoyé.",
     };
   }
 
