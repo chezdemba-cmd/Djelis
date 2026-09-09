@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "../context/SessionContext";
+import { LAUNCH_MODE } from "../lib/launchMode";
 
 export default function Navbar({ onOpenLogin, onOpenMobileMenu }) {
   const { isAuthenticated, currentProfile, logout, selectProfile } = useSession();
@@ -43,7 +44,10 @@ export default function Navbar({ onOpenLogin, onOpenMobileMenu }) {
         {isAuthenticated && currentProfile !== null && (
           <nav className="navbar-links">
             <Link href="/browse" className={pathname === '/browse' ? 'active' : ''}>Accueil</Link>
-            <Link href="/djaasoo" className={pathname.startsWith('/djaasoo') ? 'active' : ''}>DjaaSoo</Link>
+            <Link href="/djaasoo" className={pathname.startsWith('/djaasoo') ? 'active' : ''} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              DjaaSoo
+              {LAUNCH_MODE && <span className="material-icons-round" style={{ fontSize: 14, opacity: 0.7 }}>lock</span>}
+            </Link>
             <Link href="/djelison" className={pathname.startsWith('/djelison') ? 'active' : ''}>DjeliSon</Link>
             <Link href="/mylist" className={pathname === '/mylist' ? 'active' : ''}>Ma Liste</Link>
           </nav>

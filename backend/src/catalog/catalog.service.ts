@@ -7,6 +7,16 @@ import { stripMediaRefs } from "./media-sanitizer";
 export class CatalogService {
   constructor(private prisma: PrismaService) {}
 
+  /** Mode lancement : DjaaSoo (vidéo) fermé — on ne sert que l'audio partout. */
+  private get launchMode(): boolean {
+    return process.env.LAUNCH_MODE === "true";
+  }
+
+  /** Fragment `where` Prisma qui exclut la vidéo en mode lancement. */
+  private get launchTypeFilter(): { type?: ContentType } {
+    return this.launchMode ? { type: ContentType.AUDIO } : {};
+  }
+
   mapContentToMobile(content: any) {
     if (!content) return null;
     return {
@@ -46,23 +56,29 @@ export class CatalogService {
 
   // Separates landing page components into DjaaSoo (Video) and DjeliSon (Audio)
   async getHomeFeed(country?: string) {
-    const djaasooVideos = await this.prisma.content.findMany({
-      where: {
-        type: ContentType.VIDEO,
-        isActive: true,
-        rightsTerritories: country
-          ? {
-              some: {
-                countryCode: country,
-                isAllowed: true,
-              },
-            }
-          : undefined,
-      },
-      take: 50,
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      include: { creator: true, category: true, genre: true },
-    });
+    // Mode lancement : DjaaSoo n'est pas encore ouvert au public. On ne renvoie
+    // aucun contenu vidéo (le catalogue reste privé le temps de le constituer).
+    const launchMode = this.launchMode;
+
+    const djaasooVideos = launchMode
+      ? []
+      : await this.prisma.content.findMany({
+          where: {
+            type: ContentType.VIDEO,
+            isActive: true,
+            rightsTerritories: country
+              ? {
+                  some: {
+                    countryCode: country,
+                    isAllowed: true,
+                  },
+                }
+              : undefined,
+          },
+          take: 50,
+          orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+          include: { creator: true, category: true, genre: true },
+        });
 
     const djelisonAudios = await this.prisma.content.findMany({
       where: {
@@ -83,8 +99,10 @@ export class CatalogService {
     });
 
     return {
+      launchMode,
       djaasoo: {
         title: "DjaaSoo - Vidéos & Cinéma",
+        locked: launchMode,
         contents: djaasooVideos.map(stripMediaRefs),
       },
       djelison: {
@@ -104,25 +122,30 @@ export class CatalogService {
         }
       : undefined;
 
-    const heroVideo = await this.prisma.content.findFirst({
-      where: {
-        type: ContentType.VIDEO,
-        isActive: true,
-        rightsTerritories: territoryFilter,
-      },
-      include: { creator: true, category: true, episodes: true },
-    });
+    // Mode lancement : pas de héros ni de rangée vidéo.
+    const heroVideo = this.launchMode
+      ? null
+      : await this.prisma.content.findFirst({
+          where: {
+            type: ContentType.VIDEO,
+            isActive: true,
+            rightsTerritories: territoryFilter,
+          },
+          include: { creator: true, category: true, episodes: true },
+        });
 
-    const djaasooVideos = await this.prisma.content.findMany({
-      where: {
-        type: ContentType.VIDEO,
-        isActive: true,
-        rightsTerritories: territoryFilter,
-      },
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: { creator: true, category: true, episodes: true },
-    });
+    const djaasooVideos = this.launchMode
+      ? []
+      : await this.prisma.content.findMany({
+          where: {
+            type: ContentType.VIDEO,
+            isActive: true,
+            rightsTerritories: territoryFilter,
+          },
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: { creator: true, category: true, episodes: true },
+        });
 
     const djelisonAudios = await this.prisma.content.findMany({
       where: {
@@ -179,6 +202,7 @@ export class CatalogService {
     const whereClause: any = {
       isActive: true,
       ...(contentTypes.length > 0 ? { type: { in: contentTypes } } : {}),
+      ...this.launchTypeFilter, // mode lancement : force l'audio uniquement
       ...(categoryId ? { categoryId: parseInt(categoryId, 10) } : {}),
       ...(countryCode
         ? {
@@ -222,7 +246,11 @@ export class CatalogService {
       },
     });
 
-    if (!content || !content.isActive) {
+    if (
+      !content ||
+      !content.isActive ||
+      (this.launchMode && content.type === ContentType.VIDEO)
+    ) {
       throw new NotFoundException("Contenu introuvable ou indisponible.");
     }
 
@@ -248,7 +276,11 @@ export class CatalogService {
       });
     }
 
-    if (!content || !content.isActive) {
+    if (
+      !content ||
+      !content.isActive ||
+      (this.launchMode && content.type === ContentType.VIDEO)
+    ) {
       throw new NotFoundException("Contenu introuvable ou indisponible.");
     }
 
@@ -259,6 +291,7 @@ export class CatalogService {
     const contents = await this.prisma.content.findMany({
       where: {
         isActive: true,
+        ...this.launchTypeFilter,
         rightsTerritories: country
           ? {
               some: {
@@ -283,6 +316,7 @@ export class CatalogService {
       this.prisma.content.findMany({
         where: {
           isActive: true,
+          ...this.launchTypeFilter,
           OR: [
             { title: { contains: query, mode: "insensitive" } },
             { synopsis: { contains: query, mode: "insensitive" } },
@@ -300,6 +334,7 @@ export class CatalogService {
       this.prisma.content.count({
         where: {
           isActive: true,
+          ...this.launchTypeFilter,
           OR: [
             { title: { contains: query, mode: "insensitive" } },
             { synopsis: { contains: query, mode: "insensitive" } },

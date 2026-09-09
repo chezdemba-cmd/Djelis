@@ -1,3 +1,5 @@
+import { LAUNCH_MODE } from "../lib/launchMode";
+
 export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal, onOpenAdmin, currentProfile }) {
   return (
     <div id="page-profile" className="app-page active" style={{ width: "100%", height: "100%" }}>
@@ -29,19 +31,23 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
               </div>
               <h2 className="profile-name" id="user-display-name">{currentProfile?.name || 'Sidiki Keita'}</h2>
               <p className="profile-email" id="user-display-email">{currentProfile?.role === 'Kids' ? 'Profil Enfant' : 'Profil Principal'}</p>
-              <span className="profile-status-badge" id="user-display-status">Membre Premium VIP</span>
+              <span className="profile-status-badge" id="user-display-status">
+                {LAUNCH_MODE ? "Accès gratuit — DjeliSon" : "Membre Premium VIP"}
+              </span>
             </div>
 
-            <div className="profile-plans-hover-card tv-focusable" id="profile-abonnements-banner" onClick={openAuthModal}>
-              <div className="hover-card-content">
-                <span className="material-icons-round">stars</span>
-                <div>
-                  <h4>Gérer mon Abonnement</h4>
-                  <p>Modifier l&apos;offre, facturation et reçus</p>
+            {!LAUNCH_MODE && (
+              <div className="profile-plans-hover-card tv-focusable" id="profile-abonnements-banner" onClick={openAuthModal}>
+                <div className="hover-card-content">
+                  <span className="material-icons-round">stars</span>
+                  <div>
+                    <h4>Gérer mon Abonnement</h4>
+                    <p>Modifier l&apos;offre, facturation et reçus</p>
+                  </div>
                 </div>
+                <span className="material-icons-round">chevron_right</span>
               </div>
-              <span className="material-icons-round">chevron_right</span>
-            </div>
+            )}
 
             <div className="profile-actions-list">
               <div className="profile-action-item tv-focusable">
@@ -56,11 +62,13 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
               <div className="profile-action-item tv-focusable">
                 <span className="material-icons-round">help_outline</span> Centre d&apos;aide
               </div>
-              <div className="profile-action-item profile-plans-btn tv-focusable" onClick={openAuthModal}>
-                <span className="material-icons-round">account_balance_wallet</span>
-                <span>Abonnements & Tarifs</span>
-                <span className="material-icons-round arrow">chevron_right</span>
-              </div>
+              {!LAUNCH_MODE && (
+                <div className="profile-action-item profile-plans-btn tv-focusable" onClick={openAuthModal}>
+                  <span className="material-icons-round">account_balance_wallet</span>
+                  <span>Abonnements & Tarifs</span>
+                  <span className="material-icons-round arrow">chevron_right</span>
+                </div>
+              )}
 
               {/* Liens légaux indispensables pour la publication sur les stores */}
               <a href="/privacy" className="profile-action-item tv-focusable" style={{ textDecoration: 'none', color: 'inherit' }}>

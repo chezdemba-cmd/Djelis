@@ -231,8 +231,8 @@ export default function LoginPage() {
         <div className="login-footer">
           <div className="login-footer-register">
             Pas encore de compte ?
-            <Link href="/" className="login-link-gold">
-              Découvrir nos forfaits
+            <Link href="/register" className="login-link-gold">
+              Créer un compte
             </Link>
           </div>
           <Link href="/" className="login-back-home">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "../context/SessionContext";
+import { LAUNCH_MODE } from "../lib/launchMode";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -24,8 +25,8 @@ export default function BottomNav() {
     {
       label: "DjaaSoo",
       href: "/djaasoo",
-      icon: "movie",
-      badge: "VOD",
+      icon: LAUNCH_MODE ? "lock" : "movie",
+      badge: LAUNCH_MODE ? "SOON" : "VOD",
       isActive: pathname.startsWith("/djaasoo"),
     },
     {
@@ -163,6 +164,11 @@ export default function BottomNav() {
         .bottom-nav-mini-badge.audio {
           background: #ffb300;
           color: #0d0d11;
+        }
+
+        .bottom-nav-mini-badge.soon {
+          background: #6b7280;
+          color: #ffffff;
         }
 
         .bottom-nav-label {
