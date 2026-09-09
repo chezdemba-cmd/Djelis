@@ -43,6 +43,10 @@ class AuthLogout extends AuthEvent {
   const AuthLogout();
 }
 
+class AuthDeleteAccount extends AuthEvent {
+  const AuthDeleteAccount();
+}
+
 class AuthRegisterWithPhone extends AuthEvent {
   final String phone;
   final String password;

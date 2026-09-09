@@ -1,5 +1,11 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/network/api_client.dart';
@@ -22,14 +28,63 @@ import 'features/downloads/presentation/bloc/download_bloc.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint("Note: Fichier .env non chargé, utilisation de l'URL par défaut: $e");
-  }
-  runApp(const DjelisApp());
+Future<void> main() async {
+  await runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      debugPrint("Note: .env non chargé (normal en release) : $e");
+    }
+
+    // Résolution de la config (fail-fast si API_BASE_URL absente en release).
+    final config = AppConfig.init();
+
+    // Service audio de premier plan (notification / écran verrouillé / MediaSession).
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.djelis.app.audio',
+      androidNotificationChannelName: 'Lecture Djeli\'S',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    );
+
+    // Capture des erreurs framework Flutter.
+    final previousOnError = FlutterError.onError;
+    FlutterError.onError = (details) {
+      previousOnError?.call(details);
+      if (config.sentryDsn.isNotEmpty) {
+        Sentry.captureException(details.exception, stackTrace: details.stack);
+      }
+    };
+    // Capture des erreurs asynchrones hors framework.
+    PlatformDispatcher.instance.onError = (error, stack) {
+      if (config.sentryDsn.isNotEmpty) {
+        Sentry.captureException(error, stackTrace: stack);
+      }
+      return true;
+    };
+
+    if (config.sentryDsn.isNotEmpty) {
+      await SentryFlutter.init((o) {
+        o.dsn = config.sentryDsn;
+        o.environment = config.environment;
+        o.release = 'djelis_mobile@1.0.0+1';
+        o.tracesSampleRate = 0.0; // pas de tracing perf pour le lancement
+        o.sendDefaultPii = false; // aucune donnée personnelle envoyée
+      });
+    }
+
+    runApp(const DjelisApp());
+  }, (error, stack) {
+    // Zone catch : erreurs non rattrapées ailleurs.
+    try {
+      if (AppConfig.instance.sentryDsn.isNotEmpty) {
+        Sentry.captureException(error, stackTrace: stack);
+      }
+    } catch (_) {/* config non initialisée */}
+    debugPrint('Uncaught zone error: $error\n$stack');
+  });
 }
 
 class DjelisApp extends StatelessWidget {

@@ -7,6 +7,7 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../data/models/content_model.dart';
 import '../../data/repositories/catalog_repository.dart';
+import '../../../player/audio/audio_player_service.dart';
 
 class DjelisonScreen extends StatefulWidget {
   const DjelisonScreen({super.key});
@@ -44,22 +45,45 @@ class _DjelisonScreenState extends State<DjelisonScreen> {
   Future<void> _playContent(ContentModel content) async {
     if (_isFetchingStream) return;
     setState(() => _isFetchingStream = true);
+    final repo = context.read<CatalogRepository>();
+
+    // File d'attente = liste audio visible (bornée). URLs signées résolues en
+    // parallèle ; les morceaux qui échouent sont ignorés.
+    final queueSource = (_contents.isNotEmpty ? _contents : [content])
+        .take(20)
+        .toList();
+
     try {
-      final episodeId =
-          content.episodes.isNotEmpty ? content.episodes.first.id : null;
-      final signedUrl = await context.read<CatalogRepository>().getStreamToken(
-            contentId: content.id,
-            episodeId: episodeId,
-          );
+      String? episodeIdOf(ContentModel c) =>
+          c.episodes.isNotEmpty ? c.episodes.first.id : null;
+
+      final resolved = await Future.wait(
+        queueSource.map((c) async {
+          try {
+            final url = await repo.getStreamToken(
+                contentId: c.id, episodeId: episodeIdOf(c));
+            return AudioTrack(
+              contentId: c.id,
+              episodeId: episodeIdOf(c),
+              title: c.title,
+              artist: c.categoryName ?? "DjeliSon",
+              artUrl: c.posterUrl,
+              url: url,
+            );
+          } catch (_) {
+            return null;
+          }
+        }),
+      );
+      final tracks = resolved.whereType<AudioTrack>().toList();
+      if (tracks.isEmpty) throw Exception('no playable track');
+
+      final startIndex =
+          tracks.indexWhere((t) => t.contentId == content.id).clamp(0, tracks.length - 1);
+
+      await AudioPlayerService.instance.setQueue(tracks, initialIndex: startIndex);
       if (!mounted) return;
-      context.push('/player', extra: {
-        'contentId': content.id,
-        'episodeId': episodeId,
-        'title': content.title,
-        'videoUrl': signedUrl,
-        'isAudio': true,
-        'thumbnailUrl': content.posterUrl,
-      });
+      context.push('/audio-player');
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

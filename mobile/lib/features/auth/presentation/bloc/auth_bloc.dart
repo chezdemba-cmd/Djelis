@@ -17,6 +17,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterWithPhone>(_onRegisterWithPhone);
     on<AuthVerifyOtp>(_onVerifyOtp);
     on<AuthLogout>(_onLogout);
+    on<AuthDeleteAccount>(_onDeleteAccount);
+  }
+
+  Future<void> _onDeleteAccount(
+      AuthDeleteAccount event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.deleteAccount();
+      emit(const AuthUnauthenticated());
+    } on AppException catch (e) {
+      emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 
   Future<void> _onCheckSession(

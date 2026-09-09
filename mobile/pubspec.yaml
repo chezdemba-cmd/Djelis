@@ -23,28 +23,53 @@ dependencies:
   cached_network_image: ^3.3.0
   flutter_secure_storage: ^9.0.0
   path_provider: ^2.1.2
-  permission_handler: ^11.3.0
   flutter_dotenv: ^5.1.0
 
   # Media Playback
-  video_player: ^2.7.0
-  chewie: ^1.7.0
-  youtube_player_iframe: ^5.2.0   # embed YouTube (contenu gratuit/promo)
+  video_player: ^2.7.0                 # lecteur VIDÉO (DjaaSoo)
+  youtube_player_iframe: ^5.2.0        # embed YouTube (contenu gratuit/promo)
+  just_audio: ^0.9.40                  # moteur AUDIO (DjeliSon)
+  just_audio_background: ^0.0.1-beta.11 # background + notification + lock screen + MediaSession
+  audio_session: ^0.1.16              # focus audio (utilisé par just_audio)
 
   # Design & Icons
   cupertino_icons: ^1.0.5
   google_fonts: ^6.1.0
   url_launcher: ^6.1.11
-  audio_session: ^0.1.16
+
+  # Observabilité
+  sentry_flutter: ^9.0.0               # crash reporting (no-op si SENTRY_DSN absent)
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.14.1      # config présente, à exécuter une fois l'icône fournie
+  flutter_native_splash: ^2.4.1        # config présente, à exécuter une fois le visuel fourni
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
     - assets/icons/
-    - .env
+    - .env   # DEV UNIQUEMENT — ne JAMAIS y mettre de secret. La release utilise --dart-define.
+
+# ── Icône de lancement (à exécuter : `dart run flutter_launcher_icons`) ──────────
+# Nécessite un PNG carré 1024x1024 fourni par le projet (voir docs/ANDROID_ASSETS.md).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/branding/app_icon.png"
+  adaptive_icon_background: "#141414"
+  adaptive_icon_foreground: "assets/branding/app_icon_foreground.png"
+  min_sdk_android: 24
+
+# ── Splash screen (à exécuter : `dart run flutter_native_splash:create`) ────────
+flutter_native_splash:
+  color: "#141414"
+  image: assets/branding/splash_logo.png
+  android_12:
+    color: "#141414"
+    image: assets/branding/splash_logo.png
+  android: true
+  ios: false

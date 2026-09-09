@@ -95,6 +95,13 @@ class AuthRepository {
     }
   }
 
+  /// Suppression définitive du compte (exigence Google Play).
+  /// Appelle `DELETE /users/me` puis purge la session locale.
+  Future<void> deleteAccount() async {
+    await _api.dio.delete<void>('/users/me');
+    await _storage.clearAll();
+  }
+
   Future<UserModel?> restoreSession() async {
     if (!await _storage.hasTokens) return null;
     final userJson = await _storage.getUser();

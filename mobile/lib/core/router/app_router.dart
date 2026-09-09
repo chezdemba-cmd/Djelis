@@ -4,6 +4,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/catalog/presentation/screens/home_screen.dart';
 import '../../features/catalog/presentation/screens/detail_screen.dart';
 import '../../features/catalog/presentation/screens/player_screen.dart';
+import '../../features/catalog/presentation/screens/audio_player_screen.dart';
 import '../../features/catalog/presentation/screens/youtube_player_screen.dart';
 import '../../features/subscription/presentation/screens/plans_screen.dart';
 import '../../features/downloads/presentation/screens/downloads_screen.dart';
@@ -62,6 +63,10 @@ class AppRouter {
           }
           return PlayerScreen(title: (extra as String?) ?? 'Lecteur');
         },
+      ),
+      GoRoute(
+        path: '/audio-player',
+        builder: (context, state) => const AudioPlayerScreen(),
       ),
       GoRoute(
         path: '/plans',

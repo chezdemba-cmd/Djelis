@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/data/models/profile_model.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
@@ -15,6 +16,10 @@ class DjaasooScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // V1 de lancement : DjaaSoo n'est pas encore ouvert au public.
+    if (AppConfig.instance.launchModeV1) {
+      return _buildComingSoon();
+    }
     return BlocBuilder<CatalogBloc, CatalogState>(
       builder: (context, state) {
         if (state is CatalogLoading || state is CatalogInitial) {
@@ -62,6 +67,46 @@ class DjaasooScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildComingSoon() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 84,
+              height: 84,
+              decoration: const BoxDecoration(
+                color: AppTheme.primaryGold,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.lock, color: Colors.black, size: 42),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'DjaaSoo — Bientôt disponible',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Films, séries et théâtre africains arrivent très prochainement.\n'
+              'En attendant, profitez librement de DjeliSon : musique, clips, '
+              'podcasts et récits.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white60, fontSize: 14, height: 1.5),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
