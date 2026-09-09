@@ -1,4 +1,14 @@
-# Redis — rate-limiting & cache partagés (à faire quand le trafic le justifie)
+# Redis — rate-limiting & cache partagés
+
+> **État : câblé, inactif par défaut.** Le code lit `REDIS_URL` :
+> - **absent** → `ThrottlerModule` et `CacheModule` restent en mémoire
+>   (comportement historique, OK à faible trafic) ;
+> - **défini** → rate-limiting via `RedisThrottlerStorage`
+>   (`src/common/redis-throttler.storage.ts`, dépend d'`ioredis` seulement) et
+>   cache via `@keyv/redis`.
+>
+> Reste à faire : créer l'instance managée (Upstash), poser `REDIS_URL` sur le
+> projet Vercel, puis vérifier (voir § Vérification en bas).
 
 ## Pourquoi
 
