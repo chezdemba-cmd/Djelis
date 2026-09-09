@@ -65,6 +65,25 @@ export class EmailService {
     }
   }
 
+  /** E-mail de vérification d'adresse à l'inscription. */
+  async sendEmailVerification(
+    to: string,
+    verifyUrl: string
+  ): Promise<DeliveryResult> {
+    return this.send({
+      to,
+      subject: "Confirmez votre adresse e-mail Djeli'S",
+      text:
+        `Bienvenue sur Djeli'S !\n\n` +
+        `Confirmez votre adresse en ouvrant ce lien (valable 24 h) : ${verifyUrl}\n\n` +
+        `Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.`,
+      html:
+        `<p>Bienvenue sur Djeli'S !</p>` +
+        `<p><a href="${verifyUrl}">Confirmer mon adresse e-mail</a> (lien valable 24 h).</p>` +
+        `<p>Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.</p>`,
+    });
+  }
+
   /** E-mail de réinitialisation de mot de passe. */
   async sendPasswordReset(
     to: string,

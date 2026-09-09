@@ -75,7 +75,107 @@ export class AuthService {
       },
     });
 
+    // Vérification de contact : e-mail par lien, téléphone par OTP. Non
+    // bloquant (l'utilisateur reçoit ses jetons), mais l'état est réel.
+    if (user.email) {
+      await this.issueEmailVerification(user.id, user.email);
+    }
+    if (user.phone) {
+      await this.sendPhoneOtp(user.id, user.phone);
+    }
+
     return await this.generateUserTokens(user.id, user.role, deviceInfo);
+  }
+
+  /** Génère un token de vérification d'e-mail (24 h), le stocke haché et l'envoie. */
+  private async issueEmailVerification(userId: string, email: string) {
+    const token = crypto.randomBytes(32).toString("hex");
+    const emailVerificationTokenHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+    const emailVerificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { emailVerificationTokenHash, emailVerificationExpiresAt },
+    });
+
+    const appUrl = process.env.APP_URL || "https://djelis.com";
+    await this.email.sendEmailVerification(
+      email,
+      `${appUrl}/verify-email?token=${token}`
+    );
+
+    if (
+      process.env.NODE_ENV !== "production" &&
+      process.env.AUTH_DEBUG_CODES === "true"
+    ) {
+      console.warn(`[AUTH DEBUG] Email verification token for ${email}: ${token}`);
+    }
+  }
+
+  /** Génère un OTP (5 min), le stocke haché et l'envoie par SMS. */
+  private async sendPhoneOtp(userId: string, phone: string) {
+    const code = crypto.randomInt(100000, 999999).toString();
+    const otpCodeHash = crypto.createHash("sha256").update(code).digest("hex");
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { otpCodeHash, otpExpiresAt },
+    });
+
+    await this.sms.sendOtp(phone, code);
+
+    if (
+      process.env.NODE_ENV !== "production" &&
+      process.env.AUTH_DEBUG_CODES === "true"
+    ) {
+      console.warn(`[AUTH DEBUG] OTP for ${phone}: ${code}`);
+    }
+  }
+
+  /** Confirme une adresse e-mail à partir du token reçu par lien. */
+  async verifyEmail(token: string) {
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(token || "")
+      .digest("hex");
+    const user = await this.prisma.user.findFirst({
+      where: { emailVerificationTokenHash: tokenHash },
+    });
+
+    if (
+      !user ||
+      !user.emailVerificationExpiresAt ||
+      user.emailVerificationExpiresAt.getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException("Lien de vérification invalide ou expiré.");
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerifiedAt: new Date(),
+        emailVerificationTokenHash: null,
+        emailVerificationExpiresAt: null,
+      },
+    });
+
+    return { success: true, message: "Adresse e-mail confirmée." };
+  }
+
+  /** Renvoie un e-mail de vérification (réponse générique anti-énumération). */
+  async resendEmailVerification(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (user && !user.emailVerifiedAt) {
+      await this.issueEmailVerification(user.id, email);
+    }
+    return {
+      success: true,
+      message: "Si ce compte existe et n'est pas vérifié, un e-mail a été envoyé.",
+    };
   }
 
   async login(
@@ -158,25 +258,7 @@ export class AuthService {
     // Réponse générique dans tous les cas pour éviter l'énumération de comptes.
     if (!user) return { success: true };
 
-    const code = crypto.randomInt(100000, 999999).toString();
-    const otpCodeHash = crypto.createHash("sha256").update(code).digest("hex");
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { otpCodeHash, otpExpiresAt },
-    });
-
-    await this.sms.sendOtp(phone, code);
-
-    // En dev, on journalise aussi le code (Twilio peut être non configuré).
-    if (
-      process.env.NODE_ENV !== "production" &&
-      process.env.AUTH_DEBUG_CODES === "true"
-    ) {
-      console.warn(`[AUTH DEBUG] OTP for ${phone}: ${code}`);
-    }
-
+    await this.sendPhoneOtp(user.id, phone);
     return { success: true };
   }
 
@@ -199,7 +281,11 @@ export class AuthService {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { otpCodeHash: null, otpExpiresAt: null },
+      data: {
+        otpCodeHash: null,
+        otpExpiresAt: null,
+        phoneVerifiedAt: user.phoneVerifiedAt ?? new Date(),
+      },
     });
 
     return { success: true, message: "Vérification réussie" };
@@ -390,8 +476,9 @@ export class AuthService {
         id: user.id,
         email: user.email || null,
         phone: user.phone || null,
-        phone_verified: true,
-        email_verified: true,
+        // null = non applicable (pas de contact de ce type sur le compte).
+        phone_verified: user.phone ? Boolean(user.phoneVerifiedAt) : null,
+        email_verified: user.email ? Boolean(user.emailVerifiedAt) : null,
         status: user.isActive ? "active" : "suspended",
         country_code: null,
         profile: {
