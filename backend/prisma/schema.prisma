@@ -62,6 +62,10 @@ model User {
   passwordResetExpiresAt DateTime?
   otpCodeHash            String?
   otpExpiresAt           DateTime?
+  emailVerifiedAt            DateTime?
+  phoneVerifiedAt            DateTime?
+  emailVerificationTokenHash String?
+  emailVerificationExpiresAt DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   profiles      Profile[]

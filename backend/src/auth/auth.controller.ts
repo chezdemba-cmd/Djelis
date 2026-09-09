@@ -124,6 +124,20 @@ export class AuthController {
     return this.authService.verifyOtp(phone, otp);
   }
 
+  @Post("verify/email")
+  @Throttle({ default: { limit: 10, ttl: 300000 } })
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Body("token") token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  @Post("verify/email/resend")
+  @Throttle({ default: { limit: 3, ttl: 300000 } })
+  @HttpCode(HttpStatus.OK)
+  async resendEmailVerification(@Body("email") email: string) {
+    return this.authService.resendEmailVerification(email);
+  }
+
   @Post("forgot-password")
   @Throttle({ default: { limit: 3, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
