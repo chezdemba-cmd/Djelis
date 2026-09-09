@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/content_model.dart';
 import '../../data/repositories/catalog_repository.dart';
@@ -337,11 +338,13 @@ class _DetailScreenState extends State<DetailScreen> {
                       ep.durationMin != null ? '${ep.durationMin} min' : '',
                       style: const TextStyle(color: Colors.grey, fontSize: 11),
                     ),
-                    trailing: DownloadButton(
-                      contentId: widget.contentId,
-                      episodeId: ep.id,
-                      episodeNumber: '${ep.episodeNumber}',
-                    ),
+                    trailing: AppConfig.instance.launchModeV1
+                        ? null
+                        : DownloadButton(
+                            contentId: widget.contentId,
+                            episodeId: ep.id,
+                            episodeNumber: '${ep.episodeNumber}',
+                          ),
                     onTap: _isFetchingStream ? null : () => _playEpisode(ep),
                   );
                 },

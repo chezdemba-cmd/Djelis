@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -104,10 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.search, color: Colors.white),
               onPressed: () => _showSearch(context),
             ),
-            IconButton(
-              icon: const Icon(Icons.download_for_offline, color: Colors.white),
-              onPressed: () => context.push('/downloads'),
-            ),
+            if (!AppConfig.instance.launchModeV1)
+              IconButton(
+                icon: const Icon(Icons.download_for_offline,
+                    color: Colors.white),
+                onPressed: () => context.push('/downloads'),
+              ),
             IconButton(
               icon: const Icon(Icons.account_circle_outlined,
                   color: Colors.white),

@@ -93,12 +93,13 @@ class AccountScreen extends StatelessWidget {
                       : 'Aucun abonnement actif',
                   onTap: () => context.push('/plans'),
                 ),
-              _AccountTile(
-                icon: Icons.download_for_offline_outlined,
-                title: 'Mes téléchargements',
-                subtitle: 'Contenus disponibles hors connexion',
-                onTap: () => context.push('/downloads'),
-              ),
+              if (!launchV1)
+                _AccountTile(
+                  icon: Icons.download_for_offline_outlined,
+                  title: 'Mes téléchargements',
+                  subtitle: 'Contenus disponibles hors connexion',
+                  onTap: () => context.push('/downloads'),
+                ),
               _AccountTile(
                 icon: Icons.privacy_tip_outlined,
                 title: 'Politique de confidentialité',
