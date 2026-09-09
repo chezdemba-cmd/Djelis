@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { storeAccessToken, clearClientAuth } from "../lib/authClient";
+import { LAUNCH_MODE } from "../lib/launchMode";
 
 export default function PlansModal({ isOpen, onClose, onComplete, initialMode = "register" }) {
   const [step, setStep] = useState(1);
@@ -56,7 +57,9 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
                body: JSON.stringify({ token, refreshToken }),
              });
              if (!sessionResponse.ok) throw new Error('Session verification failed');
-             if (isLogin) {
+             // Connexion, ou inscription en mode lancement (pas de forfait) :
+             // on termine directement sans passer par les étapes d'abonnement.
+             if (isLogin || LAUNCH_MODE) {
                 if (onComplete) onComplete({ access_token: token, refresh_token: refreshToken });
                 onClose();
                 return;
@@ -96,10 +99,10 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
         <button className="modal-close tv-focusable" onClick={onClose}>
           <span className="material-icons-round">arrow_back</span>
         </button>
-        <span className="modal-header-title">{isLogin ? "Connexion" : "Inscription & Abonnement"}</span>
+        <span className="modal-header-title">{isLogin ? "Connexion" : (LAUNCH_MODE ? "Créer un compte" : "Inscription & Abonnement")}</span>
       </div>
-      
-      {!isLogin && (
+
+      {!isLogin && !LAUNCH_MODE && (
         <div className="auth-flow-indicator">
           <span className={`indicator-step ${step >= 1 ? "active" : ""}`}>1. Coordonnées</span>
           <span className="indicator-connector"></span>
@@ -151,7 +154,7 @@ export default function PlansModal({ isOpen, onClose, onComplete, initialMode = 
               </div>
 
               <button type="submit" className="modal-action-btn tv-focusable" style={{ marginTop: "24px" }}>
-                {isLogin ? "Se connecter" : "Suivant : Choisir mon forfait"} <span className="material-icons-round">chevron_right</span>
+                {isLogin ? "Se connecter" : (LAUNCH_MODE ? "Créer mon compte" : "Suivant : Choisir mon forfait")} <span className="material-icons-round">chevron_right</span>
               </button>
               
               <div style={{ marginTop: "15px", textAlign: "center" }}>

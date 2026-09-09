@@ -168,6 +168,16 @@ export class StreamController {
       throw new HttpException("Contenu introuvable", HttpStatus.NOT_FOUND);
     }
 
+    // Mode lancement : DjaaSoo (vidéo) fermé au public ; DjeliSon (audio)
+    // entièrement gratuit (on ignore isPremium plus bas).
+    const launchMode = process.env.LAUNCH_MODE === "true";
+    if (launchMode && content.type === "VIDEO") {
+      throw new HttpException(
+        "DjaaSoo n'est pas encore disponible. Ouverture prochaine.",
+        HttpStatus.FORBIDDEN
+      );
+    }
+
     // Contenu YouTube (gratuit/promo) : pas de jeton, le client lit l'embed
     // directement via content.youtube_id.
     if (content.youtubeId) {
@@ -201,7 +211,8 @@ export class StreamController {
       }
     }
 
-    if (content?.isPremium) {
+    // En mode lancement, l'audio est offert : on ne vérifie pas l'abonnement.
+    if (content?.isPremium && !(launchMode && content.type === "AUDIO")) {
       const hasActiveSubscription = user.subscriptions.length > 0;
       const hasActiveRental = user.rentals && user.rentals.length > 0;
 

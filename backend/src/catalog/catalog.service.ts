@@ -46,23 +46,29 @@ export class CatalogService {
 
   // Separates landing page components into DjaaSoo (Video) and DjeliSon (Audio)
   async getHomeFeed(country?: string) {
-    const djaasooVideos = await this.prisma.content.findMany({
-      where: {
-        type: ContentType.VIDEO,
-        isActive: true,
-        rightsTerritories: country
-          ? {
-              some: {
-                countryCode: country,
-                isAllowed: true,
-              },
-            }
-          : undefined,
-      },
-      take: 50,
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      include: { creator: true, category: true, genre: true },
-    });
+    // Mode lancement : DjaaSoo n'est pas encore ouvert au public. On ne renvoie
+    // aucun contenu vidéo (le catalogue reste privé le temps de le constituer).
+    const launchMode = process.env.LAUNCH_MODE === "true";
+
+    const djaasooVideos = launchMode
+      ? []
+      : await this.prisma.content.findMany({
+          where: {
+            type: ContentType.VIDEO,
+            isActive: true,
+            rightsTerritories: country
+              ? {
+                  some: {
+                    countryCode: country,
+                    isAllowed: true,
+                  },
+                }
+              : undefined,
+          },
+          take: 50,
+          orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+          include: { creator: true, category: true, genre: true },
+        });
 
     const djelisonAudios = await this.prisma.content.findMany({
       where: {
@@ -83,8 +89,10 @@ export class CatalogService {
     });
 
     return {
+      launchMode,
       djaasoo: {
         title: "DjaaSoo - Vidéos & Cinéma",
+        locked: launchMode,
         contents: djaasooVideos.map(stripMediaRefs),
       },
       djelison: {

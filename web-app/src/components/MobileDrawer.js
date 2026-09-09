@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "../context/SessionContext";
+import { LAUNCH_MODE } from "../lib/launchMode";
 
 export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
   const { isAuthenticated, currentProfile, logout } = useSession();
@@ -24,7 +25,8 @@ export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
             <span className="material-icons-round">home</span> Accueil
           </Link>
           <Link href="/djaasoo" className={`drawer-nav-item ${pathname.startsWith('/djaasoo') ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
-            <span className="material-icons-round">movie</span> DjaaSoo (Cinéma & Séries)
+            <span className="material-icons-round">{LAUNCH_MODE ? 'lock' : 'movie'}</span>
+            {LAUNCH_MODE ? 'DjaaSoo — Bientôt disponible' : 'DjaaSoo (Cinéma & Séries)'}
           </Link>
           <Link href="/djelison" className={`drawer-nav-item ${pathname.startsWith('/djelison') ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
             <span className="material-icons-round">headphones</span> DjeliSon (Audio & Clips)
@@ -48,9 +50,11 @@ export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
               <Link href="/login" className="drawer-nav-item" style={{ color: '#ffb300', textDecoration: 'none' }} onClick={onClose}>
                 <span className="material-icons-round">login</span> Connexion
               </Link>
-              <button className="drawer-nav-item" style={{ color: 'white' }} onClick={onOpenLogin}>
-                <span className="material-icons-round">card_membership</span> S'abonner
-              </button>
+              {!LAUNCH_MODE && (
+                <button className="drawer-nav-item" style={{ color: 'white' }} onClick={onOpenLogin}>
+                  <span className="material-icons-round">card_membership</span> S'abonner
+                </button>
+              )}
             </>
           ) : (
             <button className="drawer-nav-item" style={{ color: "var(--accent-crimson)" }} onClick={() => { logout(); onClose(); }}>
