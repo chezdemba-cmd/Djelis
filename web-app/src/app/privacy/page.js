@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = "6 septembre 2026";
+  const lastUpdated = "9 septembre 2026";
 
   return (
     <div className="legal-page-container">
@@ -46,7 +46,9 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul>
             <li>
-              <strong>Informations de compte :</strong> Adresse email, mot de passe
+              <strong>Informations de compte :</strong> Adresse email et/ou numéro
+              de téléphone (selon la méthode d&apos;inscription ; le numéro sert
+              également à l&apos;envoi de codes de vérification par SMS), mot de passe
               chiffré (hashé de manière irréversible), nom d&apos;affichage ou pseudo,
               profils utilisateurs associés (y compris le mode Jeunesse/Kids).
             </li>
@@ -64,8 +66,17 @@ export default function PrivacyPolicyPage() {
             <li>
               <strong>Données techniques :</strong> Adresse IP (utilisée
               exclusivement pour vérifier les droits territoriaux de diffusion et
-              prévenir la fraude), type d&apos;appareil et version du système
-              d&apos;exploitation.
+              prévenir la fraude), type d&apos;appareil, version du système
+              d&apos;exploitation et version de l&apos;application.
+            </li>
+            <li>
+              <strong>Diagnostics et stabilité :</strong> En cas de plantage de
+              l&apos;application, un rapport d&apos;erreur technique
+              (type d&apos;appareil, version de l&apos;application, trace technique
+              d&apos;exécution) peut être transmis à notre outil de supervision
+              (Sentry) afin de corriger les anomalies. Ces rapports sont configurés
+              pour ne pas inclure de donnée personnelle identifiante et ne sont
+              transmis que si le diagnostic est activé pour la version concernée.
             </li>
           </ul>
         </section>
@@ -137,18 +148,56 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
           <p style={{ marginTop: "15px" }}>
-            Pour demander la suppression immédiate de votre compte, rendez-vous dans vos
-            paramètres de profil ou adressez un email à{" "}
-            <a href="mailto:privacy@djelis.com" className="legal-link">
-              privacy@djelis.com
-            </a>{" "}
-            avec pour objet <em>« Demande de suppression de compte »</em>. Votre compte
-            sera clôturé et vos données purgées sous 48 heures.
+            Pour demander la suppression de votre compte, trois moyens équivalents :
+          </p>
+          <ul>
+            <li>
+              dans l&apos;application : <strong>Compte → Supprimer mon compte</strong>
+              (suppression immédiate après double confirmation) ;
+            </li>
+            <li>
+              sur le web :{" "}
+              <a href="https://djelis.com/delete-account" className="legal-link">
+                https://djelis.com/delete-account
+              </a>{" "}
+              ;
+            </li>
+            <li>
+              par email à{" "}
+              <a href="mailto:privacy@djelis.com" className="legal-link">
+                privacy@djelis.com
+              </a>{" "}
+              (objet : <em>« Demande de suppression de compte »</em>).
+            </li>
+          </ul>
+          <p>
+            Sont supprimés : le compte, les profils, l&apos;historique de lecture, les
+            favoris et les données personnelles associées. Sont conservées, de manière
+            anonymisée, uniquement les informations strictement nécessaires à nos
+            obligations légales et comptables (preuves de transaction). Le traitement
+            d&apos;une demande par email intervient sous 48 heures ; la suppression
+            in-app ou via la page web est immédiate.
           </p>
         </section>
 
         <section className="legal-section">
-          <h2>7. Protection des mineurs</h2>
+          <h2>7. Durée de conservation</h2>
+          <p>
+            Vos données de compte sont conservées tant que votre compte est actif.
+            Après suppression du compte, les données personnelles sont effacées (voir
+            section 6). Les preuves de transaction anonymisées sont conservées pour la
+            durée légale comptable applicable.
+          </p>
+          <p>
+            <strong>
+              Les durées de conservation détaillées par catégorie de données sont
+              À DÉFINIR AVANT PUBLICATION.
+            </strong>
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>8. Protection des mineurs</h2>
           <p>
             Djeli&apos;S propose des profils dédiés aux enfants (« Kids »). Ces profils
             restreignent l&apos;accès aux contenus classés « Tous publics ». Aucune donnée
@@ -157,7 +206,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section className="legal-section">
-          <h2>8. Contact & Délégué à la Protection des Données</h2>
+          <h2>9. Contact & Délégué à la Protection des Données</h2>
           <p>
             Pour toute question concernant cette politique ou pour exercer vos droits,
             vous pouvez contacter notre équipe à :
