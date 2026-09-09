@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android < 12 : rien n'est inclus dans la sauvegarde automatique.
+     (allowBackup="false" désactive déjà tout ; ce fichier est une double sécurité.) -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+</full-backup-content>

@@ -91,39 +91,3 @@ class PaymentInitResponse {
             : null,
       );
 }
-
-// ─── Mock plans for development ───────────────────────────────────────────────
-
-List<PlanModel> mockPlans() => [
-      const PlanModel(
-        id: 'plan-day',
-        name: 'Pass Jour',
-        slug: 'pass-day',
-        durationType: 'day',
-        durationValue: 1,
-        priceXof: 500,
-        countries: ['ML', 'SN', 'CI'],
-        badge: 'Rapide',
-      ),
-      const PlanModel(
-        id: 'plan-weekend',
-        name: 'Pass Week-end',
-        slug: 'pass-weekend',
-        durationType: 'weekend',
-        durationValue: 3,
-        priceXof: 1000,
-        countries: ['ML', 'SN', 'CI'],
-        badge: 'Populaire',
-      ),
-      const PlanModel(
-        id: 'plan-month',
-        name: 'Pass Mois',
-        slug: 'pass-month',
-        durationType: 'month',
-        durationValue: 1,
-        priceXof: 3000,
-        priceEur: 4.99,
-        countries: ['ML', 'SN', 'CI', 'FR'],
-        badge: 'Meilleur Prix',
-      ),
-    ];

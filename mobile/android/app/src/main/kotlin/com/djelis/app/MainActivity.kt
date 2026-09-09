@@ -1,4 +1,4 @@
-package com.example.djelis_mobile
+package com.djelis.app
 
 import io.flutter.embedding.android.FlutterActivity
 

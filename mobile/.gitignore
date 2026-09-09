@@ -46,3 +46,12 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Android release signing — NE JAMAIS committer
+/android/key.properties
+**/*.jks
+**/*.keystore
+upload-keystore.jks
+
+# .env local : garder SANS secret (URL API seulement). La release utilise --dart-define.
+# (fichier suivi volontairement pour le dev ; ne JAMAIS y écrire de clé/secret)

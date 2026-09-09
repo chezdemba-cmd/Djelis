@@ -68,6 +68,10 @@ class CatalogRepository {
   }
 
   /// Sends playback progress to the backend.
+  ///
+  /// Le backend EXIGE un `profile_id` valide (il ne retombe plus sur un profil
+  /// arbitraire). Sans profil sélectionné, on n'envoie rien : la progression
+  /// reprendra à la prochaine lecture avec un profil actif.
   Future<void> reportProgress({
     required String contentId,
     String? episodeId,
@@ -76,13 +80,14 @@ class CatalogRepository {
     required String deviceType,
     String? profileId,
   }) async {
+    if (profileId == null || profileId.isEmpty) return;
     try {
       await _api.post<void>(
         '/stream/progress',
         data: {
           'content_id': contentId,
           if (episodeId != null) 'episode_id': episodeId,
-          if (profileId != null) 'profile_id': profileId,
+          'profile_id': profileId,
           'progress_sec': progressSec,
           'quality_used': quality,
           'device_type': deviceType,

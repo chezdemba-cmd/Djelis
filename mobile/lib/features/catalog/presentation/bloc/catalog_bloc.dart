@@ -24,7 +24,7 @@ class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
           await _repository.getFeatured(countryCode: event.countryCode);
       emit(CatalogFeaturedLoaded(featured));
     } catch (e) {
-      // Fallback to mock if any error — ensures the UI always shows something.
+      // Toute erreur -> etat CatalogError (l'UI affiche un ecran d'erreur + retry).
       emit(CatalogError(e.toString()));
     }
   }

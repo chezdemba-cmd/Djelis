@@ -68,10 +68,6 @@ class _PlayerScreenState extends State<PlayerScreen>
     _Quality('240p', dataMbPerHour: 120),
   ];
 
-  // Public Mux HLS stream used as demo until real URLs come from the API.
-  static const _demoHlsUrl =
-      'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-
   // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
   @override
@@ -114,7 +110,13 @@ class _PlayerScreenState extends State<PlayerScreen>
   // ─── Player init / quality switch ───────────────────────────────────────────
 
   Future<void> _initPlayer({String? qualityUrl}) async {
-    final url = qualityUrl ?? widget.videoUrl ?? _demoHlsUrl;
+    final isLocal = widget.videoUrl == 'local' && widget.contentId != null;
+    final url = qualityUrl ?? widget.videoUrl;
+    if (!isLocal && (url == null || url.isEmpty || url == 'local')) {
+      // Aucune source réelle : pas de contenu de démonstration en production.
+      if (mounted) setState(() => _hasError = true);
+      return;
+    }
 
     // Capture resume position before disposing the old controller.
     final resume = _controller?.value.isInitialized == true
@@ -133,10 +135,10 @@ class _PlayerScreenState extends State<PlayerScreen>
       _hasError = false;
     });
 
-    final ctrl = widget.videoUrl == 'local' && widget.contentId != null
+    final ctrl = isLocal
         ? VideoPlayerController.file(File((await DownloadRepository()
             .getLocalFilePath('${widget.contentId}.mp4'))!))
-        : VideoPlayerController.networkUrl(Uri.parse(url));
+        : VideoPlayerController.networkUrl(Uri.parse(url!));
     _controller = ctrl;
     ctrl.addListener(_onUpdate);
 
@@ -182,7 +184,6 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
             );
       }
-      debugPrint('[DjeliS] progress=$pos s  quality=$_selectedQuality');
     });
   }
 

@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
+import '../config/app_config.dart';
 import '../errors/app_exception.dart';
 import '../storage/secure_storage_service.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-final String apiBaseUrl =
-    dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
+/// URL de base de l'API, résolue par [AppConfig] (dart-define > .env > dev only).
+String get apiBaseUrl => AppConfig.instance.apiBaseUrl;
 
 class ApiClient {
   late final Dio _dio;

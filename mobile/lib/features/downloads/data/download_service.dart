@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+
 import '../../catalog/data/models/content_model.dart';
 
 class DownloadService {
@@ -36,7 +39,7 @@ class DownloadService {
 
       return savePath;
     } catch (e) {
-      print('Download error: $e');
+      debugPrint('Download error: $e');
       return null;
     }
   }
@@ -75,14 +78,14 @@ class DownloadService {
             final jsonMap = jsonDecode(jsonStr);
             contents.add(ContentModel.fromJson(jsonMap));
           } catch (e) {
-            print('Error reading metadata: $e');
+            debugPrint('Error reading metadata: $e');
           }
         }
       }
 
       return contents;
     } catch (e) {
-      print('Error getting downloaded contents: $e');
+      debugPrint('Error getting downloaded contents: $e');
       return [];
     }
   }
@@ -102,7 +105,7 @@ class DownloadService {
         await metaFile.delete();
       }
     } catch (e) {
-      print('Error deleting download: $e');
+      debugPrint('Error deleting download: $e');
     }
   }
 }

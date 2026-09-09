@@ -1,0 +1,7 @@
+# Copier en `android/key.properties` (jamais committé — cf .gitignore) une fois
+# la clé d'upload générée. Voir docs/ANDROID_SIGNING.md.
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+# Chemin ABSOLU vers le keystore, hors du repo (ex: C:/Users/.../djelis/upload-keystore.jks)
+storeFile=CHANGE_ME_ABSOLUTE_PATH_TO_upload-keystore.jks
