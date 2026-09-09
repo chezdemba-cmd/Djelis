@@ -53,8 +53,13 @@ android {
                 // Fallback debug — un AAB ainsi signé n'est PAS publiable sur Play.
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 : réduction de code + ressources + obfuscation (AAB plus léger).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
