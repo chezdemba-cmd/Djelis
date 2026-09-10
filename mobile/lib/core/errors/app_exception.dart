@@ -9,25 +9,25 @@ class AppException implements Exception {
 }
 
 class NetworkException extends AppException {
-  const NetworkException([String message = 'Connexion impossible'])
-      : super(message, statusCode: 0);
+  const NetworkException([super.message = 'Connexion impossible'])
+      : super(statusCode: 0);
 }
 
 class UnauthorizedException extends AppException {
-  const UnauthorizedException([String message = 'Session expirée'])
-      : super(message, statusCode: 401);
+  const UnauthorizedException([super.message = 'Session expirée'])
+      : super(statusCode: 401);
 }
 
 class NotFoundException extends AppException {
-  const NotFoundException([String message = 'Contenu introuvable'])
-      : super(message, statusCode: 404);
+  const NotFoundException([super.message = 'Contenu introuvable'])
+      : super(statusCode: 404);
 }
 
 class ServerException extends AppException {
-  const ServerException([String message = 'Erreur serveur'])
-      : super(message, statusCode: 500);
+  const ServerException([super.message = 'Erreur serveur'])
+      : super(statusCode: 500);
 }
 
 class PaymentException extends AppException {
-  const PaymentException(String message) : super(message);
+  const PaymentException(super.message);
 }

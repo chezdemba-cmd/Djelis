@@ -10,10 +10,10 @@ class SecureStorageService {
 
   final FlutterSecureStorage _storage;
 
-  SecureStorageService()
-      : _storage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        );
+  // flutter_secure_storage >= 11 : le chiffrement Keystore (AES/RSA) est le
+  // comportement par défaut ; l'ancienne option `encryptedSharedPreferences`
+  // (Jetpack Security, dépréciée par Google) a été retirée.
+  SecureStorageService() : _storage = const FlutterSecureStorage();
 
   Future<void> saveTokens({
     required String accessToken,
