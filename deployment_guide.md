@@ -1,5 +1,15 @@
 # 🚀 Guide de Déploiement Final (Production)
 
+> ⚠️ **Obsolète pour le backend** : le backend de production réel est déployé
+> sur **Vercel** (serverless, `backend/vercel.json` + `backend/api/index.ts`),
+> **pas** sur Render. La section « Étape 2 » ci-dessous (Render) ne correspond
+> à aucun déploiement actif — la suivre déploierait sur la mauvaise
+> plateforme. Voir `LAUNCH.md` pour la procédure à jour (variables
+> d'environnement, ordre de merge, checklist de lancement). `render.yaml` et
+> le `Dockerfile` associé restent dans le repo à titre d'alternative possible
+> (auto-hébergement Docker) mais ne sont pas ce qui tourne en production
+> aujourd'hui.
+
 Ce document vous guide pas à pas pour déployer de manière sécurisée les différentes briques de votre infrastructure (Base de données, API Backend, et Interface Web).
 
 ## Étape 1 : Base de données (Supabase)
@@ -9,9 +19,24 @@ Avant de lancer les serveurs, la base de données doit être prête et sécuris�
 2. Rendez-vous dans le menu **SQL Editor** (l'icône d'éditeur de code à gauche).
 3. Ouvrez le fichier `backend/prisma/rls_policies.sql` que nous avons créé précédemment.
 4. Copiez tout le contenu de ce fichier et collez-le dans l'éditeur SQL de Supabase.
-5. Cliquez sur **Run** (Exécuter). 
-   *👉 Vos tables sont désormais verrouillées et la sécurité RLS est activée.*
+5. Cliquez sur **Run** (Exécuter).
+   *👉 Les policies existent désormais en base, mais elles n'ont d'effet que
+   si l'application se connecte avec un rôle qui ne bypasse pas RLS. Voir
+   l'avertissement ci-dessous : **ce n'est pas le cas aujourd'hui**.*
 6. Allez dans **Project Settings > Database** et copiez la **Connection String (URI)**. Remplacez le mot de passe par le vôtre. Gardez ce lien de côté.
+
+> ⚠️ **RLS actuellement décorative** : l'étape 6 ci-dessus récupère la
+> connection string du rôle **`postgres`** (propriétaire des tables), qui
+> **bypasse RLS par défaut** sous Postgres — vérifié empiriquement (audit du
+> 28/09/2026). Tant que `DATABASE_URL`/`DIRECT_URL` utilisent ce rôle, les
+> policies de `rls_policies.sql` ne bloquent rien pour l'application : toute
+> l'autorisation réelle repose sur le code applicatif (guards NestJS,
+> `where: { userId }` dans les services), qui a été audité et fonctionne
+> correctement. Pour que RLS apporte une vraie défense en profondeur, il
+> faudrait (a) exécuter `ALTER TABLE ... FORCE ROW LEVEL SECURITY` sur chaque
+> table concernée, et (b) connecter l'application via un rôle Postgres dédié,
+> non-owner, sans l'attribut `BYPASSRLS`. Aucune des deux conditions n'est
+> réunie actuellement.
 
 ## Étape 2 : L'API Backend (Render)
 Maintenant que la base est prête, nous allons déployer le serveur NestJS. Grâce au fichier `render.yaml` que nous avons créé, c'est presque magique.
