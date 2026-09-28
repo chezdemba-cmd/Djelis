@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { useSession } from "../context/SessionContext";
 import { LAUNCH_MODE } from "../lib/launchMode";
 
-export default function Navbar({ onOpenLogin, onOpenMobileMenu }) {
-  const { isAuthenticated, currentProfile, logout, selectProfile } = useSession();
+export default function Navbar({ onOpenLogin, onOpenMobileMenu, isScrolled }) {
+  const { isAuthenticated, currentProfile, isAdmin, logout, selectProfile } = useSession();
   const pathname = usePathname();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -22,7 +22,7 @@ export default function Navbar({ onOpenLogin, onOpenMobileMenu }) {
   }, [isProfileMenuOpen]);
 
   return (
-    <header className="netflix-navbar">
+    <header className={`netflix-navbar ${isScrolled ? "scrolled" : ""}`}>
       <div className="navbar-left">
         {onOpenMobileMenu && (
           <button 
@@ -84,7 +84,7 @@ export default function Navbar({ onOpenLogin, onOpenMobileMenu }) {
                   <div className="dropdown-item" onClick={() => { setIsProfileMenuOpen(false); selectProfile(null); }}>
                     <span className="material-icons-round">people</span> Changer de profil
                   </div>
-                  {isAuthenticated && (
+                  {isAdmin && (
                     <Link href="/admin" className="dropdown-item" onClick={() => setIsProfileMenuOpen(false)} style={{ textDecoration: 'none', color: 'inherit' }}>
                       <span className="material-icons-round">admin_panel_settings</span> Espace Admin
                     </Link>
