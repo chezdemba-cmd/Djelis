@@ -237,23 +237,26 @@ export class PaymentsService {
       }
 
       try {
-        const res = await fetch("https://api-checkout.cinetpay.com/v2/payment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            apikey: cinetpayApiKey,
-            site_id: cinetpaySiteId,
-            transaction_id: payment.id,
-            amount: amount,
-            currency: currency,
-            description,
-            return_url: `${appUrl}/profile?payment=success&payment_id=${payment.id}`,
-            notify_url: `${apiPublicUrl}/api/v1/payments/webhooks/cinetpay`,
-            channels: "ALL",
-          }),
-        });
+        const res = await fetch(
+          "https://api-checkout.cinetpay.com/v2/payment",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              apikey: cinetpayApiKey,
+              site_id: cinetpaySiteId,
+              transaction_id: payment.id,
+              amount: amount,
+              currency: currency,
+              description,
+              return_url: `${appUrl}/profile?payment=success&payment_id=${payment.id}`,
+              notify_url: `${apiPublicUrl}/api/v1/payments/webhooks/cinetpay`,
+              channels: "ALL",
+            }),
+          }
+        );
 
         if (!res.ok) {
           const errData = await res.text().catch(() => "");
@@ -291,7 +294,9 @@ export class PaymentsService {
       }
     }
 
-    throw new BadRequestException("Passerelle de paiement non prise en charge.");
+    throw new BadRequestException(
+      "Passerelle de paiement non prise en charge."
+    );
   }
 
   // Handle transaction confirmation from CinetPay / Wave Webhooks
