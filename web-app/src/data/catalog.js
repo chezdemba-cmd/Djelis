@@ -253,6 +253,24 @@ export async function rentContent(contentId, provider = 'cinetpay') {
   return data.redirect_url || null;
 }
 
+/**
+ * Supprime définitivement le compte connecté (DELETE /users/me).
+ * Lève une Error avec le message serveur en cas d'échec.
+ */
+export async function deleteMyAccount() {
+  const headers = await authHeaders();
+  if (!headers) throw new Error('Vous devez être connecté pour supprimer votre compte.');
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/api/v1/users/me`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || "La suppression du compte a échoué.");
+  }
+}
+
 export async function getPlaybackUrl(contentId, episodeId = null) {
   if (!contentId) return null;
   const headers = await authHeaders();

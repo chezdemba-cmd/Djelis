@@ -18,14 +18,30 @@ const NEGATIVE_TTL_MS = 30_000; // pas de nouvel essai de refresh pendant ce dé
 let refreshInFlight = null; // dédoublonne les refresh concurrents
 let noSessionUntil = 0; // horodatage jusqu'auquel on considère qu'il n'y a pas de session
 
-function jwtExpiryMs(token) {
+function decodeJwtPayload(token) {
   try {
     const [, payload] = token.split(".");
-    const { exp } = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-    return typeof exp === "number" ? exp * 1000 : 0;
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
   } catch {
-    return 0;
+    return null;
   }
+}
+
+function jwtExpiryMs(token) {
+  const { exp } = decodeJwtPayload(token) || {};
+  return typeof exp === "number" ? exp * 1000 : 0;
+}
+
+/**
+ * Rôle porté par l'access token courant (ex. "ADMIN", "SUPERADMIN"),
+ * ou `null` si absent/non connecté. Le rôle vient du payload signé par le
+ * backend (`{ sub, role }`, voir auth.service.ts) : il ne peut pas être
+ * falsifié côté client, seulement lu.
+ */
+export function currentUserRole() {
+  const token = readAccessToken();
+  if (!token) return null;
+  return decodeJwtPayload(token)?.role || null;
 }
 
 export function readAccessToken() {

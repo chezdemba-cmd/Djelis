@@ -2,12 +2,15 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { refreshSession, clearClientAuth, markSessionActive } from '../lib/authClient';
+import { refreshSession, clearClientAuth, markSessionActive, currentUserRole } from '../lib/authClient';
 
 const SessionContext = createContext();
 
+const ADMIN_ROLES = ['ADMIN', 'SUPERADMIN'];
+
 export function SessionProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -38,6 +41,7 @@ export function SessionProvider({ children }) {
         }
         if (cancelled) return;
         setIsAuthenticated(ok);
+        setIsAdmin(ok ? ADMIN_ROLES.includes(currentUserRole()) : false);
         if (!ok) {
           setCurrentProfile(null);
           clearClientAuth();
@@ -72,6 +76,7 @@ export function SessionProvider({ children }) {
       if (res.ok) {
         markSessionActive();
         setIsAuthenticated(true);
+        setIsAdmin(ADMIN_ROLES.includes(currentUserRole()));
       }
     } catch (e) {
       console.error(e);
@@ -85,6 +90,7 @@ export function SessionProvider({ children }) {
       console.error(e);
     } finally {
       setIsAuthenticated(false);
+      setIsAdmin(false);
       setCurrentProfile(null);
       try {
         localStorage.removeItem('currentProfile');
@@ -109,6 +115,7 @@ export function SessionProvider({ children }) {
   return (
     <SessionContext.Provider value={{
       isAuthenticated,
+      isAdmin,
       currentProfile,
       isLoading,
       login,

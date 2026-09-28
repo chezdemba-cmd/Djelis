@@ -1,6 +1,24 @@
+import { useState } from "react";
 import { LAUNCH_MODE } from "../lib/launchMode";
+import { deleteMyAccount } from "../data/catalog";
 
-export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal, onOpenAdmin, currentProfile }) {
+export default function ProfileScreen({ isAuthenticated, isAdmin, onLogout, openAuthModal, onOpenAdmin, currentProfile }) {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement votre compte et toutes vos données personnelles ? Cette action est irréversible.")) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      onLogout && onLogout();
+    } catch (err) {
+      alert(err.message || "La suppression du compte a échoué. Réessayez plus tard.");
+      setDeleting(false);
+    }
+  };
+
   return (
     <div id="page-profile" className="app-page active" style={{ width: "100%", height: "100%" }}>
       <div className="profile-container">
@@ -15,11 +33,6 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
               <p className="profile-email">Rejoignez Djeli&apos;S pour profiter de l&apos;expérience</p>
               <button className="modal-action-btn tv-focusable" style={{ marginTop: "14px" }} onClick={openAuthModal}>
                 Créer mon compte / Se connecter
-              </button>
-              
-              <button className="modal-action-btn tv-focusable" style={{ marginTop: "14px", background: '#333', color: '#ffb300' }} onClick={onOpenAdmin}>
-                <span className="material-icons-round" style={{ fontSize: '18px', marginRight: '8px', verticalAlign: 'middle' }}>admin_panel_settings</span>
-                Accès Admin (Simulateur)
               </button>
             </div>
           </div>
@@ -54,10 +67,12 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
                 <span className="material-icons-round">settings</span> Paramètres de l&apos;application
               </div>
 
-              {/* Lien vers l'Espace Admin */}
-              <div className="profile-action-item tv-focusable" style={{ color: '#ffb300' }} onClick={onOpenAdmin}>
-                <span className="material-icons-round">admin_panel_settings</span> Espace Administrateur
-              </div>
+              {/* Lien vers l'Espace Admin — réservé aux comptes ADMIN/SUPERADMIN */}
+              {isAdmin && (
+                <div className="profile-action-item tv-focusable" style={{ color: '#ffb300' }} onClick={onOpenAdmin}>
+                  <span className="material-icons-round">admin_panel_settings</span> Espace Administrateur
+                </div>
+              )}
 
               <div className="profile-action-item tv-focusable">
                 <span className="material-icons-round">help_outline</span> Centre d&apos;aide
@@ -83,14 +98,9 @@ export default function ProfileScreen({ isAuthenticated, onLogout, openAuthModal
                 <span className="material-icons-round arrow">chevron_right</span>
               </a>
 
-              <div className="profile-action-item tv-focusable" style={{ color: "#ff8a80" }} onClick={() => {
-                if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement votre compte et toutes vos données personnelles ? Cette action est irréversible.")) {
-                  alert("Votre demande de suppression de compte a été enregistrée. Conformément à notre politique de confidentialité, toutes vos données seront purgées sous 48h.");
-                  onLogout && onLogout();
-                }
-              }}>
+              <div className="profile-action-item tv-focusable" style={{ color: "#ff8a80", opacity: deleting ? 0.6 : 1, pointerEvents: deleting ? "none" : "auto" }} onClick={handleDeleteAccount}>
                 <span className="material-icons-round">delete_forever</span>
-                <span>Supprimer mon compte</span>
+                <span>{deleting ? "Suppression en cours…" : "Supprimer mon compte"}</span>
                 <span className="material-icons-round arrow">chevron_right</span>
               </div>
 

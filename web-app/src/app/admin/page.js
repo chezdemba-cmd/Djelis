@@ -6,16 +6,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function AdminPage() {
-  const { isAuthenticated, currentProfile } = useSession();
+  const { isAuthenticated, currentProfile, isAdmin } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated || !currentProfile) {
+    if (!isAuthenticated || !currentProfile || !isAdmin) {
       router.push('/browse');
     }
-  }, [isAuthenticated, currentProfile, router]);
+  }, [isAuthenticated, currentProfile, isAdmin, router]);
 
-  if (!isAuthenticated || !currentProfile) return null;
+  if (!isAuthenticated || !currentProfile || !isAdmin) return null;
 
   return (
     <div className="app-page active">

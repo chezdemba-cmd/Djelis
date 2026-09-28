@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function ProfilePage() {
-  const { isAuthenticated, currentProfile, logout } = useSession();
+  const { isAuthenticated, currentProfile, isAdmin, logout } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,12 +19,13 @@ export default function ProfilePage() {
 
   return (
     <div className="app-page active">
-      <ProfileScreen 
-        isAuthenticated={isAuthenticated} 
-        currentProfile={currentProfile} 
-        onLogout={logout} 
-        openAuthModal={() => {}} 
-        onOpenAdmin={() => router.push('/admin')} 
+      <ProfileScreen
+        isAuthenticated={isAuthenticated}
+        isAdmin={isAdmin}
+        currentProfile={currentProfile}
+        onLogout={logout}
+        openAuthModal={() => {}}
+        onOpenAdmin={() => router.push('/admin')}
       />
     </div>
   );

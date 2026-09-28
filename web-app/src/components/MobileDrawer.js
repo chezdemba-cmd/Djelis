@@ -6,7 +6,7 @@ import { useSession } from "../context/SessionContext";
 import { LAUNCH_MODE } from "../lib/launchMode";
 
 export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
-  const { isAuthenticated, currentProfile, logout } = useSession();
+  const { isAuthenticated, currentProfile, isAdmin, logout } = useSession();
   const pathname = usePathname();
 
   if (!isOpen) return null;
@@ -40,7 +40,7 @@ export default function MobileDrawer({ isOpen, onClose, onOpenLogin }) {
           <Link href="/profile" className={`drawer-nav-item ${pathname === '/profile' ? 'active' : ''}`} onClick={onClose} style={{ textDecoration: 'none' }}>
             <span className="material-icons-round">person_outline</span> Mon Profil
           </Link>
-          {isAuthenticated && (
+          {isAuthenticated && isAdmin && (
             <Link href="/admin" className={`drawer-nav-item ${pathname === '/admin' ? 'active' : ''}`} style={{ color: '#ffb300', textDecoration: 'none' }} onClick={onClose}>
               <span className="material-icons-round">admin_panel_settings</span> Espace Administrateur
             </Link>
