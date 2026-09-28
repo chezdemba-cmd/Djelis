@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common";
 import type Redis from "ioredis";
 import type { ThrottlerStorage } from "@nestjs/throttler";
 
@@ -20,9 +21,45 @@ const msToSec = (ms: number) => Math.max(0, Math.ceil(ms / 1000));
  * package tiers) pour éviter les conflits de peer-deps.
  */
 export class RedisThrottlerStorage implements ThrottlerStorage {
+  private readonly logger = new Logger(RedisThrottlerStorage.name);
+
   constructor(private readonly redis: Redis) {}
 
   async increment(
+    key: string,
+    ttl: number,
+    limit: number,
+    blockDuration: number,
+    throttlerName: string
+  ): Promise<ThrottlerStorageRecord> {
+    try {
+      return await this.incrementInRedis(
+        key,
+        ttl,
+        limit,
+        blockDuration,
+        throttlerName
+      );
+    } catch (err) {
+      // Une panne Redis ne doit jamais mettre l'API entière hors service : on
+      // dégrade en laissant passer la requête (fail-open) plutôt que de
+      // propager une erreur qui ferait échouer le `ThrottlerGuard` global sur
+      // TOUTE route, y compris hors rate-limiting.
+      this.logger.warn(
+        `Redis indisponible pour le rate-limiting (${throttlerName}), requête autorisée par défaut: ${
+          (err as Error)?.message || err
+        }`
+      );
+      return {
+        totalHits: 0,
+        timeToExpire: msToSec(ttl),
+        isBlocked: false,
+        timeToBlockExpire: 0,
+      };
+    }
+  }
+
+  private async incrementInRedis(
     key: string,
     ttl: number,
     limit: number,

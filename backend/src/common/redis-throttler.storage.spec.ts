@@ -3,7 +3,10 @@ import { RedisThrottlerStorage } from "./redis-throttler.storage";
 /** Faux ioredis minimal, avec TTL simulé par horloge contrôlée. */
 class FakeRedis {
   now = 0;
-  private store = new Map<string, { val: number | string; expireAt?: number }>();
+  private store = new Map<
+    string,
+    { val: number | string; expireAt?: number }
+  >();
 
   private live(key: string) {
     const e = this.store.get(key);
@@ -100,5 +103,26 @@ describe("RedisThrottlerStorage", () => {
     await storage.increment("ipx", 60000, 5, 0, "a");
     const b = await storage.increment("ipx", 60000, 5, 0, "b");
     expect(b.totalHits).toBe(1);
+  });
+
+  it("fail-open si Redis est injoignable : la requête est autorisée, pas d'erreur propagée", async () => {
+    const brokenRedis = {
+      pttl: async () => {
+        throw new Error("Connection is closed.");
+      },
+      incr: async () => {
+        throw new Error("Connection is closed.");
+      },
+      pexpire: async () => {
+        throw new Error("Connection is closed.");
+      },
+      set: async () => {
+        throw new Error("Connection is closed.");
+      },
+    };
+    const brokenStorage = new RedisThrottlerStorage(brokenRedis as any);
+
+    const result = await brokenStorage.increment("ip5", 60000, 3, 0, "def");
+    expect(result.isBlocked).toBe(false);
   });
 });
