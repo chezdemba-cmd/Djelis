@@ -9,8 +9,8 @@ export default function HeroCarousel({
   mediaType = "video", // "video" | "audio"
   autoPlayInterval = 6000,
 }) {
-  // Limite aux 10 dernières publications
-  const carouselItems = items.slice(0, 10);
+  // Limite aux 4 dernières publications
+  const carouselItems = items.slice(0, 4);
   const count = carouselItems.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -156,7 +156,7 @@ export default function HeroCarousel({
         </>
       )}
 
-      {/* Barre d'indicateurs de défilement (10 barres/points) */}
+      {/* Barre d'indicateurs de défilement (4 barres/points) */}
       {count > 1 && (
         <div className="hero-carousel-indicators" role="tablist">
           {carouselItems.map((item, idx) => (
