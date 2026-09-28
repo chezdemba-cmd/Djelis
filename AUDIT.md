@@ -79,9 +79,10 @@ outil de surveillance.
 uniquement de cette variable — sa présence dans le screenshot suffisait
 à prouver la valeur runtime, sans avoir besoin d'accéder au dashboard.
 
-**Statut** : correction en cours — l'utilisateur ajoute la variable côté
-Vercel et redéploie. À vérifier après redeploy que `/djaasoo` affiche
-bien l'écran verrouillé.
+**Statut** : ✅ résolu le 28/09/2026 — variable ajoutée en type Config
+(pas Secret, sur avertissement Vercel) sur le projet web-app, redéployée
+sans cache, vérifié en production que `/djaasoo` affiche bien l'écran
+verrouillé.
 
 **Pourquoi ça a été raté à l'audit initial** : l'audit du 28/09 a vérifié
 le *code* (la logique `LAUNCH_MODE` est correcte et appliquée partout où
